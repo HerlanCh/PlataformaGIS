@@ -1,0 +1,14 @@
+{
+  "threshold": 3,
+  "reporters": ["consoleFull"],
+  "format": ["typescript", "tsx", "javascript"],
+  "gitignore": true,
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/coverage/**",
+    "**/*.generated.ts",
+    "tools/architecture/fixtures/**",
+    "tools/plop/templates/**"
+  ]
+}

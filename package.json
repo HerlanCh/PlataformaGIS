@@ -21,7 +21,8 @@
     "prepare": "husky",
     "gen:module": "plop module",
     "postgen:module": "pnpm sync:modules && pnpm install",
-    "sync:modules": "node tools/modules/sync-modules.mjs"
+    "sync:modules": "node tools/modules/sync-modules.mjs",
+    "duplication": "jscpd apps packages tools"
   },
   "lint-staged": {
     "*.{ts,tsx,js,cjs,mjs}": [
@@ -34,6 +35,8 @@
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
     "@eslint/js": "^10.0.1",
+    "@semantic-release/changelog": "^7.0.0",
+    "@semantic-release/git": "^11.0.1",
     "@types/node": "^24.19.2",
     "@vitest/coverage-v8": "^5.0.3",
     "dependency-cruiser": "^18.5.0",
@@ -41,9 +44,11 @@
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.13.0",
     "husky": "^9.1.7",
+    "jscpd": "^5.4.1",
     "lint-staged": "^17.6.0",
     "plop": "^4.0.5",
     "prettier": "^3.9.10",
+    "semantic-release": "^25.0.9",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.1",
     "vitest": "^5.0.3"

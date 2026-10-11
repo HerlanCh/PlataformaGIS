@@ -16,22 +16,38 @@ jobs:
   calidad:
     name: Compuertas de calidad
     runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+        with:
+          # SonarCloud necesita el historial completo para atribuir el código nuevo.
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
       - name: Instalar
         run: pnpm install --frozen-lockfile
-      - name: Lint
+      - name: Lint (RNF-02)
         run: pnpm lint
       - name: Typecheck
         run: pnpm typecheck
-      - name: Reglas de arquitectura
+      - name: Reglas de arquitectura (RNF-01)
         run: pnpm depcruise
-      - name: Pruebas con cobertura
+      - name: Duplicación (RNF-03)
+        run: pnpm duplication
+      - name: Pruebas con cobertura (RNF-04)
         run: pnpm test
       - name: Build
         run: pnpm build
+      - name: Auditoría de dependencias de producción (RNF-13)
+        run: pnpm audit --prod --audit-level high
+      - name: Auditoría de dependencias de desarrollo (informativa)
+        run: pnpm audit --dev --audit-level high
+        continue-on-error: true
+      - name: SonarCloud
+        # Se omite en PR de forks y de Dependabot, que no reciben el secreto.
+        if: env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarqube-scan-action@v8
