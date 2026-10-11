@@ -59,7 +59,7 @@ El núcleo no se divide por capas sino por **módulos de funcionalidad**, cada u
 
 1. Un módulo no importa código de otro módulo. Solo puede importar `packages/shared-kernel` (tipos mínimos comunes: `GeoPoint`, IDs, `DomainEvent`) y `packages/contracts`.
 2. Los módulos se comunican por **eventos de integración** (`ReportCreated`, `ReportConfirmed`…) a través de un bus de eventos. Quien emite no sabe quién escucha.
-3. Cada módulo es dueño de sus tablas y de sus migraciones. Ningún módulo consulta las tablas de otro; si necesita un dato, lo recibe en un evento o lo pide por una interfaz pública del módulo dueño.
+3. Cada módulo es dueño de sus tablas y de sus migraciones. Ningún módulo consulta las tablas de otro; si necesita un dato, lo recibe en un evento o lo pide por un puerto propio que la raíz de composición conecta a la interfaz pública del módulo dueño (ADR-001).
 4. Cada módulo expone un único punto de entrada `index.ts` con su función `register(app, bus, config)`. Solo la raíz de composición lo llama.
 5. Cada módulo opcional tiene un interruptor de funcionalidad (`FEATURE_HEATMAP=false`). Apagado, no registra rutas, eventos ni tareas.
 
@@ -168,7 +168,7 @@ Resultado: un esqueleto que compila, se prueba y se despliega, con la arquitectu
 5. Configurar ESLint (incluida la regla `complexity: 10`), Prettier, Husky + lint-staged y Commitlint (Conventional Commits).
 6. Configurar dependency-cruiser con estas reglas:
    1. Dentro de un módulo: `adapters → application → domain`; `domain` solo importa `shared-kernel`.
-   2. Un módulo no importa nada de otro módulo, salvo su `index.ts` público.
+   2. Un módulo no importa nada de otro módulo, tampoco su `index.ts`.
    3. Solo `apps/*` importa los `index.ts` de los módulos.
    4. Ningún paquete importa desde `apps/*`.
 7. Implementar los interruptores de funcionalidad en `packages/platform`: variables `FEATURE_<MODULO>` validadas con Zod y una función `isEnabled(modulo)` que usa la raíz de composición.
@@ -211,7 +211,7 @@ Resultado: las reglas de negocio de cada módulo en TypeScript puro, dentro de s
    1. `GeoPoint` (latitud y longitud dentro del rectángulo envolvente de La Paz y El Alto; fuera de él, error).
    2. IDs tipados: `ReportId`, `UserId`, `CategoryCode`.
    3. Clase base `DomainEvent` con `id`, `type`, `version`, `occurredAt`.
-2. `contracts`: definir con Zod y versionar los **eventos de integración** entre módulos: `ReportCreated.v1`, `ReportConfirmed.v1`, `ReportResolved.v1`, `ReportExpired.v1`, `ReportRejected.v1`, `VoteCast.v1`. Un cambio incompatible crea `v2`; nunca se modifica un evento publicado.
+2. `contracts`: definir con Zod y versionar los **eventos de integración** entre módulos: `ReportCreated.v1`, `ReportConfirmed.v1`, `ReportResolved.v1`, `ReportExpired.v1`, `ReportRejected.v1`, `ReportDuplicateDetected.v1`, `VoteCast.v1`. Un cambio incompatible crea `v2`; nunca se modifica un evento publicado.
 3. Módulo `identity`: entidad `User` (identificador anónimo de dispositivo, rol, Telegram ID opcional).
 4. Módulo `reports`:
    1. Entidad `Category`: código, nombre, TTL, radio de deduplicación, indicador de sensible.
@@ -224,7 +224,7 @@ Resultado: las reglas de negocio de cada módulo en TypeScript puro, dentro de s
    2. `VerificationPolicy`: decide, según votos ponderados por reputación, si un reporte debe confirmarse o resolverse.
    3. `ReputationPolicy`: sube la reputación del autor cuando su reporte se confirma y la baja cuando se rechaza.
    4. No modifica reportes directamente: emite `VoteCast` y una decisión; el módulo `reports` escucha y aplica la transición.
-   5. Puertos: `VoteRepository`, `ReputationRepository`, y una consulta pública de `reports` para saber el autor y el estado de un reporte.
+   5. Puertos: `VoteRepository`, `ReputationRepository`, y un puerto propio `ReportLookup` para saber el autor, el estado y la ubicación de un reporte; su adaptador lo conecta la raíz de composición a la interfaz pública de `reports`.
 6. Para cada módulo, escribir su `README.md`: responsabilidad, eventos que emite, eventos que escucha, interfaz pública y tablas propias. Es el contrato del módulo.
 
 **Pruebas**
@@ -252,14 +252,14 @@ Resultado: el esquema físico versionado y los adaptadores de repositorio que im
 
 1. Migración 001: `CREATE EXTENSION postgis`.
 2. Tabla `categories`: `code` PK, `name`, `ttl_minutes`, `dedup_radius_m`, `is_sensitive`.
-3. Tabla `users`: `id` UUID, `device_hash`, `telegram_id` único y nulo, `reputation`, `role`, `created_at`.
+3. Tabla `users`: `id` UUID, `device_hash`, `telegram_id` único y nulo, `role`, `created_at`. La reputación no vive aquí: es del módulo `verification`.
 4. Tabla `reports`:
    1. `id` UUID, `category_code` FK, `author_id` FK, `status`, `description`, `created_at`, `expires_at`.
    2. `location geometry(Point, 4326)` (ubicación real, nunca expuesta).
    3. `public_location geometry(Point, 4326)` (ubicación mostrada; redondeada si la categoría es sensible).
    4. `idempotency_key` único (evita duplicados al reenviar reportes guardados sin conexión).
    5. `CHECK` sobre `status` con los valores de la máquina de estados.
-5. Tabla `votes`: PK compuesta (`report_id`, `user_id`), `value` (confirma/niega), `weight`, `created_at`.
+5. Tabla `votes`: PK compuesta (`report_id`, `user_id`), `value` (confirma/niega), `weight`, `created_at`. Tabla `reputations` (también de `verification`): `user_id` PK, `score`, `last_penalty_at`, `updated_at`.
 6. Tabla `zone_subscriptions`: `id`, `user_id`, `center geography(Point)`, `radius_m` con `CHECK` de máximo, `categories text[]`.
 7. Tabla `outbox_events`: `id`, `type`, `payload jsonb`, `created_at`, `published_at` (patrón outbox para la Fase 7).
 8. Tabla `moderation_actions`: auditoría de quién rechazó qué y por qué.
@@ -320,7 +320,7 @@ Resultado: la lógica completa de la aplicación en la carpeta `application/` de
 **Codificación** (cada caso de uso: una clase con un método `execute(input)`, entrada validada con Zod, dependencias inyectadas por constructor como puertos)
 
 1. `RegisterDevice`: crea o recupera un usuario anónimo a partir del hash del dispositivo.
-2. `CreateReport`: valida la categoría y el `GeoPoint` → consulta `findDuplicate` → si hay duplicado, delega en `ConfirmReport`; si no, crea el agregado, aplica `PrivacyPolicy` y `ExpirationPolicy`, y guarda reporte y evento en una transacción. Idempotente por `idempotency_key`.
+2. `CreateReport`: valida la categoría y el `GeoPoint` → consulta `findDuplicate` → si hay duplicado, no crea el reporte y emite `ReportDuplicateDetected`, que `verification` registra como confirmación; si no, crea el agregado, aplica `PrivacyPolicy` y `ExpirationPolicy`, y guarda reporte y evento en una transacción. Idempotente por `idempotency_key`.
 3. `ConfirmReport` y `DenyReport` ("¿Sigue ahí?"): registran el voto ponderado, aplican `VerificationPolicy` y `ReputationPolicy`, y emiten el evento correspondiente.
 4. `ListReportsInViewport`: devuelve reportes activos y confirmados del área visible.
 5. `GetHeatmap`: devuelve celdas agregadas para un rango de fechas.

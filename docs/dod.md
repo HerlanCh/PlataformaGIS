@@ -10,7 +10,7 @@ Una tarea, historia de usuario o fase se considera **completada (Done)** únicam
 - [ ] **Reglas de Arquitectura Hexagonal:** Sin violaciones detectadas por `dependency-cruiser` (`pnpm depcruise`):
   - La dirección de dependencias es estrictamente `adapters → application → domain`.
   - El dominio solo importa `shared-kernel` o contratos base; jamás bibliotecas externas, frameworks o adaptadores.
-  - Ningún módulo importa código de otro módulo. La comunicación se realiza exclusivamente mediante eventos de integración o interfaces de puertos expuestas en `index.ts`.
+  - Ningún módulo importa código de otro módulo, tampoco su `index.ts`. La comunicación se realiza mediante eventos de integración; las consultas entre módulos usan un puerto del módulo consumidor que solo la raíz de composición (`apps/*`) conecta.
 - [ ] **Complejidad ciclomática:** Ninguna función nueva o modificada excede el valor de 10 (`ESLint complexity`).
 - [ ] **Duplicación de código:** Mantenida por debajo del 3 % verificado por `jscpd` o SonarCloud.
 
@@ -18,7 +18,7 @@ Una tarea, historia de usuario o fase se considera **completada (Done)** únicam
 
 ## 2. Pruebas y Cobertura
 
-- [ ] **Metodología TDD aplicada:** En correcciones de errores y lógica de negocio, la prueba se escribió antes o en conjunto con la solución.
+- [ ] **Prueba primero en correcciones:** Toda corrección de un error entra con una prueba, escrita antes del arreglo, que reproduce el fallo.
 - [ ] **Nomenclatura de pruebas:** Las pruebas asocian explícitamente el ID de la historia de usuario correspondiente (por ejemplo: `describe('HU-03: Confirmar o negar reporte', ...)`).
 - [ ] **Umbrales de cobertura superados (`Vitest`):**
   - Capa de Dominio (`domain/`): **≥ 95 %**
@@ -30,7 +30,7 @@ Una tarea, historia de usuario o fase se considera **completada (Done)** únicam
 
 ## 3. Seguridad y Privacidad
 
-- [ ] **Privacidad de datos:** No se expone `author_id` ni coordenadas exactas (`location`) en respuestas públicas; se utiliza `public_location` redondeado según `PrivacyPolicy`.
+- [ ] **Privacidad de datos:** No se expone `author_id` ni coordenadas exactas (`location`) en respuestas públicas; se utiliza `public_location` según `PrivacyPolicy` (RNF-14).
 - [ ] **Validación de entradas:** Todos los payloads HTTP, eventos y mensajes entrantes son validados estrictamente mediante esquemas Zod en los adaptadores de entrada.
 - [ ] **Auditoría de dependencias:** Cero vulnerabilidades críticas o altas reportadas por `npm audit` y Dependabot.
 

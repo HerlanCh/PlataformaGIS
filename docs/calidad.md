@@ -27,11 +27,14 @@ La **Seguridad y Privacidad** actúa como restricción transversal innegociable.
 | **RNF-06** | Fiabilidad | Tolerancia a fallos | Pérdida de reportes creados en la PWA ante corte de conexión | **0 reportes perdidos** (persistidos en `IndexedDB`) | Playwright (simulación offline) |
 | **RNF-07** | Fiabilidad | Recuperabilidad | Tiempo y reproducibilidad de restauración de base de datos desde respaldo | **1 restauración exitosa probada por versión** | GitHub Actions + `pg_dump` / `pg_restore` |
 | **RNF-08** | Fiabilidad | Ausencia de fallos | Tasa de respuestas HTTP 5xx respecto al total de solicitudes | **< 1.0 %** de solicitudes | Logs estructurados con `pino` |
-| **RNF-09** | Eficiencia | Comportamiento temporal | Latencia p95 de endpoints de lectura y creación de reportes | **p95 < 300 ms** (bajo carga de 50 req/s) | `k6` |
-| **RNF-10** | Eficiencia | Comportamiento temporal | Latencia de difusión de evento en tiempo real vía WebSocket hacia clientes conectados | **p95 < 2.0 s** | `k6` / Artillery (Socket.io) |
+| **RNF-09** | Eficiencia | Comportamiento temporal | Latencia p95 de endpoints de lectura y creación de reportes | **p95 < 300 ms** (con la carga básica del escenario k6) | `k6` |
+| **RNF-10** | Eficiencia | Comportamiento temporal | Latencia de difusión de evento en tiempo real vía WebSocket hacia clientes conectados | **p95 < 2.0 s** (con 500 clientes conectados) | Artillery (motor Socket.io) |
 | **RNF-11** | Eficiencia | Comportamiento temporal | Tiempo de ejecución de consultas espaciales en PostGIS con 100.000 reportes | **p95 < 100 ms** (con índice espacial GiST) | PostgreSQL `EXPLAIN ANALYZE` |
 | **RNF-12** | Eficiencia | Utilización de recursos | Tamaño total del bundle inicial JavaScript de la PWA | **< 250 KB** (gzipped / brotli) | Vite build + Lighthouse CI |
 | **RNF-13** | Seguridad | Confidencialidad / Integridad | Vulnerabilidades críticas o altas en dependencias y código | **0 vulnerabilidades** | `npm audit`, Dependabot, OWASP ZAP |
+| **RNF-14** | Seguridad | Confidencialidad (privacidad) | Respuestas públicas (API, WebSocket, datos abiertos) que contienen `location` real o `author_id` | **0 respuestas** | Prueba de privacidad sobre todas las rutas (Vitest) |
+
+RNF-01 a RNF-13 reproducen la tabla ISO/IEC 25010 del roadmap. RNF-14 se añade para dar ID trazable a la regla de privacidad del proyecto.
 
 ---
 
@@ -44,3 +47,4 @@ Cualquier Pull Request a la rama `main` será **bloqueado automáticamente** si:
 - La cobertura de código cae por debajo de los umbrales definidos para dominio (95 %) o aplicación (85 %).
 - Se detecta una vulnerabilidad alta o crítica en `npm audit`.
 - El build de la PWA excede los 250 KB comprimidos para el bundle inicial.
+- Alguna respuesta pública contiene `location` o `author_id`.
