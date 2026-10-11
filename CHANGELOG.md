@@ -1,3 +1,11 @@
+# [1.2.0](https://github.com/HerlanCh/PlataformaGIS/compare/v1.1.0...v1.2.0) (2026-10-11)
+
+
+### Features
+
+* modelo de dominio de identity y reports ([3e759c8](https://github.com/HerlanCh/PlataformaGIS/commit/3e759c89b01faffde27133dfc79a308299e0fa2e))
+* modelo de dominio de verification ([edd92d5](https://github.com/HerlanCh/PlataformaGIS/commit/edd92d5b7fdf8feea13b46c6f195cf1dde281c5a))
+
 # [1.1.0](https://github.com/HerlanCh/PlataformaGIS/compare/v1.0.0...v1.1.0) (2026-10-11)
 
 
