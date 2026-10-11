@@ -19,6 +19,9 @@ updates:
       # typescript-eslint aún no admite TypeScript 7.
       - dependency-name: typescript
         update-types: [version-update:semver-major, version-update:semver-minor]
+      # Los tipos de Node siguen a la versión de Node del proyecto (.nvmrc).
+      - dependency-name: '@types/node'
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
     directory: /

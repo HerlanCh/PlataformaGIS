@@ -29,10 +29,10 @@ Los nombres de casos de uso provienen del roadmap; los marcados "por definir" se
 
 | ID RNF | Característica ISO | Métrica / Umbral | Componente Afectado | Método de Verificación en CI/CD | Estado |
 | :--- | :--- | :--- | :--- | :--- | :---: |
-| **RNF-01** | Modularidad | 0 violaciones de reglas hexagonales | Todos los módulos | `pnpm depcruise` en GitHub Actions | Definido |
-| **RNF-02** | Analizabilidad | Complejidad ciclomática ≤ 10 | Todas las funciones TS | ESLint `complexity` en CI | Definido |
-| **RNF-03** | Modificabilidad | Código duplicado < 3 % | Monorepo completo | `jscpd` / SonarCloud | Definido |
-| **RNF-04** | Capacidad de prueba | Cobertura Dominio ≥ 95 %, App ≥ 85 %, Global ≥ 75 % | Módulos y paquetes | Vitest con cobertura v8 | Definido |
+| **RNF-01** | Modularidad | 0 violaciones de reglas hexagonales | Todos los módulos | `pnpm depcruise` en GitHub Actions | Verificado en CI (Fase 1) |
+| **RNF-02** | Analizabilidad | Complejidad ciclomática ≤ 10 | Todas las funciones TS | ESLint `complexity` en CI | Verificado en CI (Fase 1) |
+| **RNF-03** | Modificabilidad | Código duplicado < 3 % | Monorepo completo | `jscpd` / SonarCloud | Verificado en CI (Fase 1) |
+| **RNF-04** | Capacidad de prueba | Cobertura Dominio ≥ 95 %, App ≥ 85 %, Global ≥ 75 % | Módulos y paquetes | Vitest con cobertura v8 | Verificado en CI (Fase 1) |
 | **RNF-05** | Disponibilidad | Disponibilidad ≥ 95 % en piloto | `apps/api` | UptimeRobot a `/health` | Definido |
 | **RNF-06** | Tolerancia a fallos | 0 reportes perdidos sin conexión | `apps/web` | Pruebas Playwright con corte de red | Definido |
 | **RNF-07** | Recuperabilidad | 1 restauración probada por versión | PostgreSQL / PostGIS | Workflow de GitHub Actions con `pg_dump` y restauración | Definido |
@@ -41,5 +41,5 @@ Los nombres de casos de uso provienen del roadmap; los marcados "por definir" se
 | **RNF-10** | Difusión de eventos | Difusión WebSocket p95 < 2 s | Socket.io | Artillery (motor Socket.io) con 500 clientes | Definido |
 | **RNF-11** | Consulta espacial | Consulta espacial p95 < 100 ms | PostGIS (100k registros) | `EXPLAIN ANALYZE` con la carga sintética | Definido |
 | **RNF-12** | Tamaño de bundle | JS inicial PWA < 250 KB | `apps/web` | Lighthouse CI | Definido |
-| **RNF-13** | Seguridad | 0 vulnerabilidades altas/críticas | Dependencias y API | `npm audit`, Dependabot, OWASP ZAP | Definido |
+| **RNF-13** | Seguridad | 0 vulnerabilidades altas/críticas | Dependencias y API | `npm audit`, Dependabot, OWASP ZAP | Verificado en CI (Fase 1) |
 | **RNF-14** | Privacidad | 0 respuestas públicas con `location` o `author_id` | `apps/api`, Socket.io, datos abiertos | Prueba de privacidad sobre todas las rutas | Definido |

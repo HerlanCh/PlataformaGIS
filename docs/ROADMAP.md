@@ -196,10 +196,10 @@ Resultado: un esqueleto que compila, se prueba y se despliega, con la arquitectu
 
 **Criterio de salida**
 
-- [ ] CI en verde con todas las compuertas activas
-- [ ] Un PR que viola la arquitectura es rechazado automáticamente
-- [ ] `/health` y el `ping` de WebSocket funcionan en staging
-- [ ] Un módulo se puede apagar por interruptor y eliminar sin romper la compilación ni las pruebas
+- [x] CI en verde con todas las compuertas activas
+- [x] Un PR que viola la arquitectura es rechazado automáticamente
+- [x] `/health` y el `ping` de WebSocket funcionan en staging
+- [x] Un módulo se puede apagar por interruptor y eliminar sin romper la compilación ni las pruebas
 
 ## Fase 2: Modelo de dominio
 
