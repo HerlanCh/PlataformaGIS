@@ -46,10 +46,18 @@ PWA comunitaria para reportar y consultar incidentes urbanos georreferenciados e
 
 ## Comandos
 
-> Completar en la Fase 1 cuando existan.
+Requiere Node 24 y pnpm 12. En bash de Windows, pnpm está en `%APPDATA%\npm`.
 
-- `pnpm install` · `pnpm dev` · `pnpm test` · `pnpm lint` · `pnpm typecheck` · `pnpm depcruise`
-- `docker compose up -d` (PostGIS local)
+- `pnpm install` · `docker compose up -d` (PostGIS local) · `pnpm dev` (API en :3000, web en :5173)
+- `pnpm test` (Vitest con cobertura y umbrales) · `pnpm exec vitest run <ruta>` (una sola prueba)
+- `pnpm lint` (ESLint + Prettier) · `pnpm format` · `pnpm typecheck` (`tsc -b`)
+- `pnpm depcruise` (reglas de arquitectura) · `pnpm duplication` (jscpd)
+- `pnpm build` · `pnpm audit --prod --audit-level high`
+- `pnpm gen:module <nombre>` crea un módulo y lo registra. Para eliminar uno: borrar su carpeta y
+  ejecutar `node tools/modules/sync-modules.mjs && pnpm install`.
+- `apps/api/src/modules.generated.ts` y las referencias de `tsconfig.json` son generados: no editarlos a mano.
+- La prueba de integración de `/health` necesita Docker; sin Docker se omite en local y es obligatoria en la CI.
+- TypeScript está fijado en la serie 6: typescript-eslint aún no admite la 7.
 
 ## Flujo de Git
 
