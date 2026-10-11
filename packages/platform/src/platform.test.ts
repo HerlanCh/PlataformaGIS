@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   checkDatabase,
+  createPool,
   ConfigError,
   createLogger,
   featureVariable,
@@ -95,5 +96,21 @@ describe('createLogger', () => {
 
     expect(lineas).toHaveLength(1);
     expect(JSON.parse(lineas[0] ?? '')).toMatchObject({ msg: 'hola', reqId: 'r-1' });
+  });
+});
+
+describe('createPool', () => {
+  it('un error en una conexión inactiva no tumba el proceso y se notifica', async () => {
+    const errores: Error[] = [];
+    const pool = createPool('postgres://gis:gis@localhost:5432/gis', (error) =>
+      errores.push(error),
+    );
+    const caida = new Error('terminating connection due to administrator command');
+
+    // Sin un oyente, emitir "error" en un EventEmitter lanza una excepción.
+    expect(() => pool.emit('error', caida)).not.toThrow();
+
+    expect(errores).toEqual([caida]);
+    await pool.end();
   });
 });

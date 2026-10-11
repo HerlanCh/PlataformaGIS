@@ -7,7 +7,9 @@ import { attachRealtime } from './realtime.js';
 const config = loadConfig();
 const flags = loadFeatureFlags();
 const logger = createLogger(config.logLevel);
-const db = createPool(config.databaseUrl);
+const db = createPool(config.databaseUrl, (error) => {
+  logger.error({ err: error }, 'error en una conexión inactiva de la base de datos');
+});
 const bus = new InMemoryEventBus((error, event) => {
   logger.error({ err: error, evento: event.type }, 'falló un manejador de eventos');
 });

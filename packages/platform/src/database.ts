@@ -12,9 +12,21 @@ export interface DatabaseHealth {
   readonly error?: string;
 }
 
-/** Pool acotado: los planes gratuitos limitan las conexiones (RSK-02). */
-export function createPool(databaseUrl: string, max = 5): Pool {
-  return new pg.Pool({ connectionString: databaseUrl, max, connectionTimeoutMillis: 5000 });
+export type IdleErrorListener = (error: Error) => void;
+
+/**
+ * Pool acotado: los planes gratuitos limitan las conexiones (RSK-02).
+ * Si la base de datos se cae, las conexiones inactivas emiten `error`; sin un oyente
+ * ese evento tumbaría el proceso. Aquí solo se notifica: el pool se recupera solo.
+ */
+export function createPool(
+  databaseUrl: string,
+  onIdleError: IdleErrorListener = () => {},
+  max = 5,
+): Pool {
+  const pool = new pg.Pool({ connectionString: databaseUrl, max, connectionTimeoutMillis: 5000 });
+  pool.on('error', onIdleError);
+  return pool;
 }
 
 /** Nunca lanza: una base de datos caída es un estado que se informa, no un fallo del proceso. */
