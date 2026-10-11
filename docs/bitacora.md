@@ -57,3 +57,41 @@ Una revisión de los artefactos anteriores encontró contradicciones entre docum
 ### Pendientes fuera de los documentos
 - La rama del repositorio es `master`; el flujo definido usa `main` (se resuelve en el paso 1 de la Fase 1).
 - Actualizar la matriz de marco lógico: Next.js cambia a Vite.
+
+---
+
+## [2026-10-11] — Cierre de Fase 1: Base arquitectónica y cadena de calidad
+
+### Resultado
+Un esqueleto que compila, se prueba y se despliega, con la arquitectura hexagonal impuesta por la CI. Versión publicada: `v1.0.0`.
+
+### Qué se construyó
+- **Monorepo pnpm** con TypeScript estricto, ESLint (complejidad máxima 10), Prettier, Husky, Commitlint y Vitest con umbrales de cobertura por capa.
+- **Paquetes base:** `shared-kernel`, `contracts`, `event-bus` (bus en memoria) y `platform` (configuración validada con Zod, interruptores `FEATURE_<MODULO>`, logger pino, pool de PostgreSQL).
+- **Generador de módulos** (`pnpm gen:module`) y los nueve módulos de la arquitectura como esqueletos. El registro de módulos y las referencias de TypeScript se generan con `tools/modules/sync-modules.mjs`.
+- **Reglas de arquitectura** en `.dependency-cruiser.cjs`, con una prueba automática que planta siete importaciones prohibidas y exige que todas se detecten.
+- **API mínima:** `GET /health` (versión y estado de la base de datos), ID de correlación por solicitud y `ping` por Socket.io cada 5 s.
+- **PWA mínima:** mapa Leaflet centrado en La Paz que muestra el último `ping`. JS inicial: 125 KB comprimido.
+- **CI** con compuertas independientes: lint, typecheck, arquitectura, duplicación, pruebas con cobertura, build, auditoría y SonarCloud. Dependabot y semantic-release activos.
+- **Staging:** API en Render, web en Vercel y base de datos en Neon con PostGIS.
+
+### Evidencia del criterio de salida
+- [x] **CI en verde con todas las compuertas activas.** Ejecución en `main` con SonarCloud incluido: compuerta de calidad `OK`, 0 bugs, 0 vulnerabilidades, 0 % de duplicación, 97,5 % de cobertura.
+- [x] **Un PR que viola la arquitectura es rechazado.** PR #2 (un dominio importa infraestructura) rechazado por `dominio-solo-shared-kernel`; PR #3 (un módulo importa otro módulo) rechazado por `modulo-no-importa-otro-modulo`. Ambos cerrados sin fusionar.
+- [x] **`/health` y el `ping` funcionan en staging.** `https://plataforma-gis-api.onrender.com/health` responde 200 con la base de datos arriba; un cliente recibe el `ping` por WebSocket a través del proxy de Render con el origen de `https://plataformagis-apps.vercel.app`. No hizo falta cambiar a Oracle Cloud.
+- [x] **Un módulo se puede apagar y eliminar.** Con un módulo `sandbox` generado con plop: `FEATURE_SANDBOX=false` devuelve 404 y no procesa su evento; al borrar la carpeta y sincronizar, todo compila y las pruebas siguen en verde.
+
+### Hallazgos
+- **Error corregido (prueba primero):** al caerse la base de datos, el pool de `pg` emitía un `error` sin oyente y terminaba el proceso. Lo detectó la CI en la prueba de integración de `/health`.
+
+### Desviaciones y decisiones
+- **TypeScript 6, no 7:** typescript-eslint aún no admite la serie 7.
+- **Auditoría bloqueante solo en producción:** `braces` tiene una vulnerabilidad alta sin versión corregida y entra únicamente por herramientas de desarrollo (plop, semantic-release). La auditoría de desarrollo se ejecuta como paso informativo. Revisar cuando exista un parche.
+- **Un solo PR para toda la fase**, en lugar de los cuatro previstos en el plan.
+- **Iconos de la PWA:** por ahora un SVG; los PNG definitivos llegan en la Fase 8.
+
+### Pendientes que pasan a la siguiente fase
+- **Proteger `main`** (PR obligatorio y CI en verde). Falta decidir cómo convive con semantic-release, que escribe `CHANGELOG.md` en `main`.
+- **Borrar la rama remota `master`**, que quedó duplicada tras renombrarla a `main`.
+- **Alinear la versión de PostgreSQL:** Neon usa la 18 y la imagen local y de pruebas es la 17. Resolver antes de las migraciones de la Fase 3.
+- **Rotar la contraseña de la base de datos de staging.**
