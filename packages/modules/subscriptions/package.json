@@ -1,0 +1,15 @@
+{
+  "name": "@gis/module-subscriptions",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@gis/contracts": "workspace:*",
+    "@gis/event-bus": "workspace:*",
+    "@gis/platform": "workspace:*",
+    "@gis/shared-kernel": "workspace:*"
+  }
+}

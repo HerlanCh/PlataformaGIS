@@ -1,0 +1,37 @@
+{
+  "name": "@gis/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=../../.env src/main.ts",
+    "build": "tsup",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@gis/event-bus": "workspace:*",
+    "@gis/module-classifier": "workspace:*",
+    "@gis/module-heatmap": "workspace:*",
+    "@gis/module-identity": "workspace:*",
+    "@gis/module-moderation": "workspace:*",
+    "@gis/module-notifications": "workspace:*",
+    "@gis/module-open-data": "workspace:*",
+    "@gis/module-reports": "workspace:*",
+    "@gis/module-subscriptions": "workspace:*",
+    "@gis/module-verification": "workspace:*",
+    "@gis/platform": "workspace:*",
+    "fastify": "^5.12.5",
+    "pg": "^8.23.1",
+    "pino": "^10.4.0",
+    "socket.io": "^4.8.4",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@testcontainers/postgresql": "^12.2.0",
+    "@types/pg": "^8.23.1",
+    "socket.io-client": "^4.8.4",
+    "testcontainers": "^12.2.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.15"
+  }
+}

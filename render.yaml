@@ -1,0 +1,22 @@
+# Despliegue de la API en Render (plan gratuito). La base de datos vive en Neon.
+services:
+  - type: web
+    name: plataforma-gis-api
+    runtime: node
+    plan: free
+    region: virginia
+    # --prod=false: el build necesita las dependencias de desarrollo aunque NODE_ENV sea production.
+    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm --filter @gis/api build
+    startCommand: APP_VERSION=${RENDER_GIT_COMMIT:-desconocida} node apps/api/dist/main.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
