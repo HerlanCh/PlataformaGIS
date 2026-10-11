@@ -1,0 +1,11 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+  - 'packages/modules/*'
+
+# Scripts de instalación permitidos. esbuild descarga su binario; el resto no se necesita.
+allowBuilds:
+  esbuild: true
+  cpu-features: false
+  protobufjs: false
+  ssh2: false

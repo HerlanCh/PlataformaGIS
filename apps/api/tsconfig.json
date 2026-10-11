@@ -1,0 +1,44 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist/types",
+    "types": ["node"]
+  },
+  "include": ["src"],
+  "references": [
+    {
+      "path": "../../packages/event-bus"
+    },
+    {
+      "path": "../../packages/platform"
+    },
+    {
+      "path": "../../packages/modules/classifier"
+    },
+    {
+      "path": "../../packages/modules/heatmap"
+    },
+    {
+      "path": "../../packages/modules/identity"
+    },
+    {
+      "path": "../../packages/modules/moderation"
+    },
+    {
+      "path": "../../packages/modules/notifications"
+    },
+    {
+      "path": "../../packages/modules/open-data"
+    },
+    {
+      "path": "../../packages/modules/reports"
+    },
+    {
+      "path": "../../packages/modules/subscriptions"
+    },
+    {
+      "path": "../../packages/modules/verification"
+    }
+  ]
+}
