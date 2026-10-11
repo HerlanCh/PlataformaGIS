@@ -11,6 +11,13 @@ export const integrationEventSchema = z.object({
 
 export type IntegrationEvent = z.infer<typeof integrationEventSchema>;
 
+/**
+ * A quién puede llegar un evento.
+ * - `public`: puede difundirse a los clientes; nunca lleva ubicación real ni autor.
+ * - `internal`: solo circula entre módulos del servidor.
+ */
+export type EventAudience = 'public' | 'internal';
+
 /** Clave con la que se publica y se suscribe un evento: `ReportCreated.v1`. */
 export const eventKey = (event: Pick<IntegrationEvent, 'type' | 'version'>): string =>
   `${event.type}.v${event.version}`;
@@ -22,12 +29,15 @@ export const eventKey = (event: Pick<IntegrationEvent, 'type' | 'version'>): str
 export function defineEvent<Type extends string, Version extends number, Payload extends z.ZodType>(
   type: Type,
   version: Version,
+  audience: EventAudience,
   payload: Payload,
 ) {
   return {
     type,
     version,
+    audience,
     key: eventKey({ type, version }),
+    payload,
     schema: integrationEventSchema.extend({
       type: z.literal(type),
       version: z.literal(version),
@@ -35,3 +45,5 @@ export function defineEvent<Type extends string, Version extends number, Payload
     }),
   };
 }
+
+export type EventDefinition = ReturnType<typeof defineEvent>;

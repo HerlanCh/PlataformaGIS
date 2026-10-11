@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { defineEvent, eventKey } from './index.js';
 
-const pruebaV1 = defineEvent('Prueba', 1, z.object({ mensaje: z.string() }));
+const pruebaV1 = defineEvent('Prueba', 1, 'internal', z.object({ mensaje: z.string() }));
 
 const evento = {
   id: '6f1c2f0e-3b7a-4d2a-9c58-0a4f5b1d2e3f',

@@ -33,6 +33,7 @@ export default defineConfig({
       thresholds: {
         ...umbral(75),
         '**/domain/**': umbral(95),
+        'packages/shared-kernel/**': umbral(95),
         '**/application/**': umbral(85),
       },
     },
