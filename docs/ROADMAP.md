@@ -218,7 +218,7 @@ Resultado: las reglas de negocio de cada módulo en TypeScript puro, dentro de s
    2. Agregado raíz `Report` con máquina de estados explícita: `ACTIVO → CONFIRMADO`, `ACTIVO|CONFIRMADO → RESUELTO | CADUCADO | RECHAZADO`. Toda transición inválida lanza un error de dominio.
    3. Métodos: `markConfirmed()`, `markResolved()`, `expire(now)`, `reject(motivo)`, `extendExpiration()`.
    4. Políticas puras: `ExpirationPolicy` (caducidad desde el TTL) y `PrivacyPolicy` (redondeo de ubicación en categorías sensibles).
-   5. Puertos: `ReportRepository`, `CategoryRepository`, `IdGenerator`.
+   5. Puertos: `ReportRepository`, `CategoryRepository`, `IdGenerator`, `AuthorStanding` (si el autor está silenciado).
 5. Módulo `verification`:
    1. Entidad `Vote` (un voto por usuario y reporte; el autor no vota su propio reporte) y entidad `Reputation`.
    2. `VerificationPolicy`: decide, según votos ponderados por reputación, si un reporte debe confirmarse o resolverse.
@@ -235,9 +235,9 @@ Resultado: las reglas de negocio de cada módulo en TypeScript puro, dentro de s
 
 **Criterio de salida**
 
-- [ ] Cobertura del dominio ≥ 95 %
-- [ ] 0 dependencias externas en los `dominios de los módulos y en shared-kernel` (verificado por dependency-cruiser)
-- [ ] Todos los puertos y eventos de integración definidos, con el README de cada módulo e incluidos en la trazabilidad
+- [x] Cobertura del dominio ≥ 95 %
+- [x] 0 dependencias externas en los `dominios de los módulos y en shared-kernel` (verificado por dependency-cruiser)
+- [x] Todos los puertos y eventos de integración definidos, con el README de cada módulo e incluidos en la trazabilidad
 
 ## Fase 3: Modelado de datos y persistencia PostGIS
 
@@ -297,7 +297,7 @@ Resultado: todas las consultas espaciales implementadas, indexadas y medidas con
 3. Puerto y adaptador `SubscriptionRepository.matchSubscribers(punto, categoria)`: suscripciones cuyo círculo contiene el punto (`ST_DWithin` contra `center` y `radius_m`).
 4. Función pura en el dominio `cellOf(GeoPoint, precision)`: codificación geohash propia (sin librería) para agrupar clientes de WebSocket por celda en la Fase 7. Precisión por defecto: 6.
 5. Función pura `cellsCovering(bbox)`: lista de celdas que cubren el área visible del mapa.
-6. Implementar el redondeo de `PrivacyPolicy` con `ST_SnapToGrid` al guardar `public_location`.
+6. Guardar en `public_location` la ubicación que entrega `PrivacyPolicy` del dominio (calculada en la Fase 2 con una cuadrícula UTM 19 Sur). `ST_SnapToGrid` se usa solo en el mapa de calor.
 
 **Pruebas**
 

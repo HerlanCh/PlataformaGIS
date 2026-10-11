@@ -43,3 +43,55 @@ Los nombres de casos de uso provienen del roadmap; los marcados "por definir" se
 | **RNF-12** | Tamaño de bundle | JS inicial PWA < 250 KB | `apps/web` | Lighthouse CI | Definido |
 | **RNF-13** | Seguridad | 0 vulnerabilidades altas/críticas | Dependencias y API | `npm audit`, Dependabot, OWASP ZAP | Verificado en CI (Fase 1) |
 | **RNF-14** | Privacidad | 0 respuestas públicas con `location` o `author_id` | `apps/api`, Socket.io, datos abiertos | Prueba de privacidad sobre todas las rutas | Definido |
+
+---
+
+## 3. Fase 2: modelo de dominio
+
+Reglas de negocio ya implementadas y probadas en `domain/`. Las pruebas viven en `tests/` de cada módulo (o junto al código en los paquetes compartidos) y llevan el ID de la historia en el nombre.
+
+### 3.1 Reglas de negocio por historia
+
+| Historia | Regla (SRS) | Implementación | Archivo de pruebas |
+| :--- | :--- | :--- | :--- |
+| HU-01 | Solo se aceptan ubicaciones dentro del área de servicio (1.3) | `GeoPoint` en `shared-kernel` | `packages/shared-kernel/src/geo-point.test.ts` |
+| HU-01 | Un reporte nace `ACTIVO` con la caducidad de su categoría (3.1) | `Report.create`, `Category`, `ExpirationPolicy` | `packages/modules/reports/tests/report.test.ts` |
+| HU-01, HU-09 | Registro anónimo por dispositivo y vínculo con Telegram | `User` | `packages/modules/identity/tests/user.test.ts` |
+| HU-02 | En categorías sensibles se muestra el centro de la celda de 200 m (3.1) | `PrivacyPolicy`, `utm19s` | `packages/modules/reports/tests/privacy-policy.test.ts`, `utm19s.test.ts` |
+| HU-02 | Los eventos públicos no llevan ubicación real ni usuarios (RNF-14) | Audiencia de cada evento en `contracts` | `packages/contracts/src/events.test.ts` |
+| HU-03 | Reglas para emitir un voto: autor, voto único, 1000 m, reporte vigente (3.2.2) | `Vote.cast` | `packages/modules/verification/tests/vote.test.ts` |
+| HU-03 | Confirmar, extender y resolver por votos ponderados y votantes distintos (3.2.3 a 3.2.5) | `VerificationPolicy` | `packages/modules/verification/tests/verification-policy.test.ts` |
+| HU-03 | Máquina de estados y extensiones de vigencia, máximo 2 (3.2.4) | `Report` | `packages/modules/reports/tests/report.test.ts` |
+| HU-03, HU-12 | Ajustes de reputación, silenciado y recuperación (3.2.6 y 3.2.7) | `Reputation`, `ReputationPolicy` | `packages/modules/verification/tests/reputation.test.ts` |
+| HU-04 | Caducidad al vencer el TTL, nunca antes; también en `CONFIRMADO` | `Report.expire`, `ExpirationPolicy` | `packages/modules/reports/tests/report.test.ts`, `expiration-policy.test.ts` |
+| HU-12 | Rechazo con motivo; el rechazo por autor silenciado no penaliza | `Report.reject`, `ReputationPolicy` | `report.test.ts`, `reputation.test.ts` |
+
+Quedan para la Fase 5, porque dependen de casos de uso: deduplicación (HU-01), límites de creación y de votos (HU-01), consulta por viewport (HU-02) e idempotencia (HU-05).
+
+### 3.2 Puertos
+
+| Módulo | Puerto | Propósito | Se implementa en |
+| :--- | :--- | :--- | :--- |
+| `identity` | `UserRepository` | Buscar y guardar usuarios | Fase 3 |
+| `reports` | `ReportRepository` | Guardar y recuperar reportes | Fase 3 (consultas espaciales en la Fase 4) |
+| `reports` | `CategoryRepository` | Leer categorías | Fase 3 |
+| `reports` | `IdGenerator` | Generar identificadores | Fase 5 |
+| `reports` | `AuthorStanding` | Saber si el autor está silenciado | Fase 5 (conectado a `verification` en la raíz de composición) |
+| `verification` | `VoteRepository` | Guardar y leer votos | Fase 3 |
+| `verification` | `ReputationRepository` | Guardar y leer reputaciones | Fase 3 |
+| `verification` | `ReportLookup` | Autor, estado, ubicación y extensiones de un reporte | Fase 5 (conectado a `reports` en la raíz de composición) |
+| `shared-kernel` | `Clock` | Fecha y hora actuales | Fase 5 |
+
+### 3.3 Eventos de integración
+
+Definidos en `packages/contracts/src/events.ts`. Un evento público puede difundirse a los clientes; uno interno solo circula entre módulos del servidor.
+
+| Evento | Audiencia | Emite | Escucha |
+| :--- | :--- | :--- | :--- |
+| `ReportCreated.v1` | Pública | `reports` | `notifications`, clientes |
+| `ReportConfirmed.v1` | Pública | `reports` | `verification`, `notifications`, clientes |
+| `ReportResolved.v1` | Pública | `reports` | `verification`, clientes |
+| `ReportExpired.v1` | Pública | `reports` | clientes |
+| `ReportRejected.v1` | Pública | `reports` | `verification`, clientes |
+| `ReportDuplicateDetected.v1` | Interna | `reports` | `verification` |
+| `VoteCast.v1` | Interna | `verification` | `reports` |

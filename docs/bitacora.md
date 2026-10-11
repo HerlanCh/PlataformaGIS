@@ -91,7 +91,53 @@ Un esqueleto que compila, se prueba y se despliega, con la arquitectura hexagona
 - **Iconos de la PWA:** por ahora un SVG; los PNG definitivos llegan en la Fase 8.
 
 ### Pendientes que pasan a la siguiente fase
-- **Proteger `main`** (PR obligatorio y CI en verde). Falta decidir cómo convive con semantic-release, que escribe `CHANGELOG.md` en `main`.
-- **Borrar la rama remota `master`**, que quedó duplicada tras renombrarla a `main`.
+- **Proteger `main`:** resuelto el mismo día. Una regla exige PR y CI en verde; semantic-release escribe `CHANGELOG.md` con una clave de despliegue que la regla admite como excepción. Comprobado con la publicación de `v1.1.0`.
+- **Rama remota `master`:** se conserva por decisión del autor; no afecta al flujo.
 - **Alinear la versión de PostgreSQL:** Neon usa la 18 y la imagen local y de pruebas es la 17. Resolver antes de las migraciones de la Fase 3.
-- **Rotar la contraseña de la base de datos de staging.**
+- **Contraseña de la base de datos de staging:** se rotará más adelante por decisión del autor.
+
+---
+
+## [2026-10-11] — Cierre de Fase 2: Modelo de dominio
+
+### Resultado
+Las reglas de negocio de los módulos Imprescindibles están escritas en TypeScript puro dentro de `domain/`, sin base de datos, HTTP ni frameworks, y probadas contra los valores del SRS.
+
+### Qué se construyó
+- **`shared-kernel`:** `GeoPoint` como objeto de valor que rechaza coordenadas fuera del área de servicio y mide distancias; constructores validados de `ReportId`, `UserId` y `CategoryCode`.
+- **`contracts`:** los siete eventos de integración versionados, cada uno marcado como público o interno.
+- **`identity`:** entidad `User` y puerto `UserRepository`.
+- **`reports`:** `Category` con el catálogo del MVP, agregado `Report` con su máquina de estados y extensiones de vigencia, `ExpirationPolicy`, `PrivacyPolicy` y cuatro puertos.
+- **`verification`:** `Vote`, `Reputation`, `VerificationPolicy`, `ReputationPolicy` y tres puertos.
+- **README** de los tres módulos con su contrato: responsabilidad, eventos, puertos y tablas.
+
+### Evidencia del criterio de salida
+- [x] **Cobertura del dominio ≥ 95 %.** Vitest impone el umbral en `**/domain/**` y en `shared-kernel`; la suite pasa con 394 pruebas y una cobertura global del 99,7 % de sentencias y 100 % de líneas.
+- [x] **0 dependencias externas en los dominios y en `shared-kernel`.** dependency-cruiser sin violaciones (reglas `dominio-solo-shared-kernel` y `shared-kernel-sin-dependencias`).
+- [x] **Puertos y eventos definidos, con README e incluidos en la trazabilidad.** Sección 3 de `trazabilidad.md`.
+
+### Pruebas destacadas
+- **Máquina de estados:** las 7 transiciones válidas y las 13 inválidas, generadas desde la tabla de transiciones.
+- **Basadas en propiedades (fast-check):** `GeoPoint`, `ExpirationPolicy`, `PrivacyPolicy`, `VerificationPolicy` y la proyección UTM.
+- **Proyección UTM 19 Sur:** coincide con `ST_Transform` de PostGIS 3.5 con menos de 1 mm de diferencia en seis puntos del área de servicio.
+
+### Decisiones de diseño (aprobadas en el plan de la fase)
+1. **La ubicación pública se calcula en el dominio.** `PrivacyPolicy` usa una proyección UTM 19 Sur propia, sin librerías. El repositorio de la Fase 4 guardará esa ubicación tal cual; se ajustó el punto 6 de la Fase 4 del roadmap.
+2. **Audiencia de los eventos.** Los eventos públicos solo llevan `publicLocation`; una prueba impide que incluyan la ubicación real o un usuario. `ReportDuplicateDetected` y `VoteCast` son internos.
+3. **La decisión de verificación viaja en `VoteCast.v1`** (`NONE`, `CONFIRM`, `EXTEND`, `RESOLVE`). `verification` nunca modifica un reporte.
+4. **Puertos añadidos** a los del roadmap: `UserRepository` y `AuthorStanding`.
+
+### Reglas precisadas al implementar
+El SRS no las detallaba; se resolvieron así y conviene revisarlas:
+- **Prioridad de las negaciones.** Si un reporte reúne a la vez los umbrales de confirmación y de resolución, se resuelve.
+- **Un usuario silenciado no gana reputación** por aciertos o reportes anteriores; solo se recupera por el plazo de 30 días.
+- **Redondeo a dos decimales** en reputaciones y sumas de votos, para que los pasos de 0,05 no acumulen error.
+- **En el instante exacto de la caducidad el reporte sigue vigente**; caduca cuando esa fecha ya pasó.
+- **Borde del área de servicio.** Si el centro de la celda de 200 m cae fuera del rectángulo, la ubicación pública se acota al borde.
+- **La descripción del reporte no se modeló.** El roadmap la prevé como paso posterior de la PWA (Fase 8) y el SRS no fija su longitud; se añadirá con su regla cuando se defina.
+
+### Publicación de versiones
+El primer PR de la fase publicó `v1.1.0`: semantic-release escribió el `CHANGELOG.md` en `main` protegida con la clave de despliegue, lo que cierra la comprobación que quedó abierta en la Fase 1.
+
+### Pendientes que pasan a la siguiente fase
+- **Alinear la versión de PostgreSQL** (Neon 18, local y pruebas 17) antes de las migraciones.
