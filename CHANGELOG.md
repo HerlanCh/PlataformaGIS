@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/HerlanCh/PlataformaGIS/compare/v1.0.0...v1.1.0) (2026-10-11)
+
+
+### Features
+
+* GeoPoint validado, identificadores y eventos de integración ([70addac](https://github.com/HerlanCh/PlataformaGIS/commit/70addac2306a7fc930377d9a85d8f5b7369f036c))
+
 # 1.0.0 (2026-10-11)
 
 
