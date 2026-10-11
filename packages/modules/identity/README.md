@@ -28,4 +28,4 @@ _Ninguna todavía._
 
 ## Eliminar el módulo
 
-Borra esta carpeta y ejecuta `pnpm sync:modules && pnpm install`.
+Borra esta carpeta y ejecuta `node tools/modules/sync-modules.mjs && pnpm install`.
