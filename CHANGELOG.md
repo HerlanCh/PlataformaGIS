@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/HerlanCh/PlataformaGIS/compare/v1.3.0...v1.4.0) (2026-10-12)
+
+
+### Features
+
+* persistencia de identity y reports sobre PostGIS ([b1b5c81](https://github.com/HerlanCh/PlataformaGIS/commit/b1b5c817531c3aeb40db6254e48f4f3cc7ed2d50))
+
 # [1.3.0](https://github.com/HerlanCh/PlataformaGIS/compare/v1.2.0...v1.3.0) (2026-10-12)
 
 
