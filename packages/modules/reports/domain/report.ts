@@ -2,6 +2,7 @@ import type { CategoryCode, GeoPoint, ReportId, UserId } from '@gis/shared-kerne
 import type { Category } from './category.js';
 import {
   ExtensionLimitReachedError,
+  InvalidIdempotencyKeyError,
   InvalidTransitionError,
   NotExpiredYetError,
 } from './errors.js';
@@ -12,6 +13,9 @@ export type ReportStatus = 'ACTIVO' | 'CONFIRMADO' | 'RESUELTO' | 'CADUCADO' | '
 
 /** `AUTOR_SILENCIADO` no penaliza de nuevo al autor (SRS 3.2.7). */
 export type RejectionReason = 'MODERACION' | 'AUTOR_SILENCIADO';
+
+// La genera el cliente (un UUID, normalmente); aquí solo se exige que sea opaca y acotada.
+const CLAVE_DE_IDEMPOTENCIA = /^[A-Za-z0-9_-]{8,128}$/;
 
 /** Máquina de estados explícita: desde cada estado, a cuáles se puede pasar. */
 export const TRANSITIONS: Readonly<Record<ReportStatus, readonly ReportStatus[]>> = {
@@ -50,6 +54,8 @@ export interface ReportProps {
   readonly expiresAt: Date;
   readonly extensions: number;
   readonly rejectionReason: RejectionReason | null;
+  /** Clave que genera el cliente; evita duplicados al reenviar un reporte guardado sin conexión. */
+  readonly idempotencyKey: string;
 }
 
 export interface CreateReportInput {
@@ -57,6 +63,7 @@ export interface CreateReportInput {
   readonly category: Category;
   readonly authorId: UserId;
   readonly location: GeoPoint;
+  readonly idempotencyKey: string;
   readonly now: Date;
 }
 
@@ -68,7 +75,8 @@ export class Report {
 
   /** Crea un reporte `ACTIVO` con su caducidad y su ubicación pública ya calculadas. */
   static create(input: CreateReportInput): Report {
-    const { id, category, authorId, location, now } = input;
+    const { id, category, authorId, location, idempotencyKey, now } = input;
+    if (!CLAVE_DE_IDEMPOTENCIA.test(idempotencyKey)) throw new InvalidIdempotencyKeyError();
     const report = new Report({
       id,
       categoryCode: category.code,
@@ -81,6 +89,7 @@ export class Report {
       expiresAt: ExpirationPolicy.initialExpiration(now, category.ttlMinutes),
       extensions: 0,
       rejectionReason: null,
+      idempotencyKey,
     });
     report.events.push({ type: 'ReportCreated', occurredAt: now });
     return report;
@@ -133,6 +142,10 @@ export class Report {
 
   get rejectionReason(): RejectionReason | null {
     return this.props.rejectionReason;
+  }
+
+  get idempotencyKey(): string {
+    return this.props.idempotencyKey;
   }
 
   /** Vigente: visible en el mapa y abierto a votos. */

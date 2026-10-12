@@ -20,6 +20,7 @@ const creado = new Date('2026-10-11T12:00:00Z');
 const minutosDespues = (minutos: number) => new Date(creado.getTime() + minutos * 60_000);
 const laPaz = GeoPoint.create(-16.5, -68.15);
 const autor = userId('11111111-1111-4111-8111-111111111111');
+const CLAVE = 'b7e2a9c4-51d3-4f6a-9e08-3c2d1a0f9b77';
 
 const crear = (codigo = 'accidente') =>
   Report.create({
@@ -27,6 +28,7 @@ const crear = (codigo = 'accidente') =>
     category: categoria(codigo),
     authorId: autor,
     location: laPaz,
+    idempotencyKey: CLAVE,
     now: creado,
   });
 
@@ -71,6 +73,7 @@ describe('Report: creación', () => {
       expiresAt: minutosDespues(360),
       extensions: 0,
       rejectionReason: null,
+      idempotencyKey: CLAVE,
       isActive: true,
     });
     expect(reporte.pullEvents()).toEqual([{ type: 'ReportCreated', occurredAt: creado }]);
@@ -255,6 +258,7 @@ describe('Report: persistencia y eventos', () => {
       expiresAt: original.expiresAt,
       extensions: original.extensions,
       rejectionReason: original.rejectionReason,
+      idempotencyKey: original.idempotencyKey,
     });
 
     expect(restaurado).toMatchObject({ status: 'CONFIRMADO', extensions: 1 });

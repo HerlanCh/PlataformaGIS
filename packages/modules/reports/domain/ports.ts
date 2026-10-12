@@ -5,6 +5,7 @@ import type { Report } from './report.js';
 /** Las consultas espaciales (viewport, cercanía, duplicados, vencidos) se añaden en la Fase 4. */
 export interface ReportRepository {
   findById(id: ReportId): Promise<Report | null>;
+  findByIdempotencyKey(idempotencyKey: string): Promise<Report | null>;
   save(report: Report): Promise<void>;
 }
 
