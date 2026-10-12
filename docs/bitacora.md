@@ -140,4 +140,4 @@ El SRS no las detallaba; se resolvieron así y conviene revisarlas:
 El primer PR de la fase publicó `v1.1.0`: semantic-release escribió el `CHANGELOG.md` en `main` protegida con la clave de despliegue, lo que cierra la comprobación que quedó abierta en la Fase 1.
 
 ### Pendientes que pasan a la siguiente fase
-- **Alinear la versión de PostgreSQL** (Neon 18, local y pruebas 17) antes de las migraciones.
+- **Alinear la versión de PostgreSQL:** resuelto el 2026-10-12. Docker local y las pruebas usan `postgis/postgis:18-3.6`, igual que Neon en staging (PostgreSQL 18.6, PostGIS 3.6). Los vectores de referencia de la proyección UTM son idénticos en PostGIS 3.5 y 3.6.

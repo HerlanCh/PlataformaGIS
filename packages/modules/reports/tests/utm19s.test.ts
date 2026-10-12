@@ -2,7 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { fromUtm19s, toUtm19s } from '../domain/utm19s.js';
 
-// Vectores de referencia calculados con PostGIS 3.5: ST_Transform(punto, 32719).
+// Vectores de referencia calculados con PostGIS: ST_Transform(punto, 32719). Idénticos en 3.5 y 3.6.
 const REFERENCIA: [nombre: string, lat: number, lon: number, este: number, norte: number][] = [
   ['Plaza Murillo', -16.4955, -68.1336, 592468.5771, 8176055.3802],
   ['Ceja de El Alto', -16.5047, -68.1633, 589294.3594, 8175050.9663],

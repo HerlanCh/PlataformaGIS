@@ -17,7 +17,7 @@ describe.skipIf(!ejecutar)('GET /health contra PostGIS real', () => {
   let db: Pool;
 
   beforeAll(async () => {
-    contenedor = await new PostgreSqlContainer('postgis/postgis:17-3.5').start();
+    contenedor = await new PostgreSqlContainer('postgis/postgis:18-3.6').start();
     db = createPool(contenedor.getConnectionUri());
   }, 180_000);
 
