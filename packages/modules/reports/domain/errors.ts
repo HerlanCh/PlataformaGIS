@@ -1,25 +1,25 @@
-import { DomainError } from '@gis/shared-kernel';
+import { ErrorDeDominio } from '@gis/shared-kernel';
 
-export class InvalidTransitionError extends DomainError {
+export class ErrorTransicionInvalida extends ErrorDeDominio {
   constructor(desde: string, hacia: string) {
-    super('INVALID_TRANSITION', `Un reporte ${desde} no puede pasar a ${hacia}`);
+    super('TRANSICION_INVALIDA', `Un reporte ${desde} no puede pasar a ${hacia}`);
   }
 }
 
-export class ExtensionLimitReachedError extends DomainError {
+export class ErrorLimiteDeExtensiones extends ErrorDeDominio {
   constructor() {
-    super('EXTENSION_LIMIT_REACHED', 'El reporte ya usó todas sus extensiones de vigencia');
+    super('LIMITE_DE_EXTENSIONES', 'El reporte ya usó todas sus extensiones de vigencia');
   }
 }
 
-export class InvalidIdempotencyKeyError extends DomainError {
+export class ErrorClaveDeIdempotenciaInvalida extends ErrorDeDominio {
   constructor() {
-    super('INVALID_IDEMPOTENCY_KEY', 'La clave de idempotencia del reporte no es válida');
+    super('CLAVE_DE_IDEMPOTENCIA_INVALIDA', 'La clave de idempotencia del reporte no es válida');
   }
 }
 
-export class NotExpiredYetError extends DomainError {
+export class ErrorAunNoCaduca extends ErrorDeDominio {
   constructor() {
-    super('NOT_EXPIRED_YET', 'El reporte todavía no alcanzó su fecha de caducidad');
+    super('AUN_NO_CADUCA', 'El reporte todavía no alcanzó su fecha de caducidad');
   }
 }

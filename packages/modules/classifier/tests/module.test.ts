@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { classifierModule } from '../index.js';
+import { classifierModulo } from '../index.js';
 
 describe('módulo classifier', () => {
   it('expone su nombre', () => {
-    expect(classifierModule.name).toBe('classifier');
+    expect(classifierModulo.nombre).toBe('classifier');
   });
 
   it('se registra sin errores', async () => {
-    const registrar = async () => classifierModule.register({} as never, {} as never, {} as never);
+    const registrar = async () => classifierModulo.registrar({} as never, {} as never, {} as never);
 
     await expect(registrar()).resolves.toBeUndefined();
   });

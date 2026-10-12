@@ -10,7 +10,7 @@ Esquema físico de la Plataforma GIS sobre PostgreSQL 18 + PostGIS 3.6. Se deriv
 - **Fechas:** `timestamptz` (con zona horaria), siempre en UTC.
 - **Coordenadas:** WGS84 (SRID 4326). En PostGIS `x` es la longitud e `y` la latitud.
 - **Valores enumerados:** columnas `text` con una restricción `CHECK`, en lugar de tipos `ENUM`, para poder añadir valores con una migración simple.
-- **Nombres en español:** las tablas y columnas se llaman en español, sin tildes ni eñes y en `snake_case`; los identificadores llevan el prefijo `id_` y las fechas terminan en `_en`. El código TypeScript conserva sus nombres en inglés: la equivalencia está en `adapters/schema.ts` de cada módulo (por ejemplo, la propiedad `expiresAt` es la columna `caduca_en`).
+- **Nombres en español:** las tablas y columnas se llaman en español, sin tildes ni eñes y en `snake_case`; los identificadores llevan el prefijo `id_` y las fechas terminan en `_en`. El código TypeScript también está en español: la equivalencia entre propiedad y columna está en `adapters/schema.ts` de cada módulo (por ejemplo, la propiedad `caducaEn` es la columna `caduca_en`).
 - **Historial de migraciones:** una tabla por módulo en el esquema `drizzle` (`migrations_platform`, `migrations_reports`, etc.). Un módulo apagado con su interruptor `FEATURE_<MODULO>` no crea sus tablas.
 
 ## Resumen
@@ -37,7 +37,7 @@ Patrón *outbox*: el agregado y sus eventos se guardan en la misma transacción,
 | Columna | Tipo | Restricción | Descripción |
 | :--- | :--- | :--- | :--- |
 | `id` | `uuid` | PK | Identificador del evento. Si se repite, la escritura falla y la transacción completa se revierte |
-| `tipo` | `text` | NOT NULL | Tipo y versión del evento, por ejemplo `ReportCreated.v1` |
+| `tipo` | `text` | NOT NULL | Tipo y versión del evento, por ejemplo `ReporteCreado.v1` |
 | `contenido` | `jsonb` | NOT NULL | Evento de integración completo |
 | `creado_en` | `timestamptz` | NOT NULL, por defecto `now()` | Momento en que ocurrió el evento |
 | `publicado_en` | `timestamptz` | Nulo | Momento en que se publicó; nulo mientras está pendiente |
@@ -96,7 +96,7 @@ Catálogo de categorías. La migración `0001_semilla_categorias` carga las cinc
 | `creado_en` | `timestamptz` | NOT NULL | Fecha de creación |
 | `caduca_en` | `timestamptz` | NOT NULL | Fecha de caducidad vigente |
 | `ubicacion` | `geometry(Point, 4326)` | NOT NULL | Ubicación real. **Nunca se expone** |
-| `ubicacion_publica` | `geometry(Point, 4326)` | NOT NULL | Ubicación que se muestra. La calcula `PrivacyPolicy` en el dominio; el repositorio la guarda sin recalcularla |
+| `ubicacion_publica` | `geometry(Point, 4326)` | NOT NULL | Ubicación que se muestra. La calcula `PoliticaDePrivacidad` en el dominio; el repositorio la guarda sin recalcularla |
 | `clave_idempotencia` | `text` | NOT NULL, único | Clave que genera el cliente; evita duplicados al reenviar reportes guardados sin conexión |
 
 **Índices:**

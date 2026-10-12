@@ -1,20 +1,20 @@
-import { DomainError } from './domain-error.js';
+import { ErrorDeDominio } from './domain-error.js';
 
 /** Rectángulo envolvente de la conurbación La Paz – El Alto (SRS 1.3). */
-export const SERVICE_AREA = {
-  minLatitude: -16.67,
-  maxLatitude: -16.38,
-  minLongitude: -68.33,
-  maxLongitude: -68.0,
+export const AREA_DE_SERVICIO = {
+  latitudMin: -16.67,
+  latitudMax: -16.38,
+  longitudMin: -68.33,
+  longitudMax: -68.0,
 } as const;
 
 const RADIO_TERRESTRE_M = 6_371_008.8;
 const aRadianes = (grados: number): number => (grados * Math.PI) / 180;
 
-export class OutOfServiceAreaError extends DomainError {
+export class ErrorFueraDelAreaDeServicio extends ErrorDeDominio {
   constructor(latitude: number, longitude: number) {
     super(
-      'OUT_OF_SERVICE_AREA',
+      'FUERA_DEL_AREA_DE_SERVICIO',
       `La coordenada (${latitude}, ${longitude}) está fuera de La Paz y El Alto`,
     );
   }
@@ -22,38 +22,39 @@ export class OutOfServiceAreaError extends DomainError {
 
 // El `>=` y `<=` dan falso con NaN: una coordenada no numérica queda fuera del área.
 const dentroDelArea = (latitude: number, longitude: number): boolean =>
-  latitude >= SERVICE_AREA.minLatitude &&
-  latitude <= SERVICE_AREA.maxLatitude &&
-  longitude >= SERVICE_AREA.minLongitude &&
-  longitude <= SERVICE_AREA.maxLongitude;
+  latitude >= AREA_DE_SERVICIO.latitudMin &&
+  latitude <= AREA_DE_SERVICIO.latitudMax &&
+  longitude >= AREA_DE_SERVICIO.longitudMin &&
+  longitude <= AREA_DE_SERVICIO.longitudMax;
 
 /** Punto en WGS84 dentro del área de servicio. Inmutable. */
-export class GeoPoint {
+export class PuntoGeo {
   private constructor(
-    readonly latitude: number,
-    readonly longitude: number,
+    readonly latitud: number,
+    readonly longitud: number,
   ) {
     Object.freeze(this);
   }
 
-  /** @throws {OutOfServiceAreaError} si la coordenada cae fuera del rectángulo de servicio. */
-  static create(latitude: number, longitude: number): GeoPoint {
-    if (!dentroDelArea(latitude, longitude)) throw new OutOfServiceAreaError(latitude, longitude);
-    return new GeoPoint(latitude, longitude);
+  /** @throws {ErrorFueraDelAreaDeServicio} si la coordenada cae fuera del rectángulo de servicio. */
+  static crear(latitude: number, longitude: number): PuntoGeo {
+    if (!dentroDelArea(latitude, longitude))
+      throw new ErrorFueraDelAreaDeServicio(latitude, longitude);
+    return new PuntoGeo(latitude, longitude);
   }
 
-  equals(other: GeoPoint): boolean {
-    return this.latitude === other.latitude && this.longitude === other.longitude;
+  esIgualA(other: PuntoGeo): boolean {
+    return this.latitud === other.latitud && this.longitud === other.longitud;
   }
 
   /** Distancia en metros sobre la esfera (haversine). */
-  distanceTo(other: GeoPoint): number {
-    const dLat = aRadianes(other.latitude - this.latitude);
-    const dLon = aRadianes(other.longitude - this.longitude);
+  distanciaA(other: PuntoGeo): number {
+    const dLat = aRadianes(other.latitud - this.latitud);
+    const dLon = aRadianes(other.longitud - this.longitud);
     const a =
       Math.sin(dLat / 2) ** 2 +
-      Math.cos(aRadianes(this.latitude)) *
-        Math.cos(aRadianes(other.latitude)) *
+      Math.cos(aRadianes(this.latitud)) *
+        Math.cos(aRadianes(other.latitud)) *
         Math.sin(dLon / 2) ** 2;
     return 2 * RADIO_TERRESTRE_M * Math.asin(Math.min(1, Math.sqrt(a)));
   }

@@ -237,3 +237,29 @@ A pedido del autor, para leer el modelo de datos con más facilidad: las tablas 
 
 ### Verificación
 `pnpm lint`, `pnpm typecheck`, `pnpm depcruise`, `pnpm duplication` y `pnpm test` en verde: 562 pruebas, misma cobertura. `pnpm db:migrate` sobre la base local crea las 8 tablas y los 18 índices con los nombres nuevos.
+
+## [2026-10-12] — Código en español
+
+### Motivo
+A pedido del autor, para leer todo el proyecto en español: clases, funciones, variables, eventos y campos del contrato pasan a llamarse en español. Es el "pedido expreso" que la regla de idioma de `CLAUDE.md` exigía para renombrar el código anterior a la Fase 4.
+
+### Qué cambió
+- **Núcleo y plataforma:** `GeoPoint` → `PuntoGeo`, `DomainError` → `ErrorDeDominio`, `EventBus` → `BusDeEventos`, `ModuleDefinition` → `DefinicionDeModulo` (`name`, `register` → `nombre`, `registrar`), `AppConfig` → `ConfigApp`, `appendToOutbox` → `agregarASalida`, entre otros.
+- **Dominio de los módulos:** `Report` → `Reporte`, `User` → `Usuario`, `Vote` → `Voto`, `Reputation` → `Reputacion`, `ZoneSubscription` → `ZonaSuscrita`; sus métodos y propiedades (`findById` → `buscarPorId`, `expiresAt` → `caducaEn`, `markConfirmed` → `marcarConfirmado`) y sus repositorios.
+- **Eventos de integración:** `ReportCreated.v1` → `ReporteCreado.v1`, `ReportConfirmed` → `ReporteConfirmado`, `ReportResolved` → `ReporteResuelto`, `ReportExpired` → `ReporteCaducado`, `ReportRejected` → `ReporteRechazado`, `ReportDuplicateDetected` → `ReporteDuplicadoDetectado`, `VoteCast` → `VotoEmitido`.
+- **Campos de los eventos:** `reportId` → `idReporte`, `expiresAt` → `caducaEn`, `status` → `estado`, `reason` → `motivo`, `voterId` → `idVotante`, `value`/`weight` → `valor`/`peso`, `latitude`/`longitude` → `latitud`/`longitud`, y el sobre (`type`, `occurredAt`, `payload` → `tipo`, `ocurridoEn`, `contenido`). La audiencia pasa a `'publico'`/`'interno'` y la decisión de verificación a `NINGUNA`/`CONFIRMAR`/`EXTENDER`/`RESOLVER`.
+- **Resultado:** `Result` → `Resultado` con `exitoso`/`valor` en lugar de `ok`/`value`. Los códigos de error estables (`INVALID_TRANSITION` → `TRANSICION_INVALIDA`, etc.) también están en español.
+- **Aplicaciones:** `buildApp` → `construirApp`, `attachRealtime` → `adjuntarTiempoReal`; el evento `ping` lleva `{ secuencia, en }`; `MapView` → `VistaMapa`, `PingStatus` → `EstadoDePing`.
+- **Generador de módulos:** la plantilla y `sync-modules.mjs` producen `<modulo>Modulo: DefinicionDeModulo` (por ejemplo `reportsModulo`) y la lista `modulos`.
+
+### Qué no cambió
+- Los campos del contrato del SRS: `location`, `publicLocation` (`public_location`), `authorId` (`author_id`), `idempotencyKey` (`idempotency_key`).
+- Los nombres de los módulos, sus carpetas, `@gis/module-*` y `FEATURE_<MODULO>`; lo que imponen las librerías (Fastify, Socket.io, React, Leaflet, Drizzle, Zod); las variables de entorno; `/health`; los eventos `connect` y `disconnect` de Socket.io.
+- Los nombres de archivo (`report.ts`, `vote.ts`...), las tablas y las columnas.
+- Las entradas anteriores de esta bitácora y el `CHANGELOG.md` conservan los nombres antiguos.
+
+### Decisión sobre los eventos
+Los eventos se renombraron dentro de `v1` y no se creó una `v2`: todavía no hay datos en producción ni consumidores externos, así que no hay filas ni clientes que migrar. Una base local con filas en `eventos_salida` guarda el nombre anterior en `tipo`; basta vaciarla.
+
+### Verificación
+`pnpm lint`, `pnpm typecheck` y `pnpm test` en verde: 562 pruebas.

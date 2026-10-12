@@ -1,13 +1,13 @@
-import { createDb, migrateAll, platformMigrations, revertLast } from '@gis/platform';
+import { crearDb, migrarTodo, migracionesDePlataforma, revertirUltima } from '@gis/platform';
 import type { Db } from '@gis/platform';
 import { createTestDatabase, describeIntegration } from '@gis/testing';
 import type { TestDatabase } from '@gis/testing';
 import { sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import { afterAll, beforeAll, expect, it } from 'vitest';
-import { moderationModule } from '../index.js';
+import { moderationModulo } from '../index.js';
 
-const migraciones = moderationModule.migrations!;
+const migraciones = moderationModulo.migraciones!;
 const REPORTE = '6f1c2f0e-3b7a-4d2a-9c58-0a4f5b1d2e3f';
 const MODERADOR = '11111111-1111-4111-8111-111111111111';
 
@@ -26,8 +26,8 @@ describeIntegration('tabla acciones_moderacion', () => {
 
   beforeAll(async () => {
     base = await createTestDatabase();
-    db = createDb(base.pool);
-    await migrateAll(db, [platformMigrations, migraciones]);
+    db = crearDb(base.pool);
+    await migrarTodo(db, [migracionesDePlataforma, migraciones]);
   });
 
   afterAll(async () => {
@@ -57,10 +57,10 @@ describeIntegration('tabla acciones_moderacion', () => {
   });
 
   it('las migraciones se revierten y se vuelven a aplicar', async () => {
-    expect(await revertLast(db, migraciones)).toBe('0000_acciones_moderacion');
+    expect(await revertirUltima(db, migraciones)).toBe('0000_acciones_moderacion');
     expect(await existeLaTabla()).toBe(false);
 
-    await migrateAll(db, [platformMigrations, migraciones]);
+    await migrarTodo(db, [migracionesDePlataforma, migraciones]);
     expect(await existeLaTabla()).toBe(true);
   });
 });

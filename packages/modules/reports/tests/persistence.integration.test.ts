@@ -1,60 +1,60 @@
-import type { IntegrationEvent } from '@gis/contracts';
+import type { EventoDeIntegracion } from '@gis/contracts';
 import {
-  appendToOutbox,
-  createDb,
-  migrateAll,
-  platformMigrations,
-  revertLast,
+  agregarASalida,
+  crearDb,
+  migrarTodo,
+  migracionesDePlataforma,
+  revertirUltima,
 } from '@gis/platform';
 import type { Db } from '@gis/platform';
-import { categoryCode, GeoPoint, reportId, userId } from '@gis/shared-kernel';
+import { codigoCategoria, PuntoGeo, idReporte, idUsuario } from '@gis/shared-kernel';
 import { createTestDatabase, describeIntegration } from '@gis/testing';
 import type { TestDatabase } from '@gis/testing';
 import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, expect, it } from 'vitest';
-import { PgCategoryRepository } from '../adapters/category-repository.js';
-import { PostgisReportRepository } from '../adapters/report-repository.js';
-import { PgReportUnitOfWork } from '../adapters/report-unit-of-work.js';
-import { MVP_CATEGORIES } from '../domain/category.js';
-import type { Category } from '../domain/category.js';
-import { Report } from '../domain/report.js';
-import { reportsModule } from '../index.js';
+import { RepositorioCategoriasPg } from '../adapters/category-repository.js';
+import { RepositorioReportesPostgis } from '../adapters/report-repository.js';
+import { UnidadDeTrabajoReportePg } from '../adapters/report-unit-of-work.js';
+import { CATEGORIAS_MVP } from '../domain/category.js';
+import type { Categoria } from '../domain/category.js';
+import { Reporte } from '../domain/report.js';
+import { reportsModulo } from '../index.js';
 
-const migraciones = reportsModule.migrations!;
-const autor = userId('11111111-1111-4111-8111-111111111111');
+const migraciones = reportsModulo.migraciones!;
+const autor = idUsuario('11111111-1111-4111-8111-111111111111');
 const creado = new Date('2026-10-12T12:00:00.000Z');
 const minutosDespues = (minutos: number) => new Date(creado.getTime() + minutos * 60_000);
-const plazaMurillo = GeoPoint.create(-16.4955, -68.1336);
+const plazaMurillo = PuntoGeo.crear(-16.4955, -68.1336);
 
-const categoria = (codigo: string): Category => MVP_CATEGORIES.find((c) => c.code === codigo)!;
+const categoria = (codigo: string): Categoria => CATEGORIAS_MVP.find((c) => c.codigo === codigo)!;
 
 let secuencia = 0;
 /** Reporte nuevo con identificador y clave de idempotencia únicos. */
-function nuevoReporte(codigo = 'accidente'): Report {
+function nuevoReporte(codigo = 'accidente'): Reporte {
   secuencia += 1;
   const sufijo = String(secuencia).padStart(12, '0');
-  return Report.create({
-    id: reportId(`aaaaaaaa-aaaa-4aaa-8aaa-${sufijo}`),
-    category: categoria(codigo),
+  return Reporte.crear({
+    id: idReporte(`aaaaaaaa-aaaa-4aaa-8aaa-${sufijo}`),
+    categoria: categoria(codigo),
     authorId: autor,
     location: plazaMurillo,
     idempotencyKey: `clave-${sufijo}`,
-    now: creado,
+    ahora: creado,
   });
 }
 
-const evento = (id: string): IntegrationEvent => ({
+const evento = (id: string): EventoDeIntegracion => ({
   id,
-  type: 'ReportCreated',
+  tipo: 'ReporteCreado',
   version: 1,
-  occurredAt: creado.toISOString(),
-  payload: {},
+  ocurridoEn: creado.toISOString(),
+  contenido: {},
 });
 
 describeIntegration('persistencia de reports', () => {
   let base: TestDatabase;
   let db: Db;
-  let reportes: PostgisReportRepository;
+  let reportes: RepositorioReportesPostgis;
 
   const contar = async (tabla: string): Promise<number> => {
     const { rows } = await db.execute(sql.raw(`select count(*)::int as total from ${tabla}`));
@@ -63,9 +63,9 @@ describeIntegration('persistencia de reports', () => {
 
   beforeAll(async () => {
     base = await createTestDatabase();
-    db = createDb(base.pool);
-    await migrateAll(db, [platformMigrations, migraciones]);
-    reportes = new PostgisReportRepository(db);
+    db = crearDb(base.pool);
+    await migrarTodo(db, [migracionesDePlataforma, migraciones]);
+    reportes = new RepositorioReportesPostgis(db);
   });
 
   afterAll(async () => {
@@ -73,51 +73,51 @@ describeIntegration('persistencia de reports', () => {
   });
 
   it('la semilla coincide con el catálogo de categorías del dominio', async () => {
-    const guardadas = await new PgCategoryRepository(db).findAll();
+    const guardadas = await new RepositorioCategoriasPg(db).buscarTodas();
 
-    const porCodigo = [...MVP_CATEGORIES].sort((a, b) => a.code.localeCompare(b.code));
+    const porCodigo = [...CATEGORIAS_MVP].sort((a, b) => a.codigo.localeCompare(b.codigo));
     expect(guardadas).toEqual(porCodigo);
   });
 
   it('busca una categoría por su código', async () => {
-    const categorias = new PgCategoryRepository(db);
+    const categorias = new RepositorioCategoriasPg(db);
 
-    expect(await categorias.findByCode(categoryCode('robo'))).toEqual(categoria('robo'));
-    expect(await categorias.findByCode(categoryCode('inexistente'))).toBeNull();
+    expect(await categorias.buscarPorCodigo(codigoCategoria('robo'))).toEqual(categoria('robo'));
+    expect(await categorias.buscarPorCodigo(codigoCategoria('inexistente'))).toBeNull();
   });
 
   it('guarda un reporte y lo recupera sin pérdida', async () => {
     const reporte = nuevoReporte('bloqueo');
 
-    await reportes.save(reporte);
-    const recuperado = (await reportes.findById(reporte.id))!;
+    await reportes.guardar(reporte);
+    const recuperado = (await reportes.buscarPorId(reporte.id))!;
 
     expect(recuperado).toMatchObject({
       id: reporte.id,
-      categoryCode: 'bloqueo',
+      codigoCategoria: 'bloqueo',
       authorId: autor,
-      status: 'ACTIVO',
-      ttlMinutes: 360,
-      createdAt: creado,
-      expiresAt: minutosDespues(360),
-      extensions: 0,
-      rejectionReason: null,
+      estado: 'ACTIVO',
+      ttlMinutos: 360,
+      creadoEn: creado,
+      caducaEn: minutosDespues(360),
+      extensiones: 0,
+      motivoRechazo: null,
       idempotencyKey: reporte.idempotencyKey,
     });
-    expect(recuperado.location.equals(plazaMurillo)).toBe(true);
-    expect(recuperado.publicLocation.equals(plazaMurillo)).toBe(true);
-    expect(recuperado.pullEvents()).toEqual([]);
+    expect(recuperado.location.esIgualA(plazaMurillo)).toBe(true);
+    expect(recuperado.publicLocation.esIgualA(plazaMurillo)).toBe(true);
+    expect(recuperado.extraerEventos()).toEqual([]);
   });
 
   it('RNF-14: guarda por separado la ubicación real y la pública que decidió el dominio', async () => {
     const robo = nuevoReporte('robo');
 
-    await reportes.save(robo);
-    const recuperado = (await reportes.findById(robo.id))!;
+    await reportes.guardar(robo);
+    const recuperado = (await reportes.buscarPorId(robo.id))!;
 
-    expect(recuperado.location.equals(plazaMurillo)).toBe(true);
-    expect(recuperado.publicLocation.equals(robo.publicLocation)).toBe(true);
-    expect(recuperado.publicLocation.equals(plazaMurillo)).toBe(false);
+    expect(recuperado.location.esIgualA(plazaMurillo)).toBe(true);
+    expect(recuperado.publicLocation.esIgualA(robo.publicLocation)).toBe(true);
+    expect(recuperado.publicLocation.esIgualA(plazaMurillo)).toBe(false);
   });
 
   it('las ubicaciones se guardan como puntos WGS84', async () => {
@@ -131,46 +131,48 @@ describeIntegration('persistencia de reports', () => {
 
   it('guarda cada cambio del ciclo de vida', async () => {
     const reporte = nuevoReporte('accidente');
-    await reportes.save(reporte);
+    await reportes.guardar(reporte);
 
-    reporte.markConfirmed(minutosDespues(10));
-    await reportes.save(reporte);
-    expect(await reportes.findById(reporte.id)).toMatchObject({
-      status: 'CONFIRMADO',
-      extensions: 1,
-      expiresAt: minutosDespues(270),
+    reporte.marcarConfirmado(minutosDespues(10));
+    await reportes.guardar(reporte);
+    expect(await reportes.buscarPorId(reporte.id)).toMatchObject({
+      estado: 'CONFIRMADO',
+      extensiones: 1,
+      caducaEn: minutosDespues(270),
     });
 
-    reporte.reject('MODERACION', minutosDespues(20));
-    await reportes.save(reporte);
-    expect(await reportes.findById(reporte.id)).toMatchObject({
-      status: 'RECHAZADO',
-      rejectionReason: 'MODERACION',
+    reporte.rechazar('MODERACION', minutosDespues(20));
+    await reportes.guardar(reporte);
+    expect(await reportes.buscarPorId(reporte.id)).toMatchObject({
+      estado: 'RECHAZADO',
+      motivoRechazo: 'MODERACION',
     });
   });
 
   it('HU-05: encuentra un reporte por su clave de idempotencia', async () => {
     const reporte = nuevoReporte();
-    await reportes.save(reporte);
+    await reportes.guardar(reporte);
 
-    expect((await reportes.findByIdempotencyKey(reporte.idempotencyKey))?.id).toBe(reporte.id);
-    expect(await reportes.findByIdempotencyKey('clave-desconocida')).toBeNull();
+    expect((await reportes.buscarPorClaveDeIdempotencia(reporte.idempotencyKey))?.id).toBe(
+      reporte.id,
+    );
+    expect(await reportes.buscarPorClaveDeIdempotencia('clave-desconocida')).toBeNull();
   });
 
   it('HU-05: la base de datos rechaza una clave de idempotencia repetida', async () => {
     const original = nuevoReporte();
-    await reportes.save(original);
-    const repetido = Report.create({
-      id: reportId('bbbbbbbb-bbbb-4bbb-8bbb-000000000001'),
-      category: categoria('accidente'),
+    await reportes.guardar(original);
+    const repetido = Reporte.crear({
+      id: idReporte('bbbbbbbb-bbbb-4bbb-8bbb-000000000001'),
+      categoria: categoria('accidente'),
       authorId: autor,
       location: plazaMurillo,
       idempotencyKey: original.idempotencyKey,
-      now: creado,
+      ahora: creado,
     });
 
-    await expect(reportes.save(repetido)).rejects.toThrow();
-    expect(await reportes.findById(repetido.id)).toBeNull();
+    await expect(reportes.guardar(repetido)).rejects.toThrow();
+    expect(await reportes.buscarPorId(repetido.id)).toBeNull();
   });
 
   it.each([
@@ -205,25 +207,25 @@ describeIntegration('persistencia de reports', () => {
     const reporte = nuevoReporte();
     const antes = await contar('eventos_salida');
 
-    await new PgReportUnitOfWork(db).commit(reporte, [
+    await new UnidadDeTrabajoReportePg(db).confirmar(reporte, [
       evento('cccccccc-cccc-4ccc-8ccc-000000000001'),
     ]);
 
-    expect(await reportes.findById(reporte.id)).not.toBeNull();
+    expect(await reportes.buscarPorId(reporte.id)).not.toBeNull();
     expect(await contar('eventos_salida')).toBe(antes + 1);
   });
 
   it('atomicidad: si falla la escritura del evento, el reporte tampoco se guarda', async () => {
     const idRepetido = 'cccccccc-cccc-4ccc-8ccc-000000000002';
-    await appendToOutbox(db, [evento(idRepetido)]);
+    await agregarASalida(db, [evento(idRepetido)]);
     const reporte = nuevoReporte();
     const antes = await contar('eventos_salida');
 
     await expect(
-      new PgReportUnitOfWork(db).commit(reporte, [evento(idRepetido)]),
+      new UnidadDeTrabajoReportePg(db).confirmar(reporte, [evento(idRepetido)]),
     ).rejects.toThrow();
 
-    expect(await reportes.findById(reporte.id)).toBeNull();
+    expect(await reportes.buscarPorId(reporte.id)).toBeNull();
     expect(await contar('eventos_salida')).toBe(antes);
   });
 });
@@ -242,7 +244,7 @@ describeIntegration('migraciones de reports', () => {
 
   beforeAll(async () => {
     base = await createTestDatabase();
-    db = createDb(base.pool);
+    db = crearDb(base.pool);
   });
 
   afterAll(async () => {
@@ -250,20 +252,20 @@ describeIntegration('migraciones de reports', () => {
   });
 
   it('se aplican sobre una base vacía y se revierten por completo', async () => {
-    await migrateAll(db, [platformMigrations, migraciones]);
+    await migrarTodo(db, [migracionesDePlataforma, migraciones]);
     expect(await tablas()).toEqual(['categorias', 'reportes']);
 
-    expect(await revertLast(db, migraciones)).toBe('0001_semilla_categorias');
-    expect(await new PgCategoryRepository(db).findAll()).toEqual([]);
+    expect(await revertirUltima(db, migraciones)).toBe('0001_semilla_categorias');
+    expect(await new RepositorioCategoriasPg(db).buscarTodas()).toEqual([]);
 
-    expect(await revertLast(db, migraciones)).toBe('0000_categorias_reportes');
+    expect(await revertirUltima(db, migraciones)).toBe('0000_categorias_reportes');
     expect(await tablas()).toEqual([]);
   });
 
   it('tras revertir, aplicarlas de nuevo deja el mismo esquema y la semilla', async () => {
-    await migrateAll(db, [platformMigrations, migraciones]);
+    await migrarTodo(db, [migracionesDePlataforma, migraciones]);
 
     expect(await tablas()).toEqual(['categorias', 'reportes']);
-    expect(await new PgCategoryRepository(db).findAll()).toHaveLength(5);
+    expect(await new RepositorioCategoriasPg(db).buscarTodas()).toHaveLength(5);
   });
 });

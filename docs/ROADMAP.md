@@ -57,8 +57,8 @@ El núcleo no se divide por capas sino por **módulos de funcionalidad**, cada u
 
 **Reglas de aislamiento (verificadas por dependency-cruiser en cada PR):**
 
-1. Un módulo no importa código de otro módulo. Solo puede importar `packages/shared-kernel` (tipos mínimos comunes: `GeoPoint`, IDs, `DomainEvent`) y `packages/contracts`.
-2. Los módulos se comunican por **eventos de integración** (`ReportCreated`, `ReportConfirmed`…) a través de un bus de eventos. Quien emite no sabe quién escucha.
+1. Un módulo no importa código de otro módulo. Solo puede importar `packages/shared-kernel` (tipos mínimos comunes: `PuntoGeo`, IDs, `EventoDeDominio`) y `packages/contracts`.
+2. Los módulos se comunican por **eventos de integración** (`ReporteCreado`, `ReporteConfirmado`…) a través de un bus de eventos. Quien emite no sabe quién escucha.
 3. Cada módulo es dueño de sus tablas y de sus migraciones. Ningún módulo consulta las tablas de otro; si necesita un dato, lo recibe en un evento o lo pide por un puerto propio que la raíz de composición conecta a la interfaz pública del módulo dueño (ADR-001).
 4. Cada módulo expone un único punto de entrada `index.ts` con su función `register(app, bus, config)`. Solo la raíz de composición lo llama.
 5. Cada módulo opcional tiene un interruptor de funcionalidad (`FEATURE_HEATMAP=false`). Apagado, no registra rutas, eventos ni tareas.
@@ -158,8 +158,8 @@ Resultado: un esqueleto que compila, se prueba y se despliega, con la arquitectu
    1. `apps/api`: raíz de composición del servidor (Fastify + Socket.io). Solo registra módulos; no contiene lógica.
    2. `apps/web`: PWA React + Vite.
    3. `apps/bot`: bot de Telegram.
-   4. `packages/shared-kernel`: lo mínimo común a todos los módulos: `GeoPoint`, IDs tipados, `DomainEvent`, `Result`, errores base, puerto `Clock`. Sin dependencias.
-   5. `packages/event-bus`: puerto `EventBus` y su implementación en memoria (la versión con outbox llega en la Fase 7).
+   4. `packages/shared-kernel`: lo mínimo común a todos los módulos: `PuntoGeo`, IDs tipados, `EventoDeDominio`, `Result`, errores base, puerto `Clock`. Sin dependencias.
+   5. `packages/event-bus`: puerto `BusDeEventos` y su implementación en memoria (la versión con outbox llega en la Fase 7).
    6. `packages/contracts`: esquemas Zod de la API y de los eventos de integración, versionados.
    7. `packages/platform`: infraestructura compartida sin reglas de negocio: pool de PostgreSQL, logger, carga de configuración, interruptores de funcionalidad.
    8. `packages/modules/<nombre>`: un paquete por módulo de la tabla de Arquitectura, cada uno con `domain/`, `application/`, `adapters/`, `migrations/`, `tests/` e `index.ts`.
@@ -208,29 +208,29 @@ Resultado: las reglas de negocio de cada módulo en TypeScript puro, dentro de s
 **Codificación**
 
 1. `shared-kernel`: objetos de valor inmutables con validación en el constructor:
-   1. `GeoPoint` (latitud y longitud dentro del rectángulo envolvente de La Paz y El Alto; fuera de él, error).
-   2. IDs tipados: `ReportId`, `UserId`, `CategoryCode`.
-   3. Clase base `DomainEvent` con `id`, `type`, `version`, `occurredAt`.
-2. `contracts`: definir con Zod y versionar los **eventos de integración** entre módulos: `ReportCreated.v1`, `ReportConfirmed.v1`, `ReportResolved.v1`, `ReportExpired.v1`, `ReportRejected.v1`, `ReportDuplicateDetected.v1`, `VoteCast.v1`. Un cambio incompatible crea `v2`; nunca se modifica un evento publicado.
-3. Módulo `identity`: entidad `User` (identificador anónimo de dispositivo, rol, Telegram ID opcional).
+   1. `PuntoGeo` (latitud y longitud dentro del rectángulo envolvente de La Paz y El Alto; fuera de él, error).
+   2. IDs tipados: `IdReporte`, `IdUsuario`, `CodigoCategoria`.
+   3. Clase base `EventoDeDominio` con `id`, `tipo`, `version`, `ocurridoEn`.
+2. `contracts`: definir con Zod y versionar los **eventos de integración** entre módulos: `ReporteCreado.v1`, `ReporteConfirmado.v1`, `ReporteResuelto.v1`, `ReporteCaducado.v1`, `ReporteRechazado.v1`, `ReporteDuplicadoDetectado.v1`, `VotoEmitido.v1`. Un cambio incompatible crea `v2`; nunca se modifica un evento publicado.
+3. Módulo `identity`: entidad `Usuario` (identificador anónimo de dispositivo, rol, Telegram ID opcional).
 4. Módulo `reports`:
-   1. Entidad `Category`: código, nombre, TTL, radio de deduplicación, indicador de sensible.
-   2. Agregado raíz `Report` con máquina de estados explícita: `ACTIVO → CONFIRMADO`, `ACTIVO|CONFIRMADO → RESUELTO | CADUCADO | RECHAZADO`. Toda transición inválida lanza un error de dominio.
-   3. Métodos: `markConfirmed()`, `markResolved()`, `expire(now)`, `reject(motivo)`, `extendExpiration()`.
-   4. Políticas puras: `ExpirationPolicy` (caducidad desde el TTL) y `PrivacyPolicy` (redondeo de ubicación en categorías sensibles).
-   5. Puertos: `ReportRepository`, `CategoryRepository`, `IdGenerator`, `AuthorStanding` (si el autor está silenciado).
+   1. Entidad `Categoria`: código, nombre, TTL, radio de deduplicación, indicador de sensible.
+   2. Agregado raíz `Reporte` con máquina de estados explícita: `ACTIVO → CONFIRMADO`, `ACTIVO|CONFIRMADO → RESUELTO | CADUCADO | RECHAZADO`. Toda transición inválida lanza un error de dominio.
+   3. Métodos: `marcarConfirmado()`, `marcarResuelto()`, `caducar(ahora)`, `rechazar(motivo)`, `extenderCaducidad()`.
+   4. Políticas puras: `PoliticaDeCaducidad` (caducidad desde el TTL) y `PoliticaDePrivacidad` (redondeo de ubicación en categorías sensibles).
+   5. Puertos: `RepositorioDeReportes`, `RepositorioDeCategorias`, `GeneradorDeId`, `ReputacionDelAutor` (si el autor está silenciado).
 5. Módulo `verification`:
-   1. Entidad `Vote` (un voto por usuario y reporte; el autor no vota su propio reporte) y entidad `Reputation`.
-   2. `VerificationPolicy`: decide, según votos ponderados por reputación, si un reporte debe confirmarse o resolverse.
-   3. `ReputationPolicy`: sube la reputación del autor cuando su reporte se confirma y la baja cuando se rechaza.
-   4. No modifica reportes directamente: emite `VoteCast` y una decisión; el módulo `reports` escucha y aplica la transición.
-   5. Puertos: `VoteRepository`, `ReputationRepository`, y un puerto propio `ReportLookup` para saber el autor, el estado y la ubicación de un reporte; su adaptador lo conecta la raíz de composición a la interfaz pública de `reports`.
+   1. Entidad `Voto` (un voto por usuario y reporte; el autor no vota su propio reporte) y entidad `Reputacion`.
+   2. `PoliticaDeVerificacion`: decide, según votos ponderados por reputación, si un reporte debe confirmarse o resolverse.
+   3. `PoliticaDeReputacion`: sube la reputación del autor cuando su reporte se confirma y la baja cuando se rechaza.
+   4. No modifica reportes directamente: emite `VotoEmitido` y una decisión; el módulo `reports` escucha y aplica la transición.
+   5. Puertos: `RepositorioDeVotos`, `RepositorioDeReputaciones`, y un puerto propio `ConsultaDeReporte` para saber el autor, el estado y la ubicación de un reporte; su adaptador lo conecta la raíz de composición a la interfaz pública de `reports`.
 6. Para cada módulo, escribir su `README.md`: responsabilidad, eventos que emite, eventos que escucha, interfaz pública y tablas propias. Es el contrato del módulo.
 
 **Pruebas**
 
 1. Pruebas unitarias de cada transición válida e inválida de la máquina de estados.
-2. Pruebas basadas en propiedades con fast-check para `GeoPoint`, `VerificationPolicy` y `ExpirationPolicy` (por ejemplo: la caducidad nunca es anterior a la creación).
+2. Pruebas basadas en propiedades con fast-check para `PuntoGeo`, `PoliticaDeVerificacion` y `PoliticaDeCaducidad` (por ejemplo: la caducidad nunca es anterior a la creación).
 3. Cada criterio de aceptación de la Fase 0 que sea una regla de negocio tiene al menos una prueba con su ID en el nombre (`HU-03: ...`).
 
 **Criterio de salida**
@@ -288,16 +288,16 @@ Resultado: todas las consultas espaciales implementadas, indexadas y medidas con
 
 **Codificación**
 
-1. Añadir al puerto `ReportRepository` los métodos espaciales y luego implementarlos en el adaptador PostGIS:
+1. Añadir al puerto `RepositorioDeReportes` los métodos espaciales y luego implementarlos en el adaptador PostGIS:
    1. `findInViewport(bbox, categorias, estados)`: `ubicacion_publica && ST_MakeEnvelope(...)` para usar el índice GiST.
    2. `findNearby(punto, radio_m)`: `ST_DWithin(location::geography, punto::geography, radio_m)`.
    3. `findDuplicate(categoria, punto, ventana)`: mismo tipo, dentro de `radio_duplicado_m` y activo. Si existe, el nuevo reporte se convierte en confirmación del existente.
    4. `findExpired(now)`: reportes activos con `caduca_en < now`, en lotes.
 2. Puerto y adaptador `HeatmapQuery.aggregate(bbox, tamaño_celda, desde, hasta, categorias)`: agrupar con `ST_SnapToGrid` y devolver solo celdas con al menos 3 reportes (umbral de anonimato y antiestigmatización).
-3. Puerto y adaptador `SubscriptionRepository.matchSubscribers(punto, categoria)`: suscripciones cuyo círculo contiene el punto (`ST_DWithin` contra `centro` y `radio_m`).
-4. Función pura en el dominio `cellOf(GeoPoint, precision)`: codificación geohash propia (sin librería) para agrupar clientes de WebSocket por celda en la Fase 7. Precisión por defecto: 6.
+3. Puerto y adaptador `RepositorioDeSuscripciones.matchSubscribers(punto, categoria)`: suscripciones cuyo círculo contiene el punto (`ST_DWithin` contra `centro` y `radio_m`).
+4. Función pura en el dominio `cellOf(PuntoGeo, precision)`: codificación geohash propia (sin librería) para agrupar clientes de WebSocket por celda en la Fase 7. Precisión por defecto: 6.
 5. Función pura `cellsCovering(bbox)`: lista de celdas que cubren el área visible del mapa.
-6. Guardar en `ubicacion_publica` la ubicación que entrega `PrivacyPolicy` del dominio (calculada en la Fase 2 con una cuadrícula UTM 19 Sur). `ST_SnapToGrid` se usa solo en el mapa de calor.
+6. Guardar en `ubicacion_publica` la ubicación que entrega `PoliticaDePrivacidad` del dominio (calculada en la Fase 2 con una cuadrícula UTM 19 Sur). `ST_SnapToGrid` se usa solo en el mapa de calor.
 
 **Pruebas**
 
@@ -320,13 +320,13 @@ Resultado: la lógica completa de la aplicación en la carpeta `application/` de
 **Codificación** (cada caso de uso: una clase con un método `execute(input)`, entrada validada con Zod, dependencias inyectadas por constructor como puertos)
 
 1. `RegisterDevice`: crea o recupera un usuario anónimo a partir del hash del dispositivo.
-2. `CreateReport`: valida la categoría y el `GeoPoint` → consulta `findDuplicate` → si hay duplicado, no crea el reporte y emite `ReportDuplicateDetected`, que `verification` registra como confirmación; si no, crea el agregado, aplica `PrivacyPolicy` y `ExpirationPolicy`, y guarda reporte y evento en una transacción. Idempotente por `idempotency_key`.
-3. `ConfirmReport` y `DenyReport` ("¿Sigue ahí?"): registran el voto ponderado, aplican `VerificationPolicy` y `ReputationPolicy`, y emiten el evento correspondiente.
+2. `CreateReport`: valida la categoría y el `PuntoGeo` → consulta `findDuplicate` → si hay duplicado, no crea el reporte y emite `ReporteDuplicadoDetectado`, que `verification` registra como confirmación; si no, crea el agregado, aplica `PoliticaDePrivacidad` y `PoliticaDeCaducidad`, y guarda reporte y evento en una transacción. Idempotente por `idempotency_key`.
+3. `ConfirmReport` y `DenyReport` ("¿Sigue ahí?"): registran el voto ponderado, aplican `PoliticaDeVerificacion` y `PoliticaDeReputacion`, y emiten el evento correspondiente.
 4. `ListReportsInViewport`: devuelve reportes activos y confirmados del área visible.
 5. `GetHeatmap`: devuelve celdas agregadas para un rango de fechas.
 6. `SubscribeZone` y `UnsubscribeZone`: con límite de zonas por usuario.
-7. `ExpireReports`: procesa en lotes los reportes vencidos y emite `ReportExpired`.
-8. `NotifySubscribers`: ante `ReportCreated` o `ReportConfirmed`, busca suscriptores con `matchSubscribers` y envía por `NotificationSender`.
+7. `ExpireReports`: procesa en lotes los reportes vencidos y emite `ReporteCaducado`.
+8. `NotifySubscribers`: ante `ReporteCreado` o `ReporteConfirmado`, busca suscriptores con `matchSubscribers` y envía por `NotificationSender`.
 9. `RejectReport` (moderador): cambia el estado, registra la acción y ajusta la reputación.
 10. Puerto `RateLimiter` y su uso en `CreateReport` y en los votos (límite por usuario y por ventana de tiempo).
 11. Errores de aplicación tipados (`NotFound`, `Forbidden`, `Conflict`, `ValidationFailed`, `RateLimited`) que los adaptadores traducen a su protocolo.
@@ -386,7 +386,7 @@ Resultado: cada cambio de un reporte llega a los clientes que miran esa zona en 
 
 **Codificación**
 
-1. Despachador de outbox (`OutboxDispatcher`): lee `eventos_salida` sin publicar con `SELECT ... FOR UPDATE SKIP LOCKED`, los publica y marca `publicado_en`. Es la implementación definitiva del puerto EventBus: entrega cada evento, al menos una vez, a Socket.io y a los manejadores de los demás módulos; cada evento lleva su `id` para que el cliente descarte duplicados.
+1. Despachador de outbox (`OutboxDispatcher`): lee `eventos_salida` sin publicar con `SELECT ... FOR UPDATE SKIP LOCKED`, los publica y marca `publicado_en`. Es la implementación definitiva del puerto BusDeEventos: entrega cada evento, al menos una vez, a Socket.io y a los manejadores de los demás módulos; cada evento lleva su `id` para que el cliente descarte duplicados.
 2. Adaptador `SocketIoEventPublisher` que implementa `EventPublisher`: emite cada evento a la sala `cell:<geohash>` de la celda del reporte.
 3. Protocolo del cliente: al mover el mapa, el cliente envía `viewport:update` con su bbox; el servidor calcula `cellsCovering(bbox)` y actualiza las salas del socket (con un máximo de celdas por cliente).
 4. Autenticación del handshake de Socket.io con el mismo JWT de la API.
@@ -497,7 +497,7 @@ Resultado: las funciones Deseables. Cada bloque se conecta por un puerto ya exis
 1. Primero, un adaptador `RuleBasedClassifier` que implementa `ClassifierPort`: lista de palabras de spam, enlaces, longitud anormal, frecuencia del autor. Va a producción primero.
 2. Dejar listo el script que exporta las descripciones moderadas como conjunto etiquetado. El paso 3 de este bloque se ejecuta en la Fase 13, cuando el piloto haya generado datos.
 3. Con datos suficientes: servicio `services/classifier` en Python FastAPI con scikit-learn (TF-IDF + regresión logística) o un modelo BETO ajustado; adaptador `HttpClassifier` que implementa el mismo puerto.
-4. El reporte nunca espera al clasificador: se clasifica de forma asíncrona tras `ReportCreated`; si el servicio falla, se usa el clasificador por reglas.
+4. El reporte nunca espera al clasificador: se clasifica de forma asíncrona tras `ReporteCreado`; si el servicio falla, se usa el clasificador por reglas.
 
 **Pruebas**
 

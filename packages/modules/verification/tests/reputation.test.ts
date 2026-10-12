@@ -1,120 +1,129 @@
 import { describe, expect, it } from 'vitest';
-import { Reputation, REPUTATION } from '../domain/reputation.js';
-import { REPUTATION_ADJUSTMENTS, ReputationPolicy } from '../domain/reputation-policy.js';
+import { Reputacion, REPUTACION } from '../domain/reputation.js';
+import { AJUSTES_DE_REPUTACION, PoliticaDeReputacion } from '../domain/reputation-policy.js';
 import { ahora, diasDespues, reputacion, usuario, voto } from './fixtures.js';
 
 const alguien = usuario(1);
 
-describe('Reputation', () => {
+describe('Reputacion', () => {
   it('todo usuario nuevo empieza con reputación 1.0', () => {
-    expect(Reputation.initial(alguien)).toMatchObject({
-      userId: alguien,
-      score: 1.0,
-      lastPenaltyAt: null,
-      isSilenced: false,
+    expect(Reputacion.inicial(alguien)).toMatchObject({
+      idUsuario: alguien,
+      puntaje: 1.0,
+      ultimaPenalizacionEn: null,
+      estaSilenciado: false,
     });
   });
 
   it('HU-03: el autor de un reporte confirmado gana 0.20', () => {
-    const autor = Reputation.initial(alguien);
+    const autor = Reputacion.inicial(alguien);
 
-    autor.reward(REPUTATION_ADJUSTMENTS.reportConfirmed);
+    autor.premiar(AJUSTES_DE_REPUTACION.reporteConfirmado);
 
-    expect(autor.score).toBe(1.2);
+    expect(autor.puntaje).toBe(1.2);
   });
 
   it('HU-03: un voto acertado suma 0.05 sin acumular error de coma flotante', () => {
-    const votante = Reputation.initial(alguien);
+    const votante = Reputacion.inicial(alguien);
 
-    for (let i = 0; i < 3; i += 1) votante.reward(REPUTATION_ADJUSTMENTS.accurateVote);
+    for (let i = 0; i < 3; i += 1) votante.premiar(AJUSTES_DE_REPUTACION.votoAcertado);
 
-    expect(votante.score).toBe(1.15);
+    expect(votante.puntaje).toBe(1.15);
   });
 
   it('la reputación no supera 5.0', () => {
     const veterano = reputacion(alguien, 4.9);
 
-    veterano.reward(0.2);
+    veterano.premiar(0.2);
 
-    expect(veterano.score).toBe(REPUTATION.max);
+    expect(veterano.puntaje).toBe(REPUTACION.maximo);
   });
 
   it('HU-12: un rechazo por moderación resta 0.50 y anota la fecha', () => {
-    const autor = Reputation.initial(alguien);
+    const autor = Reputacion.inicial(alguien);
 
-    autor.penalize(ReputationPolicy.penaltyForRejection('MODERACION'), ahora);
+    autor.penalizar(PoliticaDeReputacion.penalizacionPorRechazo('MODERACION'), ahora);
 
-    expect(autor).toMatchObject({ score: 0.5, lastPenaltyAt: ahora, isSilenced: false });
+    expect(autor).toMatchObject({
+      puntaje: 0.5,
+      ultimaPenalizacionEn: ahora,
+      estaSilenciado: false,
+    });
   });
 
   it('HU-12: dos rechazos silencian a un usuario nuevo', () => {
-    const autor = Reputation.initial(alguien);
+    const autor = Reputacion.inicial(alguien);
 
-    autor.penalize(0.5, ahora);
-    autor.penalize(0.5, ahora);
+    autor.penalizar(0.5, ahora);
+    autor.penalizar(0.5, ahora);
 
-    expect(autor).toMatchObject({ score: 0, isSilenced: true });
+    expect(autor).toMatchObject({ puntaje: 0, estaSilenciado: true });
   });
 
   it('la reputación no baja de 0.0', () => {
     const autor = reputacion(alguien, 0.2);
 
-    autor.penalize(0.5, ahora);
+    autor.penalizar(0.5, ahora);
 
-    expect(autor.score).toBe(REPUTATION.min);
+    expect(autor.puntaje).toBe(REPUTACION.minimo);
   });
 
   it('el rechazo automático por autor silenciado no penaliza de nuevo', () => {
-    expect(ReputationPolicy.penaltyForRejection('AUTOR_SILENCIADO')).toBe(0);
+    expect(PoliticaDeReputacion.penalizacionPorRechazo('AUTOR_SILENCIADO')).toBe(0);
   });
 
   it('un usuario silenciado no gana reputación por aciertos', () => {
     const silenciado = reputacion(alguien, 0);
 
-    silenciado.reward(0.2);
+    silenciado.premiar(0.2);
 
-    expect(silenciado).toMatchObject({ score: 0, isSilenced: true });
+    expect(silenciado).toMatchObject({ puntaje: 0, estaSilenciado: true });
   });
 });
 
-describe('Reputation: recuperación de un usuario silenciado', () => {
-  const silenciado = () => Reputation.restore({ userId: alguien, score: 0, lastPenaltyAt: ahora });
+describe('Reputacion: recuperación de un usuario silenciado', () => {
+  const silenciado = () =>
+    Reputacion.restaurar({ idUsuario: alguien, puntaje: 0, ultimaPenalizacionEn: ahora });
 
   it('vuelve a 0.5 a los 30 días de su última penalización', () => {
     const usuarioSilenciado = silenciado();
 
-    expect(usuarioSilenciado.recoverIfDue(diasDespues(30))).toBe(true);
-    expect(usuarioSilenciado).toMatchObject({ score: 0.5, isSilenced: false });
+    expect(usuarioSilenciado.recuperarSiCorresponde(diasDespues(30))).toBe(true);
+    expect(usuarioSilenciado).toMatchObject({ puntaje: 0.5, estaSilenciado: false });
   });
 
   it('a los 29 días sigue silenciado', () => {
     const usuarioSilenciado = silenciado();
 
-    expect(usuarioSilenciado.recoverIfDue(diasDespues(29))).toBe(false);
-    expect(usuarioSilenciado.isSilenced).toBe(true);
+    expect(usuarioSilenciado.recuperarSiCorresponde(diasDespues(29))).toBe(false);
+    expect(usuarioSilenciado.estaSilenciado).toBe(true);
   });
 
   it('una nueva penalización reinicia el plazo', () => {
     const usuarioSilenciado = silenciado();
-    usuarioSilenciado.penalize(0.5, diasDespues(20));
+    usuarioSilenciado.penalizar(0.5, diasDespues(20));
 
-    expect(usuarioSilenciado.recoverIfDue(diasDespues(40))).toBe(false);
-    expect(usuarioSilenciado.recoverIfDue(diasDespues(50))).toBe(true);
+    expect(usuarioSilenciado.recuperarSiCorresponde(diasDespues(40))).toBe(false);
+    expect(usuarioSilenciado.recuperarSiCorresponde(diasDespues(50))).toBe(true);
   });
 
   it('no afecta a quien no está silenciado', () => {
-    const penalizado = Reputation.restore({ userId: alguien, score: 0.5, lastPenaltyAt: ahora });
+    const penalizado = Reputacion.restaurar({
+      idUsuario: alguien,
+      puntaje: 0.5,
+      ultimaPenalizacionEn: ahora,
+    });
 
-    expect(penalizado.recoverIfDue(diasDespues(60))).toBe(false);
-    expect(penalizado.score).toBe(0.5);
+    expect(penalizado.recuperarSiCorresponde(diasDespues(60))).toBe(false);
+    expect(penalizado.puntaje).toBe(0.5);
   });
 
   it('no recupera a un silenciado sin fecha de penalización registrada', () => {
-    expect(reputacion(alguien, 0).recoverIfDue(diasDespues(60))).toBe(false);
+    expect(reputacion(alguien, 0).recuperarSiCorresponde(diasDespues(60))).toBe(false);
   });
 });
 
-describe('ReputationPolicy: votos acertados', () => {
+describe('PoliticaDeReputacion: votos acertados', () => {
   const votos = [
     voto(1, 'CONFIRMACION'),
     voto(2, 'CONFIRMACION'),
@@ -124,10 +133,13 @@ describe('ReputationPolicy: votos acertados', () => {
   ];
 
   it('HU-03: si el reporte se confirma, aciertan quienes confirmaron', () => {
-    expect(ReputationPolicy.accurateVoters(votos, 'CONFIRMADO')).toEqual([usuario(1), usuario(2)]);
+    expect(PoliticaDeReputacion.votantesAcertados(votos, 'CONFIRMADO')).toEqual([
+      usuario(1),
+      usuario(2),
+    ]);
   });
 
   it('HU-03: si el reporte se resuelve, aciertan quienes negaron', () => {
-    expect(ReputationPolicy.accurateVoters(votos, 'RESUELTO')).toEqual([usuario(3)]);
+    expect(PoliticaDeReputacion.votantesAcertados(votos, 'RESUELTO')).toEqual([usuario(3)]);
   });
 });

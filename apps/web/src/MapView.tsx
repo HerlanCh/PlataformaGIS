@@ -6,7 +6,7 @@ import { useEffect, useRef } from 'react';
 export const CENTRO_LA_PAZ: [number, number] = [-16.4955, -68.1336];
 const ZOOM_INICIAL = 13;
 
-export function MapView() {
+export function VistaMapa() {
   const contenedor = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
-  integrationEvents,
-  reportCreatedV1,
-  reportDuplicateDetectedV1,
-  reportRejectedV1,
-  voteCastV1,
+  eventosDeIntegracion,
+  reporteCreadoV1,
+  reporteDuplicadoDetectadoV1,
+  reporteRechazadoV1,
+  votoEmitidoV1,
 } from './index.js';
 
 const ID = '6f1c2f0e-3b7a-4d2a-9c58-0a4f5b1d2e3f';
-const sobre = { id: ID, occurredAt: '2026-10-11T12:00:00Z' };
+const sobre = { id: ID, ocurridoEn: '2026-10-11T12:00:00Z' };
 
 /** Nombres de todos los campos de un esquema, incluidos los anidados. */
 function campos(esquema: z.ZodType): string[] {
@@ -22,91 +22,91 @@ function campos(esquema: z.ZodType): string[] {
 
 describe('catálogo de eventos de integración', () => {
   it('contiene los siete eventos de la Fase 2 con clave única', () => {
-    const claves = integrationEvents.map((evento) => evento.key);
+    const claves = eventosDeIntegracion.map((evento) => evento.clave);
 
     expect(claves).toEqual([
-      'ReportCreated.v1',
-      'ReportConfirmed.v1',
-      'ReportResolved.v1',
-      'ReportExpired.v1',
-      'ReportRejected.v1',
-      'ReportDuplicateDetected.v1',
-      'VoteCast.v1',
+      'ReporteCreado.v1',
+      'ReporteConfirmado.v1',
+      'ReporteResuelto.v1',
+      'ReporteCaducado.v1',
+      'ReporteRechazado.v1',
+      'ReporteDuplicadoDetectado.v1',
+      'VotoEmitido.v1',
     ]);
     expect(new Set(claves).size).toBe(claves.length);
   });
 
   it('RNF-14: ningún evento público lleva ubicación real, autor ni otro usuario', () => {
-    const prohibidos = ['location', 'authorId', 'reporterId', 'voterId', 'reporterLocation'];
-    const publicos = integrationEvents.filter((evento) => evento.audience === 'public');
+    const prohibidos = ['location', 'authorId', 'idReportante', 'idVotante', 'ubicacionReportante'];
+    const publicos = eventosDeIntegracion.filter((evento) => evento.audiencia === 'publico');
 
     expect(publicos.length).toBeGreaterThan(0);
     for (const evento of publicos) {
-      const presentes = campos(evento.payload);
+      const presentes = campos(evento.contenido);
       expect(presentes.filter((campo) => prohibidos.includes(campo))).toEqual([]);
     }
   });
 
   it('los eventos que identifican a un usuario son internos', () => {
-    expect(reportDuplicateDetectedV1.audience).toBe('internal');
-    expect(voteCastV1.audience).toBe('internal');
+    expect(reporteDuplicadoDetectadoV1.audiencia).toBe('interno');
+    expect(votoEmitidoV1.audiencia).toBe('interno');
   });
 });
 
 describe('contratos', () => {
   const creado = {
     ...sobre,
-    type: 'ReportCreated',
+    tipo: 'ReporteCreado',
     version: 1,
-    payload: {
-      reportId: ID,
-      categoryCode: 'bloqueo',
-      publicLocation: { latitude: -16.5, longitude: -68.15 },
-      status: 'ACTIVO',
-      createdAt: '2026-10-11T12:00:00Z',
-      expiresAt: '2026-10-11T18:00:00Z',
+    contenido: {
+      idReporte: ID,
+      codigoCategoria: 'bloqueo',
+      publicLocation: { latitud: -16.5, longitud: -68.15 },
+      estado: 'ACTIVO',
+      creadoEn: '2026-10-11T12:00:00Z',
+      caducaEn: '2026-10-11T18:00:00Z',
     },
   };
 
-  it('ReportCreated.v1 acepta un evento válido', () => {
-    expect(reportCreatedV1.schema.parse(creado)).toEqual(creado);
+  it('ReporteCreado.v1 acepta un evento válido', () => {
+    expect(reporteCreadoV1.esquema.parse(creado)).toEqual(creado);
   });
 
-  it('ReportCreated.v1 descarta un campo que no está en el contrato', () => {
-    const conAutor = { ...creado, payload: { ...creado.payload, authorId: ID } };
+  it('ReporteCreado.v1 descarta un campo que no está en el contrato', () => {
+    const conAutor = { ...creado, contenido: { ...creado.contenido, authorId: ID } };
 
-    expect(reportCreatedV1.schema.parse(conAutor).payload).not.toHaveProperty('authorId');
+    expect(reporteCreadoV1.esquema.parse(conAutor).contenido).not.toHaveProperty('authorId');
   });
 
-  it('ReportCreated.v1 rechaza un estado desconocido', () => {
-    const invalido = { ...creado, payload: { ...creado.payload, status: 'BORRADO' } };
+  it('ReporteCreado.v1 rechaza un estado desconocido', () => {
+    const invalido = { ...creado, contenido: { ...creado.contenido, estado: 'BORRADO' } };
 
-    expect(reportCreatedV1.schema.safeParse(invalido).success).toBe(false);
+    expect(reporteCreadoV1.esquema.safeParse(invalido).success).toBe(false);
   });
 
-  it('ReportRejected.v1 solo admite motivos del catálogo', () => {
-    const rechazado = (reason: string) => ({
+  it('ReporteRechazado.v1 solo admite motivos del catálogo', () => {
+    const rechazado = (motivo: string) => ({
       ...sobre,
-      type: 'ReportRejected',
+      tipo: 'ReporteRechazado',
       version: 1,
-      payload: { reportId: ID, reason },
+      contenido: { idReporte: ID, motivo },
     });
 
-    expect(reportRejectedV1.schema.safeParse(rechazado('MODERACION')).success).toBe(true);
-    expect(reportRejectedV1.schema.safeParse(rechazado('AUTOR_SILENCIADO')).success).toBe(true);
-    expect(reportRejectedV1.schema.safeParse(rechazado('porque sí')).success).toBe(false);
+    expect(reporteRechazadoV1.esquema.safeParse(rechazado('MODERACION')).success).toBe(true);
+    expect(reporteRechazadoV1.esquema.safeParse(rechazado('AUTOR_SILENCIADO')).success).toBe(true);
+    expect(reporteRechazadoV1.esquema.safeParse(rechazado('porque sí')).success).toBe(false);
   });
 
-  it('VoteCast.v1 lleva la decisión de verificación y limita el peso al rango de reputación', () => {
-    const voto = (weight: number, decision: string) => ({
+  it('VotoEmitido.v1 lleva la decisión de verificación y limita el peso al rango de reputación', () => {
+    const voto = (peso: number, decision: string) => ({
       ...sobre,
-      type: 'VoteCast',
+      tipo: 'VotoEmitido',
       version: 1,
-      payload: { reportId: ID, voterId: ID, value: 'CONFIRMACION', weight, decision },
+      contenido: { idReporte: ID, idVotante: ID, valor: 'CONFIRMACION', peso, decision },
     });
 
-    expect(voteCastV1.schema.safeParse(voto(1, 'CONFIRM')).success).toBe(true);
-    expect(voteCastV1.schema.safeParse(voto(5.1, 'NONE')).success).toBe(false);
-    expect(voteCastV1.schema.safeParse(voto(1, 'BORRAR')).success).toBe(false);
+    expect(votoEmitidoV1.esquema.safeParse(voto(1, 'CONFIRMAR')).success).toBe(true);
+    expect(votoEmitidoV1.esquema.safeParse(voto(5.1, 'NINGUNA')).success).toBe(false);
+    expect(votoEmitidoV1.esquema.safeParse(voto(1, 'BORRAR')).success).toBe(false);
   });
 });

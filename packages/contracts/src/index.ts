@@ -1,16 +1,20 @@
 export {
-  integrationEvents,
-  rejectionReasonSchema,
-  reportConfirmedV1,
-  reportCreatedV1,
-  reportDuplicateDetectedV1,
-  reportExpiredV1,
-  reportRejectedV1,
-  reportResolvedV1,
-  reportStatusSchema,
-  verificationDecisionSchema,
-  voteCastV1,
-  voteValueSchema,
+  eventosDeIntegracion,
+  esquemaMotivoRechazo,
+  reporteConfirmadoV1,
+  reporteCreadoV1,
+  reporteDuplicadoDetectadoV1,
+  reporteCaducadoV1,
+  reporteRechazadoV1,
+  reporteResueltoV1,
+  esquemaEstadoReporte,
+  esquemaDecisionVerificacion,
+  votoEmitidoV1,
+  esquemaValorVoto,
 } from './events.js';
-export { defineEvent, eventKey, integrationEventSchema } from './integration-event.js';
-export type { EventAudience, EventDefinition, IntegrationEvent } from './integration-event.js';
+export { definirEvento, claveDeEvento, esquemaEventoDeIntegracion } from './integration-event.js';
+export type {
+  AudienciaDeEvento,
+  DefinicionDeEvento,
+  EventoDeIntegracion,
+} from './integration-event.js';

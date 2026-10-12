@@ -1,27 +1,27 @@
-export { ConfigError, loadConfig } from './config.js';
-export type { AppConfig, Env } from './config.js';
-export { checkDatabase, createDb, createPool } from './database.js';
+export { ErrorDeConfig, cargarConfig } from './config.js';
+export type { ConfigApp, Entorno } from './config.js';
+export { verificarBaseDeDatos, crearDb, crearPool } from './database.js';
 export type {
-  DatabaseHealth,
+  SaludBaseDeDatos,
   Db,
-  Executor,
-  IdleErrorListener,
+  Ejecutor,
+  EscuchaDeErrorInactivo,
   Pool,
-  Queryable,
+  Consultable,
   Tx,
 } from './database.js';
-export { CORE_MODULES, featureVariable, loadFeatureFlags } from './features.js';
-export type { FeatureFlags } from './features.js';
-export { createLogger } from './logger.js';
-export type { Logger } from './logger.js';
+export { MODULOS_BASE, variableDeInterruptor, cargarInterruptores } from './features.js';
+export type { InterruptoresDeFunciones } from './features.js';
+export { crearRegistro } from './logger.js';
+export type { Registro } from './logger.js';
 export {
-  migrateAll,
-  migrateUp,
-  migrationsTable,
-  platformMigrations,
-  revertLast,
+  migrarTodo,
+  migrarAvance,
+  tablaDeMigraciones,
+  migracionesDePlataforma,
+  revertirUltima,
 } from './migrations.js';
-export type { MigrationSet } from './migrations.js';
-export type { ModuleDefinition } from './module.js';
-export { appendToOutbox } from './outbox.js';
-export { outboxEvents } from './schema.js';
+export type { ConjuntoDeMigraciones } from './migrations.js';
+export type { DefinicionDeModulo } from './module.js';
+export { agregarASalida } from './outbox.js';
+export { eventosSalida } from './schema.js';

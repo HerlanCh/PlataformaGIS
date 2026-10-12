@@ -10,9 +10,9 @@ No envía notificaciones: eso es del módulo `notifications`. Por ahora solo exi
 
 ## Modelo de dominio
 
-| Elemento           | Tipo    | Qué hace                                                                                                                       |
-| :----------------- | :------ | :----------------------------------------------------------------------------------------------------------------------------- |
-| `ZoneSubscription` | Entidad | Zona inmutable: dueño, centro, radio entero entre 100 m y 2000 m y al menos una categoría. Para cambiarla se elimina y se crea |
+| Elemento       | Tipo    | Qué hace                                                                                                                       |
+| :------------- | :------ | :----------------------------------------------------------------------------------------------------------------------------- |
+| `ZonaSuscrita` | Entidad | Zona inmutable: dueño, centro, radio entero entre 100 m y 2000 m y al menos una categoría. Para cambiarla se elimina y se crea |
 
 ## Eventos que emite
 
@@ -24,9 +24,9 @@ _Ninguno todavía._
 
 ## Puertos
 
-| Puerto                   | Para qué                                                    |
-| :----------------------- | :---------------------------------------------------------- |
-| `SubscriptionRepository` | Guardar, eliminar y leer las zonas, por ID o por su usuario |
+| Puerto                       | Para qué                                                    |
+| :--------------------------- | :---------------------------------------------------------- |
+| `RepositorioDeSuscripciones` | Guardar, eliminar y leer las zonas, por ID o por su usuario |
 
 ## Interfaz pública
 

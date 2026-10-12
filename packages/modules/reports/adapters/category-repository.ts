@@ -1,32 +1,32 @@
-import type { Executor } from '@gis/platform';
-import { categoryCode } from '@gis/shared-kernel';
-import type { CategoryCode } from '@gis/shared-kernel';
+import type { Ejecutor } from '@gis/platform';
+import { codigoCategoria } from '@gis/shared-kernel';
+import type { CodigoCategoria } from '@gis/shared-kernel';
 import { asc, eq } from 'drizzle-orm';
-import { Category } from '../domain/category.js';
-import type { CategoryRepository } from '../domain/ports.js';
-import { categories } from './schema.js';
+import { Categoria } from '../domain/category.js';
+import type { RepositorioDeCategorias } from '../domain/ports.js';
+import { categorias } from './schema.js';
 
-type Fila = typeof categories.$inferSelect;
+type Fila = typeof categorias.$inferSelect;
 
-const aEntidad = (fila: Fila): Category =>
-  Category.create({
-    code: categoryCode(fila.code),
-    name: fila.name,
-    ttlMinutes: fila.ttlMinutes,
-    dedupRadiusM: fila.dedupRadiusM,
-    isSensitive: fila.isSensitive,
+const aEntidad = (fila: Fila): Categoria =>
+  Categoria.crear({
+    codigo: codigoCategoria(fila.codigo),
+    nombre: fila.nombre,
+    ttlMinutos: fila.ttlMinutos,
+    radioDuplicadoM: fila.radioDuplicadoM,
+    esSensible: fila.esSensible,
   });
 
-export class PgCategoryRepository implements CategoryRepository {
-  constructor(private readonly db: Executor) {}
+export class RepositorioCategoriasPg implements RepositorioDeCategorias {
+  constructor(private readonly db: Ejecutor) {}
 
-  async findByCode(code: CategoryCode): Promise<Category | null> {
-    const [fila] = await this.db.select().from(categories).where(eq(categories.code, code));
+  async buscarPorCodigo(codigo: CodigoCategoria): Promise<Categoria | null> {
+    const [fila] = await this.db.select().from(categorias).where(eq(categorias.codigo, codigo));
     return fila ? aEntidad(fila) : null;
   }
 
-  async findAll(): Promise<readonly Category[]> {
-    const filas = await this.db.select().from(categories).orderBy(asc(categories.code));
+  async buscarTodas(): Promise<readonly Categoria[]> {
+    const filas = await this.db.select().from(categorias).orderBy(asc(categorias.codigo));
     return filas.map(aEntidad);
   }
 }

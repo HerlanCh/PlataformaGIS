@@ -64,11 +64,11 @@ writeFileSync(
   registro,
   [
     '// Archivo generado por tools/modules/sync-modules.mjs. No editar a mano.',
-    ...modulos.map((m) => `import { ${camello(m)}Module } from '@gis/module-${m}';`),
-    "import type { ModuleDefinition } from '@gis/platform';",
+    ...modulos.map((m) => `import { ${camello(m)}Modulo } from '@gis/module-${m}';`),
+    "import type { DefinicionDeModulo } from '@gis/platform';",
     '',
-    `export const modules: readonly ModuleDefinition[] = [${modulos
-      .map((m) => `${camello(m)}Module`)
+    `export const modulos: readonly DefinicionDeModulo[] = [${modulos
+      .map((m) => `${camello(m)}Modulo`)
       .join(', ')}];`,
     '',
   ].join('\n'),

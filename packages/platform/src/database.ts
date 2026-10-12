@@ -5,16 +5,16 @@ import pg from 'pg';
 export type Pool = pg.Pool;
 
 /** Lo mínimo que necesita una comprobación de salud; facilita los dobles de prueba. */
-export interface Queryable {
+export interface Consultable {
   query(sql: string): Promise<unknown>;
 }
 
-export interface DatabaseHealth {
+export interface SaludBaseDeDatos {
   readonly ok: boolean;
   readonly error?: string;
 }
 
-export type IdleErrorListener = (error: Error) => void;
+export type EscuchaDeErrorInactivo = (error: Error) => void;
 
 /** Base de datos con el constructor de consultas de Drizzle. */
 export type Db = NodePgDatabase;
@@ -26,29 +26,33 @@ export type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
  * Lo que recibe un repositorio: la base de datos o una transacción en curso.
  * Así el mismo adaptador sirve dentro y fuera de una unidad de trabajo.
  */
-export type Executor = Db | Tx;
+export type Ejecutor = Db | Tx;
 
 /**
  * Pool acotado: los planes gratuitos limitan las conexiones (RSK-02).
  * Si la base de datos se cae, las conexiones inactivas emiten `error`; sin un oyente
  * ese evento tumbaría el proceso. Aquí solo se notifica: el pool se recupera solo.
  */
-export function createPool(
-  databaseUrl: string,
-  onIdleError: IdleErrorListener = () => {},
+export function crearPool(
+  urlBaseDeDatos: string,
+  alErrorInactivo: EscuchaDeErrorInactivo = () => {},
   max = 5,
 ): Pool {
-  const pool = new pg.Pool({ connectionString: databaseUrl, max, connectionTimeoutMillis: 5000 });
-  pool.on('error', onIdleError);
+  const pool = new pg.Pool({
+    connectionString: urlBaseDeDatos,
+    max,
+    connectionTimeoutMillis: 5000,
+  });
+  pool.on('error', alErrorInactivo);
   return pool;
 }
 
-export function createDb(pool: Pool): Db {
+export function crearDb(pool: Pool): Db {
   return drizzle(pool);
 }
 
 /** Nunca lanza: una base de datos caída es un estado que se informa, no un fallo del proceso. */
-export async function checkDatabase(db: Queryable): Promise<DatabaseHealth> {
+export async function verificarBaseDeDatos(db: Consultable): Promise<SaludBaseDeDatos> {
   try {
     await db.query('SELECT 1');
     return { ok: true };

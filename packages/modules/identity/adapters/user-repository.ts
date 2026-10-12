@@ -1,60 +1,60 @@
-import type { Executor } from '@gis/platform';
-import { userId } from '@gis/shared-kernel';
-import type { UserId } from '@gis/shared-kernel';
+import type { Ejecutor } from '@gis/platform';
+import { idUsuario } from '@gis/shared-kernel';
+import type { IdUsuario } from '@gis/shared-kernel';
 import { eq } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
-import type { UserRepository } from '../domain/ports.js';
-import { User } from '../domain/user.js';
-import type { Role } from '../domain/user.js';
-import { users } from './schema.js';
+import type { RepositorioDeUsuarios } from '../domain/ports.js';
+import { Usuario } from '../domain/user.js';
+import type { Rol } from '../domain/user.js';
+import { usuarios } from './schema.js';
 
-type Fila = typeof users.$inferSelect;
+type Fila = typeof usuarios.$inferSelect;
 
 /** Mapeo explícito fila → entidad: el dominio nunca ve tipos de Drizzle. */
-const aEntidad = (fila: Fila): User =>
-  User.restore({
-    id: userId(fila.id),
-    deviceHash: fila.deviceHash,
-    role: fila.role as Role,
-    telegramId: fila.telegramId,
-    createdAt: fila.createdAt,
+const aEntidad = (fila: Fila): Usuario =>
+  Usuario.restaurar({
+    id: idUsuario(fila.id),
+    hashDispositivo: fila.hashDispositivo,
+    rol: fila.rol as Rol,
+    idTelegram: fila.idTelegram,
+    creadoEn: fila.creadoEn,
   });
 
-export class PgUserRepository implements UserRepository {
-  constructor(private readonly db: Executor) {}
+export class RepositorioUsuariosPg implements RepositorioDeUsuarios {
+  constructor(private readonly db: Ejecutor) {}
 
-  findById(id: UserId): Promise<User | null> {
-    return this.buscar(eq(users.id, id));
+  buscarPorId(id: IdUsuario): Promise<Usuario | null> {
+    return this.buscar(eq(usuarios.id, id));
   }
 
-  findByDeviceHash(deviceHash: string): Promise<User | null> {
-    return this.buscar(eq(users.deviceHash, deviceHash));
+  buscarPorHashDispositivo(hashDispositivo: string): Promise<Usuario | null> {
+    return this.buscar(eq(usuarios.hashDispositivo, hashDispositivo));
   }
 
-  findByTelegramId(telegramId: string): Promise<User | null> {
-    return this.buscar(eq(users.telegramId, telegramId));
+  buscarPorIdTelegram(idTelegram: string): Promise<Usuario | null> {
+    return this.buscar(eq(usuarios.idTelegram, idTelegram));
   }
 
-  async save(user: User): Promise<void> {
+  async guardar(usuario: Usuario): Promise<void> {
     const fila = {
-      id: user.id,
-      deviceHash: user.deviceHash,
-      role: user.role,
-      telegramId: user.telegramId,
-      createdAt: user.createdAt,
+      id: usuario.id,
+      hashDispositivo: usuario.hashDispositivo,
+      rol: usuario.rol,
+      idTelegram: usuario.idTelegram,
+      creadoEn: usuario.creadoEn,
     };
     await this.db
-      .insert(users)
+      .insert(usuarios)
       .values(fila)
       .onConflictDoUpdate({
-        target: users.id,
+        target: usuarios.id,
         // El hash del dispositivo y la fecha de alta no cambian.
-        set: { role: fila.role, telegramId: fila.telegramId },
+        set: { rol: fila.rol, idTelegram: fila.idTelegram },
       });
   }
 
-  private async buscar(condicion: SQL): Promise<User | null> {
-    const [fila] = await this.db.select().from(users).where(condicion).limit(1);
+  private async buscar(condicion: SQL): Promise<Usuario | null> {
+    const [fila] = await this.db.select().from(usuarios).where(condicion).limit(1);
     return fila ? aEntidad(fila) : null;
   }
 }

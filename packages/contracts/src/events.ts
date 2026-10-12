@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { defineEvent } from './integration-event.js';
-import type { EventDefinition } from './integration-event.js';
+import { definirEvento } from './integration-event.js';
+import type { DefinicionDeEvento } from './integration-event.js';
 
-const geoPointSchema = z.object({ latitude: z.number(), longitude: z.number() });
-const categoryCodeSchema = z.string().regex(/^[a-z][a-z0-9_]*$/);
+const esquemaPuntoGeo = z.object({ latitud: z.number(), longitud: z.number() });
+const esquemaCodigoCategoria = z.string().regex(/^[a-z][a-z0-9_]*$/);
 
 /** Estados de un reporte (máquina de estados del módulo `reports`). */
-export const reportStatusSchema = z.enum([
+export const esquemaEstadoReporte = z.enum([
   'ACTIVO',
   'CONFIRMADO',
   'RESUELTO',
@@ -15,91 +15,91 @@ export const reportStatusSchema = z.enum([
 ]);
 
 /** Motivo de un rechazo. `AUTOR_SILENCIADO` no penaliza de nuevo al autor (SRS 3.2.7). */
-export const rejectionReasonSchema = z.enum(['MODERACION', 'AUTOR_SILENCIADO']);
+export const esquemaMotivoRechazo = z.enum(['MODERACION', 'AUTOR_SILENCIADO']);
 
-export const voteValueSchema = z.enum(['CONFIRMACION', 'NEGACION']);
+export const esquemaValorVoto = z.enum(['CONFIRMACION', 'NEGACION']);
 
 /** Lo que `verification` pide aplicar a `reports` tras un voto (SRS 3.2). */
-export const verificationDecisionSchema = z.enum(['NONE', 'CONFIRM', 'EXTEND', 'RESOLVE']);
+export const esquemaDecisionVerificacion = z.enum(['NINGUNA', 'CONFIRMAR', 'EXTENDER', 'RESOLVER']);
 
 // --- Eventos públicos: pueden difundirse a los clientes. Solo `publicLocation`. ---
 
-export const reportCreatedV1 = defineEvent(
-  'ReportCreated',
+export const reporteCreadoV1 = definirEvento(
+  'ReporteCreado',
   1,
-  'public',
+  'publico',
   z.object({
-    reportId: z.uuid(),
-    categoryCode: categoryCodeSchema,
-    publicLocation: geoPointSchema,
-    status: reportStatusSchema,
-    createdAt: z.iso.datetime(),
-    expiresAt: z.iso.datetime(),
+    idReporte: z.uuid(),
+    codigoCategoria: esquemaCodigoCategoria,
+    publicLocation: esquemaPuntoGeo,
+    estado: esquemaEstadoReporte,
+    creadoEn: z.iso.datetime(),
+    caducaEn: z.iso.datetime(),
   }),
 );
 
-export const reportConfirmedV1 = defineEvent(
-  'ReportConfirmed',
+export const reporteConfirmadoV1 = definirEvento(
+  'ReporteConfirmado',
   1,
-  'public',
-  z.object({ reportId: z.uuid(), expiresAt: z.iso.datetime() }),
+  'publico',
+  z.object({ idReporte: z.uuid(), caducaEn: z.iso.datetime() }),
 );
 
-export const reportResolvedV1 = defineEvent(
-  'ReportResolved',
+export const reporteResueltoV1 = definirEvento(
+  'ReporteResuelto',
   1,
-  'public',
-  z.object({ reportId: z.uuid() }),
+  'publico',
+  z.object({ idReporte: z.uuid() }),
 );
 
-export const reportExpiredV1 = defineEvent(
-  'ReportExpired',
+export const reporteCaducadoV1 = definirEvento(
+  'ReporteCaducado',
   1,
-  'public',
-  z.object({ reportId: z.uuid() }),
+  'publico',
+  z.object({ idReporte: z.uuid() }),
 );
 
-export const reportRejectedV1 = defineEvent(
-  'ReportRejected',
+export const reporteRechazadoV1 = definirEvento(
+  'ReporteRechazado',
   1,
-  'public',
-  z.object({ reportId: z.uuid(), reason: rejectionReasonSchema }),
+  'publico',
+  z.object({ idReporte: z.uuid(), motivo: esquemaMotivoRechazo }),
 );
 
 // --- Eventos internos: solo entre módulos del servidor. ---
 
 /** Un reporte nuevo cayó en el radio de deduplicación de otro vigente (HU-01, escenario 2). */
-export const reportDuplicateDetectedV1 = defineEvent(
-  'ReportDuplicateDetected',
+export const reporteDuplicadoDetectadoV1 = definirEvento(
+  'ReporteDuplicadoDetectado',
   1,
-  'internal',
+  'interno',
   z.object({
-    existingReportId: z.uuid(),
-    reporterId: z.uuid(),
-    reporterLocation: geoPointSchema,
+    idReporteExistente: z.uuid(),
+    idReportante: z.uuid(),
+    ubicacionReportante: esquemaPuntoGeo,
   }),
 );
 
-export const voteCastV1 = defineEvent(
-  'VoteCast',
+export const votoEmitidoV1 = definirEvento(
+  'VotoEmitido',
   1,
-  'internal',
+  'interno',
   z.object({
-    reportId: z.uuid(),
-    voterId: z.uuid(),
-    value: voteValueSchema,
-    weight: z.number().min(0).max(5),
-    decision: verificationDecisionSchema,
+    idReporte: z.uuid(),
+    idVotante: z.uuid(),
+    valor: esquemaValorVoto,
+    peso: z.number().min(0).max(5),
+    decision: esquemaDecisionVerificacion,
   }),
 );
 
 /** Catálogo de eventos de integración publicados. */
-export const integrationEvents: readonly EventDefinition[] = [
-  reportCreatedV1,
-  reportConfirmedV1,
-  reportResolvedV1,
-  reportExpiredV1,
-  reportRejectedV1,
-  reportDuplicateDetectedV1,
-  voteCastV1,
+export const eventosDeIntegracion: readonly DefinicionDeEvento[] = [
+  reporteCreadoV1,
+  reporteConfirmadoV1,
+  reporteResueltoV1,
+  reporteCaducadoV1,
+  reporteRechazadoV1,
+  reporteDuplicadoDetectadoV1,
+  votoEmitidoV1,
 ];

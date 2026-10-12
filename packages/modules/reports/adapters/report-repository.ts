@@ -1,76 +1,76 @@
-import type { Executor } from '@gis/platform';
-import { categoryCode, GeoPoint, reportId, userId } from '@gis/shared-kernel';
-import type { ReportId } from '@gis/shared-kernel';
+import type { Ejecutor } from '@gis/platform';
+import { codigoCategoria, PuntoGeo, idReporte, idUsuario } from '@gis/shared-kernel';
+import type { IdReporte } from '@gis/shared-kernel';
 import { eq } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
-import type { ReportRepository } from '../domain/ports.js';
-import { Report } from '../domain/report.js';
-import type { RejectionReason, ReportStatus } from '../domain/report.js';
-import { reports } from './schema.js';
+import type { RepositorioDeReportes } from '../domain/ports.js';
+import { Reporte } from '../domain/report.js';
+import type { MotivoRechazo, EstadoReporte } from '../domain/report.js';
+import { reportes } from './schema.js';
 
-type Fila = typeof reports.$inferSelect;
+type Fila = typeof reportes.$inferSelect;
 type Punto = Fila['location'];
 
 // En PostGIS x es la longitud e y la latitud.
-const aPunto = (punto: GeoPoint): Punto => ({ x: punto.longitude, y: punto.latitude });
-const aGeoPoint = (punto: Punto): GeoPoint => GeoPoint.create(punto.y, punto.x);
+const aPunto = (punto: PuntoGeo): Punto => ({ x: punto.longitud, y: punto.latitud });
+const aPuntoGeo = (punto: Punto): PuntoGeo => PuntoGeo.crear(punto.y, punto.x);
 
 /** Mapeo explícito fila → agregado: el dominio nunca ve tipos de Drizzle. */
-const aAgregado = (fila: Fila): Report =>
-  Report.restore({
-    id: reportId(fila.id),
-    categoryCode: categoryCode(fila.categoryCode),
-    authorId: userId(fila.authorId),
-    location: aGeoPoint(fila.location),
-    publicLocation: aGeoPoint(fila.publicLocation),
-    status: fila.status as ReportStatus,
-    ttlMinutes: fila.ttlMinutes,
-    createdAt: fila.createdAt,
-    expiresAt: fila.expiresAt,
-    extensions: fila.extensions,
-    rejectionReason: fila.rejectionReason as RejectionReason | null,
+const aAgregado = (fila: Fila): Reporte =>
+  Reporte.restaurar({
+    id: idReporte(fila.id),
+    codigoCategoria: codigoCategoria(fila.codigoCategoria),
+    authorId: idUsuario(fila.authorId),
+    location: aPuntoGeo(fila.location),
+    publicLocation: aPuntoGeo(fila.publicLocation),
+    estado: fila.estado as EstadoReporte,
+    ttlMinutos: fila.ttlMinutos,
+    creadoEn: fila.creadoEn,
+    caducaEn: fila.caducaEn,
+    extensiones: fila.extensiones,
+    motivoRechazo: fila.motivoRechazo as MotivoRechazo | null,
     idempotencyKey: fila.idempotencyKey,
   });
 
 /** Las consultas espaciales (viewport, cercanía, duplicados, vencidos) se añaden en la Fase 4. */
-export class PostgisReportRepository implements ReportRepository {
-  constructor(private readonly db: Executor) {}
+export class RepositorioReportesPostgis implements RepositorioDeReportes {
+  constructor(private readonly db: Ejecutor) {}
 
-  findById(id: ReportId): Promise<Report | null> {
-    return this.buscar(eq(reports.id, id));
+  buscarPorId(id: IdReporte): Promise<Reporte | null> {
+    return this.buscar(eq(reportes.id, id));
   }
 
-  findByIdempotencyKey(idempotencyKey: string): Promise<Report | null> {
-    return this.buscar(eq(reports.idempotencyKey, idempotencyKey));
+  buscarPorClaveDeIdempotencia(claveDeIdempotencia: string): Promise<Reporte | null> {
+    return this.buscar(eq(reportes.idempotencyKey, claveDeIdempotencia));
   }
 
-  async save(report: Report): Promise<void> {
+  async guardar(reporte: Reporte): Promise<void> {
     const mutables = {
-      status: report.status,
-      expiresAt: report.expiresAt,
-      extensions: report.extensions,
-      rejectionReason: report.rejectionReason,
+      estado: reporte.estado,
+      caducaEn: reporte.caducaEn,
+      extensiones: reporte.extensiones,
+      motivoRechazo: reporte.motivoRechazo,
     };
     await this.db
-      .insert(reports)
+      .insert(reportes)
       .values({
-        id: report.id,
-        categoryCode: report.categoryCode,
-        authorId: report.authorId,
-        ttlMinutes: report.ttlMinutes,
-        createdAt: report.createdAt,
-        location: aPunto(report.location),
+        id: reporte.id,
+        codigoCategoria: reporte.codigoCategoria,
+        authorId: reporte.authorId,
+        ttlMinutos: reporte.ttlMinutos,
+        creadoEn: reporte.creadoEn,
+        location: aPunto(reporte.location),
         // Se guarda la ubicación pública que decidió el dominio, sin recalcularla.
-        publicLocation: aPunto(report.publicLocation),
-        idempotencyKey: report.idempotencyKey,
+        publicLocation: aPunto(reporte.publicLocation),
+        idempotencyKey: reporte.idempotencyKey,
         ...mutables,
       })
       // Tras la creación solo cambia el ciclo de vida; las ubicaciones y el autor son fijos.
-      .onConflictDoUpdate({ target: reports.id, set: mutables });
+      .onConflictDoUpdate({ target: reportes.id, set: mutables });
   }
 
-  private async buscar(condicion: SQL): Promise<Report | null> {
-    const [fila] = await this.db.select().from(reports).where(condicion).limit(1);
+  private async buscar(condicion: SQL): Promise<Reporte | null> {
+    const [fila] = await this.db.select().from(reportes).where(condicion).limit(1);
     return fila ? aAgregado(fila) : null;
   }
 }

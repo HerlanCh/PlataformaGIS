@@ -1,23 +1,23 @@
 // Aplica las migraciones pendientes: `pnpm db:migrate`.
 import {
-  createDb,
-  createLogger,
-  createPool,
-  loadConfig,
-  loadFeatureFlags,
-  migrateAll,
+  crearDb,
+  crearRegistro,
+  crearPool,
+  cargarConfig,
+  cargarInterruptores,
+  migrarTodo,
 } from '@gis/platform';
-import { migrationSets } from './migrations.js';
-import { modules } from './modules.generated.js';
+import { conjuntosDeMigraciones } from './migrations.js';
+import { modulos } from './modules.generated.js';
 
-const config = loadConfig();
-const logger = createLogger(config.logLevel);
-const pool = createPool(config.databaseUrl);
+const config = cargarConfig();
+const logger = crearRegistro(config.nivelDeLog);
+const pool = crearPool(config.urlBaseDeDatos);
 
 try {
-  const conjuntos = migrationSets(loadFeatureFlags(), modules);
-  await migrateAll(createDb(pool), conjuntos);
-  logger.info({ conjuntos: conjuntos.map((c) => c.name) }, 'migraciones aplicadas');
+  const conjuntos = conjuntosDeMigraciones(cargarInterruptores(), modulos);
+  await migrarTodo(crearDb(pool), conjuntos);
+  logger.info({ conjuntos: conjuntos.map((c) => c.nombre) }, 'migraciones aplicadas');
 } finally {
   await pool.end();
 }

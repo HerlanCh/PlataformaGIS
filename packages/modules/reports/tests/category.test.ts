@@ -1,41 +1,46 @@
-import { categoryCode } from '@gis/shared-kernel';
+import { codigoCategoria } from '@gis/shared-kernel';
 import { describe, expect, it } from 'vitest';
-import { Category, InvalidCategoryError, MVP_CATEGORIES } from '../domain/category.js';
+import { Categoria, ErrorCategoriaInvalida, CATEGORIAS_MVP } from '../domain/category.js';
 
 const valida = {
-  code: categoryCode('bloqueo'),
-  name: 'Bloqueo',
-  ttlMinutes: 360,
-  dedupRadiusM: 100,
-  isSensitive: false,
+  codigo: codigoCategoria('bloqueo'),
+  nombre: 'Bloqueo',
+  ttlMinutos: 360,
+  radioDuplicadoM: 100,
+  esSensible: false,
 };
 
-describe('Category', () => {
+describe('Categoria', () => {
   it('se crea con sus parámetros y recorta el nombre', () => {
-    expect(Category.create({ ...valida, name: '  Bloqueo  ' })).toMatchObject(valida);
+    expect(Categoria.crear({ ...valida, nombre: '  Bloqueo  ' })).toMatchObject(valida);
   });
 
   it.each([
-    ['un nombre vacío', { name: '   ' }],
-    ['un TTL de cero', { ttlMinutes: 0 }],
-    ['un TTL negativo', { ttlMinutes: -5 }],
-    ['un TTL con decimales', { ttlMinutes: 1.5 }],
-    ['un radio de cero', { dedupRadiusM: 0 }],
-    ['un radio con decimales', { dedupRadiusM: 50.5 }],
+    ['un nombre vacío', { nombre: '   ' }],
+    ['un TTL de cero', { ttlMinutos: 0 }],
+    ['un TTL negativo', { ttlMinutos: -5 }],
+    ['un TTL con decimales', { ttlMinutos: 1.5 }],
+    ['un radio de cero', { radioDuplicadoM: 0 }],
+    ['un radio con decimales', { radioDuplicadoM: 50.5 }],
   ])('rechaza %s', (_caso, cambio) => {
-    expect(() => Category.create({ ...valida, ...cambio })).toThrow(InvalidCategoryError);
+    expect(() => Categoria.crear({ ...valida, ...cambio })).toThrow(ErrorCategoriaInvalida);
   });
 
   it('es inmutable', () => {
-    const categoria = Category.create(valida);
+    const categoria = Categoria.crear(valida);
 
     expect(() => {
-      (categoria as { ttlMinutes: number }).ttlMinutes = 1;
+      (categoria as { ttlMinutos: number }).ttlMinutos = 1;
     }).toThrow(TypeError);
   });
 
   it('el catálogo del MVP coincide con la tabla del SRS 3.1', () => {
-    const tabla = MVP_CATEGORIES.map((c) => [c.code, c.ttlMinutes, c.dedupRadiusM, c.isSensitive]);
+    const tabla = CATEGORIAS_MVP.map((c) => [
+      c.codigo,
+      c.ttlMinutos,
+      c.radioDuplicadoM,
+      c.esSensible,
+    ]);
 
     expect(tabla).toEqual([
       ['bloqueo', 360, 100, false],

@@ -1,20 +1,25 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { GeoPoint, OutOfServiceAreaError, SERVICE_AREA } from './index.js';
+import { PuntoGeo, ErrorFueraDelAreaDeServicio, AREA_DE_SERVICIO } from './index.js';
 
-const { minLatitude, maxLatitude, minLongitude, maxLongitude } = SERVICE_AREA;
+const {
+  latitudMin: minLatitude,
+  latitudMax: maxLatitude,
+  longitudMin: minLongitude,
+  longitudMax: maxLongitude,
+} = AREA_DE_SERVICIO;
 
 const latitudDentro = fc.double({ min: minLatitude, max: maxLatitude, noNaN: true });
 const longitudDentro = fc.double({ min: minLongitude, max: maxLongitude, noNaN: true });
 const puntoDentro = fc
   .tuple(latitudDentro, longitudDentro)
-  .map(([latitud, longitud]) => GeoPoint.create(latitud, longitud));
+  .map(([latitud, longitud]) => PuntoGeo.crear(latitud, longitud));
 
-describe('GeoPoint', () => {
+describe('PuntoGeo', () => {
   it('HU-01: acepta una ubicación de La Paz', () => {
-    const punto = GeoPoint.create(-16.5, -68.15);
+    const punto = PuntoGeo.crear(-16.5, -68.15);
 
-    expect(punto).toMatchObject({ latitude: -16.5, longitude: -68.15 });
+    expect(punto).toMatchObject({ latitud: -16.5, longitud: -68.15 });
   });
 
   it.each([
@@ -26,12 +31,12 @@ describe('GeoPoint', () => {
     ['una latitud no numérica', Number.NaN, -68.15],
     ['una longitud infinita', -16.5, Number.POSITIVE_INFINITY],
   ])('HU-01: rechaza %s', (_caso, latitud, longitud) => {
-    expect(() => GeoPoint.create(latitud, longitud)).toThrow(OutOfServiceAreaError);
+    expect(() => PuntoGeo.crear(latitud, longitud)).toThrow(ErrorFueraDelAreaDeServicio);
   });
 
   it('acepta los bordes del rectángulo', () => {
-    expect(() => GeoPoint.create(minLatitude, minLongitude)).not.toThrow();
-    expect(() => GeoPoint.create(maxLatitude, maxLongitude)).not.toThrow();
+    expect(() => PuntoGeo.crear(minLatitude, minLongitude)).not.toThrow();
+    expect(() => PuntoGeo.crear(maxLatitude, maxLongitude)).not.toThrow();
   });
 
   it('incluye los barrios de borde contrastados en el SRS', () => {
@@ -45,39 +50,39 @@ describe('GeoPoint', () => {
     ];
 
     for (const [, latitud, longitud] of barrios) {
-      expect(() => GeoPoint.create(latitud, longitud)).not.toThrow();
+      expect(() => PuntoGeo.crear(latitud, longitud)).not.toThrow();
     }
   });
 
   it('es inmutable', () => {
-    const punto = GeoPoint.create(-16.5, -68.15);
+    const punto = PuntoGeo.crear(-16.5, -68.15);
 
     expect(() => {
-      (punto as { latitude: number }).latitude = 0;
+      (punto as { latitud: number }).latitud = 0;
     }).toThrow(TypeError);
   });
 
   it('compara por valor', () => {
-    expect(GeoPoint.create(-16.5, -68.15).equals(GeoPoint.create(-16.5, -68.15))).toBe(true);
-    expect(GeoPoint.create(-16.5, -68.15).equals(GeoPoint.create(-16.5, -68.16))).toBe(false);
-    expect(GeoPoint.create(-16.5, -68.15).equals(GeoPoint.create(-16.51, -68.15))).toBe(false);
+    expect(PuntoGeo.crear(-16.5, -68.15).esIgualA(PuntoGeo.crear(-16.5, -68.15))).toBe(true);
+    expect(PuntoGeo.crear(-16.5, -68.15).esIgualA(PuntoGeo.crear(-16.5, -68.16))).toBe(false);
+    expect(PuntoGeo.crear(-16.5, -68.15).esIgualA(PuntoGeo.crear(-16.51, -68.15))).toBe(false);
   });
 
   it('mide una distancia conocida: Plaza Murillo a la Ceja de El Alto', () => {
-    const plazaMurillo = GeoPoint.create(-16.4955, -68.1336);
-    const ceja = GeoPoint.create(-16.5047, -68.1633);
+    const plazaMurillo = PuntoGeo.crear(-16.4955, -68.1336);
+    const ceja = PuntoGeo.crear(-16.5047, -68.1633);
 
     // Unos 3,3 km en línea recta.
-    expect(plazaMurillo.distanceTo(ceja)).toBeGreaterThan(3200);
-    expect(plazaMurillo.distanceTo(ceja)).toBeLessThan(3400);
+    expect(plazaMurillo.distanciaA(ceja)).toBeGreaterThan(3200);
+    expect(plazaMurillo.distanciaA(ceja)).toBeLessThan(3400);
   });
 
   it('propiedad: todo punto dentro del rectángulo se crea', () => {
     fc.assert(
       fc.property(latitudDentro, longitudDentro, (latitud, longitud) => {
-        expect(GeoPoint.create(latitud, longitud)).toMatchObject({
-          latitude: latitud,
-          longitude: longitud,
+        expect(PuntoGeo.crear(latitud, longitud)).toMatchObject({
+          latitud: latitud,
+          longitud: longitud,
         });
       }),
     );
@@ -95,12 +100,12 @@ describe('GeoPoint', () => {
 
     fc.assert(
       fc.property(latitudFuera, longitudDentro, (latitud, longitud) => {
-        expect(() => GeoPoint.create(latitud, longitud)).toThrow(OutOfServiceAreaError);
+        expect(() => PuntoGeo.crear(latitud, longitud)).toThrow(ErrorFueraDelAreaDeServicio);
       }),
     );
     fc.assert(
       fc.property(latitudDentro, longitudFuera, (latitud, longitud) => {
-        expect(() => GeoPoint.create(latitud, longitud)).toThrow(OutOfServiceAreaError);
+        expect(() => PuntoGeo.crear(latitud, longitud)).toThrow(ErrorFueraDelAreaDeServicio);
       }),
     );
   });
@@ -108,9 +113,9 @@ describe('GeoPoint', () => {
   it('propiedad: la distancia es simétrica, no negativa y nula solo consigo mismo', () => {
     fc.assert(
       fc.property(puntoDentro, puntoDentro, (a, b) => {
-        expect(a.distanceTo(b)).toBeGreaterThanOrEqual(0);
-        expect(a.distanceTo(b)).toBeCloseTo(b.distanceTo(a), 6);
-        expect(a.distanceTo(a)).toBe(0);
+        expect(a.distanciaA(b)).toBeGreaterThanOrEqual(0);
+        expect(a.distanciaA(b)).toBeCloseTo(b.distanciaA(a), 6);
+        expect(a.distanciaA(a)).toBe(0);
       }),
     );
   });

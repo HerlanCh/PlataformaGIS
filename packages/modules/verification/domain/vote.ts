@@ -1,85 +1,92 @@
-import type { GeoPoint, ReportId, UserId } from '@gis/shared-kernel';
+import type { PuntoGeo, IdReporte, IdUsuario } from '@gis/shared-kernel';
 import {
-  AlreadyVotedError,
-  AuthorCannotVoteError,
-  ReportNotActiveError,
-  TooFarToVoteError,
+  ErrorYaVoto,
+  ErrorAutorNoPuedeVotar,
+  ErrorReporteNoActivo,
+  ErrorDemasiadoLejosParaVotar,
 } from './errors.js';
-import type { ReportSnapshot } from './report-snapshot.js';
-import type { Reputation } from './reputation.js';
+import type { InstantaneaDeReporte } from './report-snapshot.js';
+import type { Reputacion } from './reputation.js';
 
-export type VoteValue = 'CONFIRMACION' | 'NEGACION';
+export type ValorVoto = 'CONFIRMACION' | 'NEGACION';
 
 /** Distancia máxima entre el votante y la ubicación real del reporte (SRS 3.2.2). */
-export const MAX_VOTE_DISTANCE_M = 1000;
+export const DISTANCIA_MAX_VOTO_M = 1000;
 
-export interface VoteProps {
-  readonly reportId: ReportId;
-  readonly voterId: UserId;
-  readonly value: VoteValue;
+export interface PropsVoto {
+  readonly idReporte: IdReporte;
+  readonly idVotante: IdUsuario;
+  readonly valor: ValorVoto;
   /** Reputación del votante en el momento de votar. */
-  readonly weight: number;
-  readonly castAt: Date;
+  readonly peso: number;
+  readonly emitidoEn: Date;
 }
 
-export interface CastVoteInput {
-  readonly report: ReportSnapshot;
-  readonly voter: Reputation;
-  readonly voterLocation: GeoPoint;
-  readonly value: VoteValue;
+export interface EntradaEmitirVoto {
+  readonly reporte: InstantaneaDeReporte;
+  readonly votante: Reputacion;
+  readonly ubicacionVotante: PuntoGeo;
+  readonly valor: ValorVoto;
   /** Si el votante ya tiene un voto sobre este reporte. */
-  readonly alreadyVoted: boolean;
-  readonly now: Date;
+  readonly yaVoto: boolean;
+  readonly ahora: Date;
 }
 
-const VIGENTES: readonly ReportSnapshot['status'][] = ['ACTIVO', 'CONFIRMADO'];
+const VIGENTES: readonly InstantaneaDeReporte['estado'][] = ['ACTIVO', 'CONFIRMADO'];
 
 /** Voto de un usuario sobre un reporte ("¿Sigue ahí?"). Inmutable. */
-export class Vote {
-  readonly reportId: ReportId;
-  readonly voterId: UserId;
-  readonly value: VoteValue;
-  readonly weight: number;
-  readonly castAt: Date;
+export class Voto {
+  readonly idReporte: IdReporte;
+  readonly idVotante: IdUsuario;
+  readonly valor: ValorVoto;
+  readonly peso: number;
+  readonly emitidoEn: Date;
 
-  private constructor(props: VoteProps) {
-    this.reportId = props.reportId;
-    this.voterId = props.voterId;
-    this.value = props.value;
-    this.weight = props.weight;
-    this.castAt = props.castAt;
+  private constructor(props: PropsVoto) {
+    this.idReporte = props.idReporte;
+    this.idVotante = props.idVotante;
+    this.valor = props.valor;
+    this.peso = props.peso;
+    this.emitidoEn = props.emitidoEn;
     Object.freeze(this);
   }
 
   /**
    * Emite un voto aplicando las reglas del SRS 3.2.2. El voto de un usuario
    * silenciado se registra con peso 0.
-   * @throws {ReportNotActiveError} si el reporte ya no está vigente.
-   * @throws {AuthorCannotVoteError} si el votante es el autor.
-   * @throws {AlreadyVotedError} si ya votó sobre este reporte.
-   * @throws {TooFarToVoteError} si está a más de 1000 m.
+   * @throws {ErrorReporteNoActivo} si el reporte ya no está vigente.
+   * @throws {ErrorAutorNoPuedeVotar} si el votante es el autor.
+   * @throws {ErrorYaVoto} si ya votó sobre este reporte.
+   * @throws {ErrorDemasiadoLejosParaVotar} si está a más de 1000 m.
    */
-  static cast(input: CastVoteInput): Vote {
-    const { report, voter, voterLocation, value, alreadyVoted, now } = input;
+  static emitir(input: EntradaEmitirVoto): Voto {
+    const {
+      reporte: report,
+      votante: voter,
+      ubicacionVotante: voterLocation,
+      valor: valor,
+      yaVoto: alreadyVoted,
+      ahora: now,
+    } = input;
 
-    if (!VIGENTES.includes(report.status)) throw new ReportNotActiveError();
-    if (voter.userId === report.authorId) throw new AuthorCannotVoteError();
-    if (alreadyVoted) throw new AlreadyVotedError();
-    if (voterLocation.distanceTo(report.location) > MAX_VOTE_DISTANCE_M) {
-      throw new TooFarToVoteError(MAX_VOTE_DISTANCE_M);
+    if (!VIGENTES.includes(report.estado)) throw new ErrorReporteNoActivo();
+    if (voter.idUsuario === report.authorId) throw new ErrorAutorNoPuedeVotar();
+    if (alreadyVoted) throw new ErrorYaVoto();
+    if (voterLocation.distanciaA(report.location) > DISTANCIA_MAX_VOTO_M) {
+      throw new ErrorDemasiadoLejosParaVotar(DISTANCIA_MAX_VOTO_M);
     }
 
-    return new Vote({
-      reportId: report.id,
-      voterId: voter.userId,
-      value,
-      weight: voter.score,
-      castAt: now,
+    return new Voto({
+      idReporte: report.id,
+      idVotante: voter.idUsuario,
+      valor: valor,
+      peso: voter.puntaje,
+      emitidoEn: now,
     });
   }
 
   /** Reconstruye un voto ya persistido. */
-  static restore(props: VoteProps): Vote {
-    return new Vote(props);
+  static restaurar(props: PropsVoto): Voto {
+    return new Voto(props);
   }
 }

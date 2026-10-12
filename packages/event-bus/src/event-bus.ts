@@ -1,15 +1,15 @@
-import type { IntegrationEvent } from '@gis/contracts';
+import type { EventoDeIntegracion } from '@gis/contracts';
 
-export type EventHandler = (event: IntegrationEvent) => void | Promise<void>;
+export type ManejadorDeEvento = (event: EventoDeIntegracion) => void | Promise<void>;
 
 /** Cancela la suscripción que la devolvió. */
-export type Unsubscribe = () => void;
+export type Desuscribir = () => void;
 
 /**
  * Puerto del bus de eventos. Quien publica no sabe quién escucha.
- * La clave tiene la forma `Tipo.vN` (ver `eventKey` en contracts).
+ * La clave tiene la forma `Tipo.vN` (ver `claveDeEvento` en contracts).
  */
-export interface EventBus {
-  publish(event: IntegrationEvent): Promise<void>;
-  subscribe(key: string, handler: EventHandler): Unsubscribe;
+export interface BusDeEventos {
+  publicar(event: EventoDeIntegracion): Promise<void>;
+  suscribir(key: string, handler: ManejadorDeEvento): Desuscribir;
 }

@@ -1,33 +1,33 @@
-import { eventKey } from '@gis/contracts';
-import type { IntegrationEvent } from '@gis/contracts';
-import type { EventBus, EventHandler, Unsubscribe } from './event-bus.js';
+import { claveDeEvento } from '@gis/contracts';
+import type { EventoDeIntegracion } from '@gis/contracts';
+import type { BusDeEventos, ManejadorDeEvento, Desuscribir } from './event-bus.js';
 
-export type HandlerErrorListener = (error: unknown, event: IntegrationEvent) => void;
+export type EscuchaDeErrorDeManejador = (error: unknown, event: EventoDeIntegracion) => void;
 
 /**
  * Bus en memoria para un solo proceso. No sobrevive a un reinicio:
  * la entrega fiable llega con el outbox de la Fase 7.
  */
-export class InMemoryEventBus implements EventBus {
-  private readonly handlers = new Map<string, Set<EventHandler>>();
+export class BusDeEventosEnMemoria implements BusDeEventos {
+  private readonly manejadores = new Map<string, Set<ManejadorDeEvento>>();
 
-  constructor(private readonly onHandlerError: HandlerErrorListener = () => {}) {}
+  constructor(private readonly alErrorDeManejador: EscuchaDeErrorDeManejador = () => {}) {}
 
-  subscribe(key: string, handler: EventHandler): Unsubscribe {
-    const registrados = this.handlers.get(key) ?? new Set<EventHandler>();
+  suscribir(key: string, handler: ManejadorDeEvento): Desuscribir {
+    const registrados = this.manejadores.get(key) ?? new Set<ManejadorDeEvento>();
     registrados.add(handler);
-    this.handlers.set(key, registrados);
+    this.manejadores.set(key, registrados);
     return () => {
       registrados.delete(handler);
     };
   }
 
-  async publish(event: IntegrationEvent): Promise<void> {
-    const registrados = [...(this.handlers.get(eventKey(event)) ?? [])];
+  async publicar(event: EventoDeIntegracion): Promise<void> {
+    const registrados = [...(this.manejadores.get(claveDeEvento(event)) ?? [])];
     // El fallo de un manejador no impide que los demás reciban el evento.
     const resultados = await Promise.allSettled(registrados.map(async (handler) => handler(event)));
     for (const resultado of resultados) {
-      if (resultado.status === 'rejected') this.onHandlerError(resultado.reason, event);
+      if (resultado.status === 'rejected') this.alErrorDeManejador(resultado.reason, event);
     }
   }
 }

@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { {{camelCase name}}Module } from '../index.js';
+import { {{camelCase name}}Modulo } from '../index.js';
 
 describe('módulo {{name}}', () => {
   it('expone su nombre', () => {
-    expect({{camelCase name}}Module.name).toBe('{{name}}');
+    expect({{camelCase name}}Modulo.nombre).toBe('{{name}}');
   });
 
   it('se registra sin errores', async () => {
     const registrar = async () =>
-      {{camelCase name}}Module.register({} as never, {} as never, {} as never);
+      {{camelCase name}}Modulo.registrar({} as never, {} as never, {} as never);
 
     await expect(registrar()).resolves.toBeUndefined();
   });

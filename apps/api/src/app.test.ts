@@ -1,37 +1,37 @@
-import { InMemoryEventBus } from '@gis/event-bus';
-import { createLogger, loadConfig, loadFeatureFlags } from '@gis/platform';
-import type { ModuleDefinition, Queryable } from '@gis/platform';
+import { BusDeEventosEnMemoria } from '@gis/event-bus';
+import { crearRegistro, cargarConfig, cargarInterruptores } from '@gis/platform';
+import type { DefinicionDeModulo, Consultable } from '@gis/platform';
 import { describe, expect, it, vi } from 'vitest';
-import { buildApp } from './app.js';
+import { construirApp } from './app.js';
 
-const config = loadConfig({
+const config = cargarConfig({
   DATABASE_URL: 'postgres://gis:gis@localhost:5432/gis',
   CORS_ORIGIN: 'http://localhost:5173',
   APP_VERSION: '1.2.3',
 });
 
-const dbArriba: Queryable = { query: async () => [] };
-const dbCaida: Queryable = {
+const dbArriba: Consultable = { query: async () => [] };
+const dbCaida: Consultable = {
   query: async () => {
     throw new Error('ECONNREFUSED');
   },
 };
 
 interface Opciones {
-  db?: Queryable;
+  db?: Consultable;
   env?: Record<string, string>;
-  modules?: ModuleDefinition[];
+  modules?: DefinicionDeModulo[];
   lineas?: string[];
 }
 
 function crear({ db = dbArriba, env = {}, modules = [], lineas = [] }: Opciones = {}) {
-  return buildApp({
+  return construirApp({
     config,
-    flags: loadFeatureFlags(env),
-    logger: createLogger('info', { write: (linea) => lineas.push(linea) }),
+    interruptores: cargarInterruptores(env),
+    registro: crearRegistro('info', { write: (linea) => lineas.push(linea) }),
     db,
-    bus: new InMemoryEventBus(),
-    modules,
+    bus: new BusDeEventosEnMemoria(),
+    modulos: modules,
   });
 }
 
@@ -82,9 +82,9 @@ describe('ID de correlación', () => {
 });
 
 describe('registro de módulos', () => {
-  const moduloDePrueba = (name: string): ModuleDefinition => ({
-    name,
-    register: vi.fn((app) => {
+  const moduloDePrueba = (name: string): DefinicionDeModulo => ({
+    nombre: name,
+    registrar: vi.fn((app) => {
       app.get(`/${name}`, async () => ({ modulo: name }));
     }),
   });
@@ -99,7 +99,7 @@ describe('registro de módulos', () => {
 
     expect((await app.inject({ method: 'GET', url: '/heatmap' })).statusCode).toBe(200);
     expect((await app.inject({ method: 'GET', url: '/moderation' })).statusCode).toBe(404);
-    expect(apagado.register).not.toHaveBeenCalled();
+    expect(apagado.registrar).not.toHaveBeenCalled();
   });
 
   it('registra siempre los módulos imprescindibles', async () => {
@@ -107,6 +107,6 @@ describe('registro de módulos', () => {
 
     await crear({ modules: [reports] });
 
-    expect(reports.register).toHaveBeenCalledOnce();
+    expect(reports.registrar).toHaveBeenCalledOnce();
   });
 });

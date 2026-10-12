@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
-  checkDatabase,
-  createPool,
-  ConfigError,
-  createLogger,
-  featureVariable,
-  loadConfig,
-  loadFeatureFlags,
+  verificarBaseDeDatos,
+  crearPool,
+  ErrorDeConfig,
+  crearRegistro,
+  variableDeInterruptor,
+  cargarConfig,
+  cargarInterruptores,
 } from './index.js';
 
 const entornoValido = {
@@ -14,65 +14,65 @@ const entornoValido = {
   CORS_ORIGIN: 'http://localhost:5173',
 };
 
-describe('loadConfig', () => {
+describe('cargarConfig', () => {
   it('aplica los valores por defecto', () => {
-    expect(loadConfig(entornoValido)).toEqual({
+    expect(cargarConfig(entornoValido)).toEqual({
       version: '0.0.0-dev',
-      nodeEnv: 'development',
-      port: 3000,
-      logLevel: 'info',
-      databaseUrl: entornoValido.DATABASE_URL,
-      corsOrigin: entornoValido.CORS_ORIGIN,
+      entorno: 'development',
+      puerto: 3000,
+      nivelDeLog: 'info',
+      urlBaseDeDatos: entornoValido.DATABASE_URL,
+      origenCors: entornoValido.CORS_ORIGIN,
     });
   });
 
   it('convierte el puerto a número', () => {
-    expect(loadConfig({ ...entornoValido, PORT: '8080' }).port).toBe(8080);
+    expect(cargarConfig({ ...entornoValido, PORT: '8080' }).puerto).toBe(8080);
   });
 
   it('no arranca si falta una variable obligatoria y dice cuál', () => {
-    const cargar = () => loadConfig({ CORS_ORIGIN: entornoValido.CORS_ORIGIN });
+    const cargar = () => cargarConfig({ CORS_ORIGIN: entornoValido.CORS_ORIGIN });
 
-    expect(cargar).toThrow(ConfigError);
+    expect(cargar).toThrow(ErrorDeConfig);
     expect(cargar).toThrow(/DATABASE_URL/);
   });
 
   it('rechaza valores inválidos', () => {
-    expect(() => loadConfig({ ...entornoValido, PORT: 'abc' })).toThrow(/PORT/);
-    expect(() => loadConfig({ ...entornoValido, NODE_ENV: 'staging' })).toThrow(/NODE_ENV/);
+    expect(() => cargarConfig({ ...entornoValido, PORT: 'abc' })).toThrow(/PORT/);
+    expect(() => cargarConfig({ ...entornoValido, NODE_ENV: 'staging' })).toThrow(/NODE_ENV/);
   });
 });
 
-describe('loadFeatureFlags', () => {
+describe('cargarInterruptores', () => {
   it('los módulos imprescindibles siempre están activos', () => {
-    const flags = loadFeatureFlags({});
+    const flags = cargarInterruptores({});
 
-    expect(flags.isEnabled('reports')).toBe(true);
-    expect(flags.isEnabled('verification')).toBe(true);
-    expect(flags.isEnabled('identity')).toBe(true);
+    expect(flags.estaActivo('reports')).toBe(true);
+    expect(flags.estaActivo('verification')).toBe(true);
+    expect(flags.estaActivo('identity')).toBe(true);
   });
 
   it('un módulo opcional está apagado salvo que su variable sea true', () => {
-    const flags = loadFeatureFlags({ FEATURE_HEATMAP: 'true', FEATURE_MODERATION: 'false' });
+    const flags = cargarInterruptores({ FEATURE_HEATMAP: 'true', FEATURE_MODERATION: 'false' });
 
-    expect(flags.isEnabled('heatmap')).toBe(true);
-    expect(flags.isEnabled('moderation')).toBe(false);
-    expect(flags.isEnabled('classifier')).toBe(false);
+    expect(flags.estaActivo('heatmap')).toBe(true);
+    expect(flags.estaActivo('moderation')).toBe(false);
+    expect(flags.estaActivo('classifier')).toBe(false);
   });
 
   it('traduce el nombre del módulo a su variable', () => {
-    expect(featureVariable('open-data')).toBe('FEATURE_OPEN_DATA');
-    expect(loadFeatureFlags({ FEATURE_OPEN_DATA: 'true' }).isEnabled('open-data')).toBe(true);
+    expect(variableDeInterruptor('open-data')).toBe('FEATURE_OPEN_DATA');
+    expect(cargarInterruptores({ FEATURE_OPEN_DATA: 'true' }).estaActivo('open-data')).toBe(true);
   });
 
   it('rechaza un valor que no sea true o false', () => {
-    expect(() => loadFeatureFlags({ FEATURE_HEATMAP: 'si' })).toThrow(/FEATURE_HEATMAP/);
+    expect(() => cargarInterruptores({ FEATURE_HEATMAP: 'si' })).toThrow(/FEATURE_HEATMAP/);
   });
 });
 
 describe('checkDatabase', () => {
   it('informa que la base de datos responde', async () => {
-    await expect(checkDatabase({ query: async () => [] })).resolves.toEqual({ ok: true });
+    await expect(verificarBaseDeDatos({ query: async () => [] })).resolves.toEqual({ ok: true });
   });
 
   it('informa el error sin lanzarlo', async () => {
@@ -82,14 +82,17 @@ describe('checkDatabase', () => {
       },
     };
 
-    await expect(checkDatabase(caida)).resolves.toEqual({ ok: false, error: 'ECONNREFUSED' });
+    await expect(verificarBaseDeDatos(caida)).resolves.toEqual({
+      ok: false,
+      error: 'ECONNREFUSED',
+    });
   });
 });
 
-describe('createLogger', () => {
+describe('crearRegistro', () => {
   it('escribe JSON con el nivel configurado', () => {
     const lineas: string[] = [];
-    const logger = createLogger('info', { write: (linea) => lineas.push(linea) });
+    const logger = crearRegistro('info', { write: (linea) => lineas.push(linea) });
 
     logger.debug('no se escribe');
     logger.info({ reqId: 'r-1' }, 'hola');
@@ -99,12 +102,10 @@ describe('createLogger', () => {
   });
 });
 
-describe('createPool', () => {
+describe('crearPool', () => {
   it('un error en una conexión inactiva no tumba el proceso y se notifica', async () => {
     const errores: Error[] = [];
-    const pool = createPool('postgres://gis:gis@localhost:5432/gis', (error) =>
-      errores.push(error),
-    );
+    const pool = crearPool('postgres://gis:gis@localhost:5432/gis', (error) => errores.push(error));
     const caida = new Error('terminating connection due to administrator command');
 
     // Sin un oyente, emitir "error" en un EventEmitter lanza una excepción.

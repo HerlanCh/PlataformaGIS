@@ -1,103 +1,103 @@
-import { GeoPoint, reportId, userId } from '@gis/shared-kernel';
+import { PuntoGeo, idReporte, idUsuario } from '@gis/shared-kernel';
 import { describe, expect, it } from 'vitest';
-import { MVP_CATEGORIES } from '../domain/category.js';
-import type { Category } from '../domain/category.js';
+import { CATEGORIAS_MVP } from '../domain/category.js';
+import type { Categoria } from '../domain/category.js';
 import {
-  ExtensionLimitReachedError,
-  InvalidTransitionError,
-  NotExpiredYetError,
+  ErrorLimiteDeExtensiones,
+  ErrorTransicionInvalida,
+  ErrorAunNoCaduca,
 } from '../domain/errors.js';
-import { Report, TRANSITIONS } from '../domain/report.js';
-import type { ReportStatus } from '../domain/report.js';
+import { Reporte, TRANSICIONES } from '../domain/report.js';
+import type { EstadoReporte } from '../domain/report.js';
 
-const categoria = (codigo: string): Category => {
-  const encontrada = MVP_CATEGORIES.find((c) => c.code === codigo);
+const categoria = (codigo: string): Categoria => {
+  const encontrada = CATEGORIAS_MVP.find((c) => c.codigo === codigo);
   if (!encontrada) throw new Error(`categoría desconocida: ${codigo}`);
   return encontrada;
 };
 
 const creado = new Date('2026-10-11T12:00:00Z');
 const minutosDespues = (minutos: number) => new Date(creado.getTime() + minutos * 60_000);
-const laPaz = GeoPoint.create(-16.5, -68.15);
-const autor = userId('11111111-1111-4111-8111-111111111111');
+const laPaz = PuntoGeo.crear(-16.5, -68.15);
+const autor = idUsuario('11111111-1111-4111-8111-111111111111');
 const CLAVE = 'b7e2a9c4-51d3-4f6a-9e08-3c2d1a0f9b77';
 
 const crear = (codigo = 'accidente') =>
-  Report.create({
-    id: reportId('6f1c2f0e-3b7a-4d2a-9c58-0a4f5b1d2e3f'),
-    category: categoria(codigo),
+  Reporte.crear({
+    id: idReporte('6f1c2f0e-3b7a-4d2a-9c58-0a4f5b1d2e3f'),
+    categoria: categoria(codigo),
     authorId: autor,
     location: laPaz,
     idempotencyKey: CLAVE,
-    now: creado,
+    ahora: creado,
   });
 
 /** Lleva un reporte nuevo al estado indicado por un camino válido. */
-function enEstado(estado: ReportStatus): Report {
+function enEstado(estado: EstadoReporte): Reporte {
   const reporte = crear();
-  const caminos: Record<ReportStatus, (r: Report) => void> = {
+  const caminos: Record<EstadoReporte, (r: Reporte) => void> = {
     ACTIVO: () => {},
-    CONFIRMADO: (r) => r.markConfirmed(creado),
-    RESUELTO: (r) => r.markResolved(creado),
-    CADUCADO: (r) => r.expire(minutosDespues(181)),
-    RECHAZADO: (r) => r.reject('MODERACION', creado),
+    CONFIRMADO: (r) => r.marcarConfirmado(creado),
+    RESUELTO: (r) => r.marcarResuelto(creado),
+    CADUCADO: (r) => r.caducar(minutosDespues(181)),
+    RECHAZADO: (r) => r.rechazar('MODERACION', creado),
   };
   caminos[estado](reporte);
-  reporte.pullEvents();
+  reporte.extraerEventos();
   return reporte;
 }
 
 /** Intenta la transición hacia `destino` con el método que le corresponde. */
-const INTENTAR: Record<Exclude<ReportStatus, 'ACTIVO'>, (r: Report) => void> = {
-  CONFIRMADO: (r) => r.markConfirmed(creado),
-  RESUELTO: (r) => r.markResolved(creado),
+const INTENTAR: Record<Exclude<EstadoReporte, 'ACTIVO'>, (r: Reporte) => void> = {
+  CONFIRMADO: (r) => r.marcarConfirmado(creado),
+  RESUELTO: (r) => r.marcarResuelto(creado),
   // Muy después de cualquier caducidad posible, para probar solo la máquina de estados.
-  CADUCADO: (r) => r.expire(minutosDespues(100_000)),
-  RECHAZADO: (r) => r.reject('MODERACION', creado),
+  CADUCADO: (r) => r.caducar(minutosDespues(100_000)),
+  RECHAZADO: (r) => r.rechazar('MODERACION', creado),
 };
 
-const ESTADOS = Object.keys(TRANSITIONS) as ReportStatus[];
-const DESTINOS = Object.keys(INTENTAR) as Exclude<ReportStatus, 'ACTIVO'>[];
+const ESTADOS = Object.keys(TRANSICIONES) as EstadoReporte[];
+const DESTINOS = Object.keys(INTENTAR) as Exclude<EstadoReporte, 'ACTIVO'>[];
 const PARES = ESTADOS.flatMap((desde) => DESTINOS.map((hacia) => [desde, hacia] as const));
 
-describe('Report: creación', () => {
+describe('Reporte: creación', () => {
   it('HU-01: nace ACTIVO, con la caducidad de su categoría', () => {
     const reporte = crear('bloqueo');
 
     expect(reporte).toMatchObject({
-      status: 'ACTIVO',
-      categoryCode: 'bloqueo',
+      estado: 'ACTIVO',
+      codigoCategoria: 'bloqueo',
       authorId: autor,
-      ttlMinutes: 360,
-      createdAt: creado,
-      expiresAt: minutosDespues(360),
-      extensions: 0,
-      rejectionReason: null,
+      ttlMinutos: 360,
+      creadoEn: creado,
+      caducaEn: minutosDespues(360),
+      extensiones: 0,
+      motivoRechazo: null,
       idempotencyKey: CLAVE,
-      isActive: true,
+      estaActivo: true,
     });
-    expect(reporte.pullEvents()).toEqual([{ type: 'ReportCreated', occurredAt: creado }]);
+    expect(reporte.extraerEventos()).toEqual([{ tipo: 'ReporteCreado', ocurridoEn: creado }]);
   });
 
   it('HU-02: en una categoría no sensible la ubicación pública es la real', () => {
-    expect(crear('bloqueo').publicLocation.equals(laPaz)).toBe(true);
+    expect(crear('bloqueo').publicLocation.esIgualA(laPaz)).toBe(true);
   });
 
   it('HU-02: en "robo" la ubicación pública no es la real, que se conserva aparte', () => {
     const reporte = crear('robo');
 
-    expect(reporte.location.equals(laPaz)).toBe(true);
-    expect(reporte.publicLocation.equals(laPaz)).toBe(false);
-    expect(reporte.location.distanceTo(reporte.publicLocation)).toBeLessThanOrEqual(142);
+    expect(reporte.location.esIgualA(laPaz)).toBe(true);
+    expect(reporte.publicLocation.esIgualA(laPaz)).toBe(false);
+    expect(reporte.location.distanciaA(reporte.publicLocation)).toBeLessThanOrEqual(142);
   });
 });
 
-describe('Report: máquina de estados', () => {
-  const validos = PARES.filter(([desde, hacia]) => TRANSITIONS[desde].includes(hacia));
-  const invalidos = PARES.filter(([desde, hacia]) => !TRANSITIONS[desde].includes(hacia));
+describe('Reporte: máquina de estados', () => {
+  const validos = PARES.filter(([desde, hacia]) => TRANSICIONES[desde].includes(hacia));
+  const invalidos = PARES.filter(([desde, hacia]) => !TRANSICIONES[desde].includes(hacia));
 
   it('la tabla de transiciones es la del roadmap', () => {
-    expect(TRANSITIONS).toEqual({
+    expect(TRANSICIONES).toEqual({
       ACTIVO: ['CONFIRMADO', 'RESUELTO', 'CADUCADO', 'RECHAZADO'],
       CONFIRMADO: ['RESUELTO', 'CADUCADO', 'RECHAZADO'],
       RESUELTO: [],
@@ -113,162 +113,162 @@ describe('Report: máquina de estados', () => {
 
     INTENTAR[hacia](reporte);
 
-    expect(reporte.status).toBe(hacia);
+    expect(reporte.estado).toBe(hacia);
   });
 
   it.each(invalidos)('rechaza %s → %s', (desde, hacia) => {
     const reporte = enEstado(desde);
 
-    expect(() => INTENTAR[hacia](reporte)).toThrow(InvalidTransitionError);
-    expect(reporte.status).toBe(desde);
-    expect(reporte.pullEvents()).toEqual([]);
+    expect(() => INTENTAR[hacia](reporte)).toThrow(ErrorTransicionInvalida);
+    expect(reporte.estado).toBe(desde);
+    expect(reporte.extraerEventos()).toEqual([]);
   });
 
   it('un estado final deja de estar vigente', () => {
-    expect(enEstado('CONFIRMADO').isActive).toBe(true);
-    expect(enEstado('RESUELTO').isActive).toBe(false);
-    expect(enEstado('CADUCADO').isActive).toBe(false);
-    expect(enEstado('RECHAZADO').isActive).toBe(false);
+    expect(enEstado('CONFIRMADO').estaActivo).toBe(true);
+    expect(enEstado('RESUELTO').estaActivo).toBe(false);
+    expect(enEstado('CADUCADO').estaActivo).toBe(false);
+    expect(enEstado('RECHAZADO').estaActivo).toBe(false);
   });
 });
 
-describe('Report: confirmación y extensiones', () => {
+describe('Reporte: confirmación y extensiones', () => {
   it('HU-03: al confirmarse, un accidente (TTL 180) extiende su caducidad 90 minutos', () => {
     const reporte = crear('accidente');
-    reporte.pullEvents();
+    reporte.extraerEventos();
 
-    reporte.markConfirmed(minutosDespues(10));
+    reporte.marcarConfirmado(minutosDespues(10));
 
     expect(reporte).toMatchObject({
-      status: 'CONFIRMADO',
-      expiresAt: minutosDespues(270),
-      extensions: 1,
+      estado: 'CONFIRMADO',
+      caducaEn: minutosDespues(270),
+      extensiones: 1,
     });
-    expect(reporte.pullEvents()).toEqual([
-      { type: 'ReportConfirmed', occurredAt: minutosDespues(10), expiresAt: minutosDespues(270) },
+    expect(reporte.extraerEventos()).toEqual([
+      { tipo: 'ReporteConfirmado', ocurridoEn: minutosDespues(10), caducaEn: minutosDespues(270) },
     ]);
   });
 
   it('HU-03: la segunda extensión añade otro 50 % del TTL original', () => {
     const reporte = enEstado('CONFIRMADO');
 
-    reporte.extendExpiration(minutosDespues(20));
+    reporte.extenderCaducidad(minutosDespues(20));
 
-    expect(reporte).toMatchObject({ expiresAt: minutosDespues(360), extensions: 2 });
-    expect(reporte.pullEvents()).toEqual([
-      { type: 'ReportExtended', occurredAt: minutosDespues(20), expiresAt: minutosDespues(360) },
+    expect(reporte).toMatchObject({ caducaEn: minutosDespues(360), extensiones: 2 });
+    expect(reporte.extraerEventos()).toEqual([
+      { tipo: 'ReporteExtendido', ocurridoEn: minutosDespues(20), caducaEn: minutosDespues(360) },
     ]);
   });
 
   it('HU-03: ninguna confirmación posterior extiende más allá de dos veces', () => {
     const reporte = enEstado('CONFIRMADO');
-    reporte.extendExpiration(creado);
+    reporte.extenderCaducidad(creado);
 
-    expect(() => reporte.extendExpiration(creado)).toThrow(ExtensionLimitReachedError);
-    expect(reporte).toMatchObject({ expiresAt: minutosDespues(360), extensions: 2 });
+    expect(() => reporte.extenderCaducidad(creado)).toThrow(ErrorLimiteDeExtensiones);
+    expect(reporte).toMatchObject({ caducaEn: minutosDespues(360), extensiones: 2 });
   });
 
   it.each(['ACTIVO', 'RESUELTO', 'CADUCADO', 'RECHAZADO'] as const)(
     'un reporte %s no admite extensión',
     (estado) => {
-      expect(() => enEstado(estado).extendExpiration(creado)).toThrow(InvalidTransitionError);
+      expect(() => enEstado(estado).extenderCaducidad(creado)).toThrow(ErrorTransicionInvalida);
     },
   );
 });
 
-describe('Report: caducidad', () => {
+describe('Reporte: caducidad', () => {
   it('HU-04: un accidente de hace 181 minutos pasa a CADUCADO', () => {
     const reporte = crear('accidente');
-    reporte.pullEvents();
+    reporte.extraerEventos();
 
-    reporte.expire(minutosDespues(181));
+    reporte.caducar(minutosDespues(181));
 
-    expect(reporte.status).toBe('CADUCADO');
-    expect(reporte.pullEvents()).toEqual([
-      { type: 'ReportExpired', occurredAt: minutosDespues(181) },
+    expect(reporte.estado).toBe('CADUCADO');
+    expect(reporte.extraerEventos()).toEqual([
+      { tipo: 'ReporteCaducado', ocurridoEn: minutosDespues(181) },
     ]);
   });
 
   it('HU-04: a los 179 minutos conserva su estado', () => {
     const reporte = crear('accidente');
 
-    expect(() => reporte.expire(minutosDespues(179))).toThrow(NotExpiredYetError);
-    expect(reporte.status).toBe('ACTIVO');
+    expect(() => reporte.caducar(minutosDespues(179))).toThrow(ErrorAunNoCaduca);
+    expect(reporte.estado).toBe('ACTIVO');
   });
 
   it('HU-04: un reporte CONFIRMADO caduca cuando pasa su caducidad extendida', () => {
     const reporte = enEstado('CONFIRMADO'); // caducidad extendida a los 270 minutos
 
-    expect(() => reporte.expire(minutosDespues(200))).toThrow(NotExpiredYetError);
-    reporte.expire(minutosDespues(271));
+    expect(() => reporte.caducar(minutosDespues(200))).toThrow(ErrorAunNoCaduca);
+    reporte.caducar(minutosDespues(271));
 
-    expect(reporte.status).toBe('CADUCADO');
+    expect(reporte.estado).toBe('CADUCADO');
   });
 });
 
-describe('Report: resolución y rechazo', () => {
+describe('Reporte: resolución y rechazo', () => {
   it('HU-03: las negaciones de la comunidad lo dejan RESUELTO', () => {
     const reporte = enEstado('CONFIRMADO');
 
-    reporte.markResolved(minutosDespues(30));
+    reporte.marcarResuelto(minutosDespues(30));
 
-    expect(reporte.status).toBe('RESUELTO');
-    expect(reporte.pullEvents()).toEqual([
-      { type: 'ReportResolved', occurredAt: minutosDespues(30) },
+    expect(reporte.estado).toBe('RESUELTO');
+    expect(reporte.extraerEventos()).toEqual([
+      { tipo: 'ReporteResuelto', ocurridoEn: minutosDespues(30) },
     ]);
   });
 
   it('HU-12: un moderador lo rechaza y queda registrado el motivo', () => {
     const reporte = enEstado('ACTIVO');
 
-    reporte.reject('MODERACION', minutosDespues(5));
+    reporte.rechazar('MODERACION', minutosDespues(5));
 
-    expect(reporte).toMatchObject({ status: 'RECHAZADO', rejectionReason: 'MODERACION' });
-    expect(reporte.pullEvents()).toEqual([
-      { type: 'ReportRejected', occurredAt: minutosDespues(5), reason: 'MODERACION' },
+    expect(reporte).toMatchObject({ estado: 'RECHAZADO', motivoRechazo: 'MODERACION' });
+    expect(reporte.extraerEventos()).toEqual([
+      { tipo: 'ReporteRechazado', ocurridoEn: minutosDespues(5), motivo: 'MODERACION' },
     ]);
   });
 
   it('el reporte de un autor silenciado se crea ACTIVO y pasa de inmediato a RECHAZADO', () => {
     const reporte = crear();
 
-    reporte.reject('AUTOR_SILENCIADO', creado);
+    reporte.rechazar('AUTOR_SILENCIADO', creado);
 
-    expect(reporte).toMatchObject({ status: 'RECHAZADO', rejectionReason: 'AUTOR_SILENCIADO' });
-    expect(reporte.pullEvents().map((evento) => evento.type)).toEqual([
-      'ReportCreated',
-      'ReportRejected',
+    expect(reporte).toMatchObject({ estado: 'RECHAZADO', motivoRechazo: 'AUTOR_SILENCIADO' });
+    expect(reporte.extraerEventos().map((evento) => evento.tipo)).toEqual([
+      'ReporteCreado',
+      'ReporteRechazado',
     ]);
   });
 });
 
-describe('Report: persistencia y eventos', () => {
+describe('Reporte: persistencia y eventos', () => {
   it('se reconstruye sin registrar eventos', () => {
     const original = enEstado('CONFIRMADO');
 
-    const restaurado = Report.restore({
+    const restaurado = Reporte.restaurar({
       id: original.id,
-      categoryCode: original.categoryCode,
+      codigoCategoria: original.codigoCategoria,
       authorId: original.authorId,
       location: original.location,
       publicLocation: original.publicLocation,
-      status: original.status,
-      ttlMinutes: original.ttlMinutes,
-      createdAt: original.createdAt,
-      expiresAt: original.expiresAt,
-      extensions: original.extensions,
-      rejectionReason: original.rejectionReason,
+      estado: original.estado,
+      ttlMinutos: original.ttlMinutos,
+      creadoEn: original.creadoEn,
+      caducaEn: original.caducaEn,
+      extensiones: original.extensiones,
+      motivoRechazo: original.motivoRechazo,
       idempotencyKey: original.idempotencyKey,
     });
 
-    expect(restaurado).toMatchObject({ status: 'CONFIRMADO', extensions: 1 });
-    expect(restaurado.pullEvents()).toEqual([]);
+    expect(restaurado).toMatchObject({ estado: 'CONFIRMADO', extensiones: 1 });
+    expect(restaurado.extraerEventos()).toEqual([]);
   });
 
   it('entregar los eventos vacía la lista', () => {
     const reporte = crear();
 
-    expect(reporte.pullEvents()).toHaveLength(1);
-    expect(reporte.pullEvents()).toEqual([]);
+    expect(reporte.extraerEventos()).toHaveLength(1);
+    expect(reporte.extraerEventos()).toEqual([]);
   });
 });

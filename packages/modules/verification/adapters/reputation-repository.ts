@@ -1,42 +1,42 @@
-import type { Executor } from '@gis/platform';
-import { userId } from '@gis/shared-kernel';
-import type { UserId } from '@gis/shared-kernel';
+import type { Ejecutor } from '@gis/platform';
+import { idUsuario } from '@gis/shared-kernel';
+import type { IdUsuario } from '@gis/shared-kernel';
 import { eq, sql } from 'drizzle-orm';
-import type { ReputationRepository } from '../domain/ports.js';
-import { Reputation } from '../domain/reputation.js';
-import { reputations } from './schema.js';
+import type { RepositorioDeReputaciones } from '../domain/ports.js';
+import { Reputacion } from '../domain/reputation.js';
+import { reputaciones } from './schema.js';
 
-type Fila = typeof reputations.$inferSelect;
+type Fila = typeof reputaciones.$inferSelect;
 
 /** Mapeo explícito fila → entidad: el dominio nunca ve tipos de Drizzle. */
-const aEntidad = (fila: Fila): Reputation =>
-  Reputation.restore({
-    userId: userId(fila.userId),
-    score: fila.score,
-    lastPenaltyAt: fila.lastPenaltyAt,
+const aEntidad = (fila: Fila): Reputacion =>
+  Reputacion.restaurar({
+    idUsuario: idUsuario(fila.idUsuario),
+    puntaje: fila.puntaje,
+    ultimaPenalizacionEn: fila.ultimaPenalizacionEn,
   });
 
-export class PgReputationRepository implements ReputationRepository {
-  constructor(private readonly db: Executor) {}
+export class RepositorioReputacionesPg implements RepositorioDeReputaciones {
+  constructor(private readonly db: Ejecutor) {}
 
-  async findByUser(id: UserId): Promise<Reputation | null> {
+  async buscarPorUsuario(id: IdUsuario): Promise<Reputacion | null> {
     const [fila] = await this.db
       .select()
-      .from(reputations)
-      .where(eq(reputations.userId, id))
+      .from(reputaciones)
+      .where(eq(reputaciones.idUsuario, id))
       .limit(1);
     return fila ? aEntidad(fila) : null;
   }
 
-  async save(reputation: Reputation): Promise<void> {
+  async guardar(reputacion: Reputacion): Promise<void> {
     const mutables = {
-      score: reputation.score,
-      lastPenaltyAt: reputation.lastPenaltyAt,
-      updatedAt: sql`now()`,
+      puntaje: reputacion.puntaje,
+      ultimaPenalizacionEn: reputacion.ultimaPenalizacionEn,
+      actualizadoEn: sql`now()`,
     };
     await this.db
-      .insert(reputations)
-      .values({ userId: reputation.userId, ...mutables })
-      .onConflictDoUpdate({ target: reputations.userId, set: mutables });
+      .insert(reputaciones)
+      .values({ idUsuario: reputacion.idUsuario, ...mutables })
+      .onConflictDoUpdate({ target: reputaciones.idUsuario, set: mutables });
   }
 }
