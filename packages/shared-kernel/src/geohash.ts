@@ -33,6 +33,24 @@ function validarPrecision(precision: number): void {
   }
 }
 
+interface Intervalo {
+  min: number;
+  max: number;
+}
+
+const BITS_POR_CARACTER = 5;
+const mundo = (): { latitud: Intervalo; longitud: Intervalo } => ({
+  latitud: { min: -90, max: 90 },
+  longitud: { min: -180, max: 180 },
+});
+
+/** Parte el intervalo por la mitad y se queda con la mitad alta o con la baja. */
+function biseccionar(intervalo: Intervalo, mitadAlta: boolean): void {
+  const mitad = (intervalo.min + intervalo.max) / 2;
+  if (mitadAlta) intervalo.min = mitad;
+  else intervalo.max = mitad;
+}
+
 /**
  * Geohash de cualquier coordenada WGS84, sin restringir el área de servicio.
  * Se bisecciona alternando longitud y latitud (empieza por la longitud); cada 5 bits son un
@@ -40,31 +58,21 @@ function validarPrecision(precision: number): void {
  */
 export function codificarGeohash(latitud: number, longitud: number, precision: number): string {
   validarPrecision(precision);
-  let latMin = -90;
-  let latMax = 90;
-  let lonMin = -180;
-  let lonMax = 180;
-  let esLongitud = true;
-  let bits = 0;
+  const { latitud: rangoLatitud, longitud: rangoLongitud } = mundo();
   let indice = 0;
   let resultado = '';
 
-  while (resultado.length < precision) {
-    const mitad = esLongitud ? (lonMin + lonMax) / 2 : (latMin + latMax) / 2;
+  for (let bit = 0; bit < precision * BITS_POR_CARACTER; bit += 1) {
+    // Los bits pares afinan la longitud y los impares, la latitud.
+    const esLongitud = bit % 2 === 0;
+    const intervalo = esLongitud ? rangoLongitud : rangoLatitud;
     const valor = esLongitud ? longitud : latitud;
-    indice <<= 1;
-    if (valor >= mitad) {
-      indice |= 1;
-      if (esLongitud) lonMin = mitad;
-      else latMin = mitad;
-    } else if (esLongitud) lonMax = mitad;
-    else latMax = mitad;
+    const mitadAlta = valor >= (intervalo.min + intervalo.max) / 2;
+    biseccionar(intervalo, mitadAlta);
+    indice = (indice << 1) | (mitadAlta ? 1 : 0);
 
-    esLongitud = !esLongitud;
-    bits += 1;
-    if (bits === 5) {
+    if (bit % BITS_POR_CARACTER === BITS_POR_CARACTER - 1) {
       resultado += ALFABETO[indice];
-      bits = 0;
       indice = 0;
     }
   }
@@ -80,28 +88,23 @@ export function limitesDeCelda(celda: string): CajaGeografica {
   if (celda.length === 0 || celda.length > PRECISION_MAXIMA) {
     throw new RangeError(`La celda debe tener entre 1 y ${PRECISION_MAXIMA} caracteres`);
   }
-  let [latMin, latMax] = [-90, 90];
-  let [lonMin, lonMax] = [-180, 180];
-  let esLongitud = true;
+  const { latitud, longitud } = mundo();
+  let bit = 0;
 
   for (const caracter of celda) {
     const valor = ALFABETO.indexOf(caracter);
     if (valor < 0) throw new RangeError(`"${caracter}" no es un carácter de geohash`);
-    for (let bit = 4; bit >= 0; bit -= 1) {
-      const encendido = ((valor >> bit) & 1) === 1;
-      if (esLongitud) {
-        const mitad = (lonMin + lonMax) / 2;
-        if (encendido) lonMin = mitad;
-        else lonMax = mitad;
-      } else {
-        const mitad = (latMin + latMax) / 2;
-        if (encendido) latMin = mitad;
-        else latMax = mitad;
-      }
-      esLongitud = !esLongitud;
+    for (let posicion = BITS_POR_CARACTER - 1; posicion >= 0; posicion -= 1) {
+      biseccionar(bit % 2 === 0 ? longitud : latitud, ((valor >> posicion) & 1) === 1);
+      bit += 1;
     }
   }
-  return { latitudMin: latMin, latitudMax: latMax, longitudMin: lonMin, longitudMax: lonMax };
+  return {
+    latitudMin: latitud.min,
+    latitudMax: latitud.max,
+    longitudMin: longitud.min,
+    longitudMax: longitud.max,
+  };
 }
 
 /**

@@ -126,7 +126,9 @@ export class RepositorioReportesPostgis implements RepositorioDeReportes {
     radioM: number,
     limite: number,
   ): Promise<readonly Reporte[]> {
-    if (!(radioM > 0)) throw new RangeError('El radio debe ser un número positivo de metros');
+    if (Number.isNaN(radioM) || radioM <= 0) {
+      throw new RangeError('El radio debe ser un número positivo de metros');
+    }
     validarLimite(limite);
     const filas = await this.db
       .select()

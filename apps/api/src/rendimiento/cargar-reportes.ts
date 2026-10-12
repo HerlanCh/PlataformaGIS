@@ -16,13 +16,13 @@ const ZONAS = 5_000;
 const AUTORES = 2_000;
 const LOTE = 5_000;
 const SEMILLA = 20261012;
-const ANFITRIONES_LOCALES = ['localhost', '127.0.0.1', '::1'];
+const ANFITRIONES_LOCALES = new Set(['localhost', '127.0.0.1', '::1']);
 
 function urlLocal(): string {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('Falta DATABASE_URL');
   const { hostname } = new URL(url);
-  if (!ANFITRIONES_LOCALES.includes(hostname)) {
+  if (!ANFITRIONES_LOCALES.has(hostname)) {
     throw new Error(`La carga sintética solo corre en una base local, no en "${hostname}"`);
   }
   return url;
