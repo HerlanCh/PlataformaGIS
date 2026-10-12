@@ -7,3 +7,4 @@ docs
 CLAUDE.md
 *.hbs
 .mcp.json
+**/migrations/meta

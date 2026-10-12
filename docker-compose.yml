@@ -6,9 +6,11 @@ services:
       POSTGRES_PASSWORD: gis
       POSTGRES_DB: gis
     ports:
-      - '5432:5432'
+      # Puerto 5433 en el anfitrión: evita chocar con un PostgreSQL instalado en la máquina.
+      - '5433:5432'
     volumes:
-      - gis-db:/var/lib/postgresql/data
+      # Desde PostgreSQL 18 la imagen guarda los datos bajo /var/lib/postgresql.
+      - gis-db:/var/lib/postgresql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U gis -d gis']
       interval: 5s

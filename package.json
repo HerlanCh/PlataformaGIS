@@ -22,7 +22,9 @@
     "gen:module": "plop module",
     "postgen:module": "pnpm sync:modules && pnpm install",
     "sync:modules": "node tools/modules/sync-modules.mjs",
-    "duplication": "jscpd apps packages tools"
+    "duplication": "jscpd apps packages tools",
+    "db:migrate": "pnpm --filter @gis/api run db:migrate",
+    "db:generate": "pnpm -r --if-present run db:generate"
   },
   "lint-staged": {
     "*.{ts,tsx,js,cjs,mjs}": [
@@ -40,6 +42,7 @@
     "@types/node": "^24.19.2",
     "@vitest/coverage-v8": "^5.0.3",
     "dependency-cruiser": "^18.5.0",
+    "drizzle-kit": "^0.31.11",
     "eslint": "^10.12.0",
     "eslint-config-prettier": "^10.1.8",
     "fast-check": "^4.10.2",
