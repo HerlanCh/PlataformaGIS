@@ -1,3 +1,18 @@
+# [2.0.0](https://github.com/HerlanCh/PlataformaGIS/compare/v1.5.0...v2.0.0) (2026-10-12)
+
+
+### Code Refactoring
+
+* código en español (clases, funciones, eventos y campos del contrato) ([8182e15](https://github.com/HerlanCh/PlataformaGIS/commit/8182e153c5b3cf841688d2ab77540ffefac7ba73))
+
+
+### BREAKING CHANGES
+
+* los eventos de integración cambian de nombre y de campos
+(ReportCreated.v1 -> ReporteCreado.v1, etc.) sin crear una v2.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+
 # [1.5.0](https://github.com/HerlanCh/PlataformaGIS/compare/v1.4.0...v1.5.0) (2026-10-12)
 
 
