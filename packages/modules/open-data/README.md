@@ -16,7 +16,7 @@ _Ninguno todavía._
 
 ## Interfaz pública
 
-`openDataModule` en `index.ts`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
+`openDataModulo` en `index.ts`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
 
 ## Tablas propias
 

@@ -30,7 +30,7 @@ _Ninguno._
 
 ## Interfaz pública
 
-`identityModule` en `index.ts`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
+`identityModulo` en `index.ts`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
 
 ## Tablas propias
 

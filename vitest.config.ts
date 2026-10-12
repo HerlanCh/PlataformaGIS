@@ -30,6 +30,9 @@ export default defineConfig({
         // Arranque del proceso y registro generado: sin lógica que probar.
         '**/src/main.{ts,tsx}',
         '**/src/migrate.ts',
+        // Scripts de carga y medición: se ejecutan contra una base real (`pnpm perf:espacial`).
+        '**/rendimiento/cargar-reportes.ts',
+        '**/rendimiento/medir-consultas.ts',
         '**/*.generated.ts',
         // Infraestructura de pruebas y definiciones de tablas (sin lógica).
         'packages/testing/**',

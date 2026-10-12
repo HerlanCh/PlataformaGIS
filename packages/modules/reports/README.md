@@ -32,29 +32,31 @@ Los eventos públicos solo llevan `publicLocation`: nunca la ubicación real ni 
 
 ## Eventos que escucha
 
-| Evento           | Qué hace                                                              |
-| :--------------- | :-------------------------------------------------------------------- |
-| `VotoEmitido.v1` | Aplica la decisión que trae: `CONFIRM`, `EXTEND` o `RESOLVE` (Fase 5) |
+| Evento           | Qué hace                                                                   |
+| :--------------- | :------------------------------------------------------------------------- |
+| `VotoEmitido.v1` | Aplica la decisión que trae: `CONFIRMAR`, `EXTENDER` o `RESOLVER` (Fase 5) |
 
 ## Puertos
 
-| Puerto                     | Para qué                                                                                |
-| :------------------------- | :-------------------------------------------------------------------------------------- |
-| `RepositorioDeReportes`    | Guardar y recuperar reportes. Las consultas espaciales se añaden en la Fase 4           |
-| `RepositorioDeCategorias`  | Leer las categorías                                                                     |
-| `GeneradorDeId`            | Generar identificadores                                                                 |
-| `ReputacionDelAutor`       | Saber si el autor está silenciado. Lo conecta la raíz de composición con `verification` |
-| `UnidadDeTrabajoDeReporte` | Guardar un reporte y sus eventos de integración en una sola transacción (outbox)        |
+| Puerto                     | Para qué                                                                                                                                   |
+| :------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------- |
+| `RepositorioDeReportes`    | Guardar y recuperar reportes, y las consultas espaciales: ventana (estados obligatorios y tope de filas), cercanía, duplicados y caducados |
+| `RepositorioDeCategorias`  | Leer las categorías                                                                                                                        |
+| `GeneradorDeId`            | Generar identificadores                                                                                                                    |
+| `ReputacionDelAutor`       | Saber si el autor está silenciado. Lo conecta la raíz de composición con `verification`                                                    |
+| `UnidadDeTrabajoDeReporte` | Guardar un reporte y sus eventos de integración en una sola transacción (outbox)                                                           |
 
 ## Interfaz pública
 
-`reportsModule` en `index.ts`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
+`reportsModulo` en `index.ts`, junto con los adaptadores `RepositorioReportesPostgis` y `RepositorioCategoriasPg`, el catálogo `CATEGORIAS_MVP` y la proyección `ReportePublico`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
 
 ## Tablas propias
 
 `reportes` y `categorias`. Columnas, índices y restricciones en `docs/diccionario-datos.md`.
 
 `reportes.id_autor` guarda el ID de un usuario de `identity` sin clave foránea.
+
+El módulo `heatmap` lee `reportes` en modo de solo lectura y solo las columnas `ubicacion_publica`, `estado`, `codigo_categoria` y `creado_en` (ADR-003): renombrarlas exige actualizar su consulta.
 
 ## Interruptor
 

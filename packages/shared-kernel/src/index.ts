@@ -7,3 +7,13 @@ export { codigoCategoria, ErrorIdentificadorInvalido, idReporte, idUsuario } fro
 export type { Marca, CodigoCategoria, IdReporte, IdUsuario } from './ids.js';
 export { fallo, exito } from './result.js';
 export type { Fallo, Exito, Resultado } from './result.js';
+export {
+  celdaDe,
+  celdasQueCubren,
+  codificarGeohash,
+  ErrorAreaDemasiadoGrande,
+  limitesDeCelda,
+  MAX_CELDAS,
+  PRECISION_CELDA,
+} from './geohash.js';
+export type { CajaGeografica } from './geohash.js';

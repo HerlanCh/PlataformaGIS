@@ -16,7 +16,7 @@ _Ninguno todavía._
 
 ## Interfaz pública
 
-`moderationModule` en `index.ts`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
+`moderationModulo` en `index.ts`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
 
 ## Tablas propias
 

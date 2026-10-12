@@ -61,7 +61,10 @@ export const reportes = pgTable(
       'reportes_motivo_rechazo_check',
       sql`${tabla.motivoRechazo} is null or ${tabla.motivoRechazo} in ('MODERACION', 'AUTOR_SILENCIADO')`,
     ),
-    index('reportes_ubicacion_idx').using('gist', tabla.location),
+    // ST_DWithin sobre geography mide en metros; solo este índice funcional lo acelera.
+    index('reportes_ubicacion_geography_idx').using('gist', sql`(${tabla.location}::geography)`),
+    // Los más recientes primero (ventana del mapa) y los rangos de fechas (mapa de calor).
+    index('reportes_creado_en_idx').on(tabla.creadoEn),
     index('reportes_ubicacion_publica_idx').using('gist', tabla.publicLocation),
     // Solo los reportes vigentes: los que se muestran en el mapa y los que pueden caducar.
     index('reportes_vigentes_idx')

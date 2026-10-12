@@ -7,7 +7,9 @@
     "dev": "tsx watch --env-file-if-exists=../../.env src/main.ts",
     "build": "tsup",
     "start": "node dist/main.js",
-    "db:migrate": "tsx --env-file-if-exists=../../.env src/migrate.ts"
+    "db:migrate": "tsx --env-file-if-exists=../../.env src/migrate.ts",
+    "seed:load": "tsx --env-file-if-exists=../../.env src/rendimiento/cargar-reportes.ts",
+    "perf:espacial": "tsx --env-file-if-exists=../../.env src/rendimiento/medir-consultas.ts"
   },
   "dependencies": {
     "@gis/event-bus": "workspace:*",
@@ -21,6 +23,7 @@
     "@gis/module-subscriptions": "workspace:*",
     "@gis/module-verification": "workspace:*",
     "@gis/platform": "workspace:*",
+    "@gis/shared-kernel": "workspace:*",
     "drizzle-orm": "^0.45.4",
     "fastify": "^5.12.5",
     "pg": "^8.23.1",

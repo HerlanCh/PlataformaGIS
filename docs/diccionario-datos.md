@@ -101,8 +101,9 @@ Catálogo de categorías. La migración `0001_semilla_categorias` carga las cinc
 
 **Índices:**
 
-- `reportes_ubicacion_idx`: GiST sobre `ubicacion` (deduplicación y distancia para votar).
-- `reportes_ubicacion_publica_idx`: GiST sobre `ubicacion_publica` (consulta por viewport).
+- `reportes_ubicacion_geography_idx`: GiST sobre `ubicacion::geography` (deduplicación, cercanía y distancia para votar: `ST_DWithin` en metros). Sustituye en la Fase 4 al índice GiST sobre `ubicacion` como `geometry`, que ninguna consulta usaba.
+- `reportes_creado_en_idx`: B-tree sobre `creado_en` (los más recientes primero en la ventana del mapa y los rangos de fechas del mapa de calor). Añadido en la Fase 4.
+- `reportes_ubicacion_publica_idx`: GiST sobre `ubicacion_publica` (consulta por ventana del mapa y mapa de calor).
 - `reportes_vigentes_idx`: B-tree parcial sobre (`estado`, `caduca_en`) donde `estado` es `ACTIVO` o `CONFIRMADO` (mapa y tarea de caducidad).
 
 La columna `description` que preveía el roadmap no se crea todavía: el dominio no la modela. Se añadirá con una migración cuando el SRS fije su regla.
@@ -151,7 +152,7 @@ Una zona es inmutable: para cambiarla se elimina y se crea otra.
 
 **Índices:**
 
-- `zonas_suscritas_centro_idx`: GiST sobre `centro` (zonas que contienen un punto, Fase 4).
+- `zonas_suscritas_centro_idx`: GiST sobre `centro` (zonas que contienen un punto: `buscarSuscriptores`).
 - `zonas_suscritas_usuario_idx`: B-tree sobre `id_usuario` (zonas de un usuario y su límite de 5).
 
 ## `moderation` (opcional)
@@ -180,6 +181,7 @@ Auditoría: quién decidió qué sobre qué reporte y por qué. Solo se inserta.
 | `identity` | `0000_usuarios` | `usuarios` |
 | `reports` | `0000_categorias_reportes` | `categorias`, `reportes` y sus índices |
 | `reports` | `0001_semilla_categorias` | Las cinco categorías del MVP |
+| `reports` | `0002_indices_de_consulta` | Índices `reportes_ubicacion_geography_idx` y `reportes_creado_en_idx`; elimina `reportes_ubicacion_idx` |
 | `verification` | `0000_votos_reputaciones` | `votos` y `reputaciones` |
 | `subscriptions` | `0000_zonas_suscritas` | `zonas_suscritas` y sus índices |
 | `moderation` | `0000_acciones_moderacion` | `acciones_moderacion` y su índice |

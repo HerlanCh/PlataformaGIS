@@ -1,10 +1,10 @@
 import type { Ejecutor } from '@gis/platform';
 import { codigoCategoria, PuntoGeo, idUsuario } from '@gis/shared-kernel';
-import type { IdUsuario } from '@gis/shared-kernel';
+import type { CodigoCategoria, IdUsuario } from '@gis/shared-kernel';
 import { asc, eq, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import type { RepositorioDeSuscripciones } from '../domain/ports.js';
-import { idSuscripcion, ZonaSuscrita } from '../domain/zone-subscription.js';
+import { idSuscripcion, RADIO_DE_ZONA, ZonaSuscrita } from '../domain/zone-subscription.js';
 import type { IdSuscripcion } from '../domain/zone-subscription.js';
 import { zonasSuscritas } from './schema.js';
 
@@ -60,6 +60,24 @@ export class RepositorioSuscripcionesPg implements RepositorioDeSuscripciones {
       .select(columnas)
       .from(zonasSuscritas)
       .where(eq(zonasSuscritas.idUsuario, id))
+      .orderBy(asc(zonasSuscritas.creadoEn), asc(zonasSuscritas.id));
+    return filas.map(aEntidad);
+  }
+
+  async buscarSuscriptores(
+    punto: PuntoGeo,
+    categoria: CodigoCategoria,
+  ): Promise<readonly ZonaSuscrita[]> {
+    const filas = await this.db
+      .select(columnas)
+      .from(zonasSuscritas)
+      .where(
+        // El radio de cada fila no sirve al índice GiST: primero se acota con el radio máximo
+        // permitido (constante) y después se aplica el radio propio de la zona.
+        sql`st_dwithin(${zonasSuscritas.centro}, ${aGeography(punto)}, ${RADIO_DE_ZONA.maxM})
+          and st_dwithin(${zonasSuscritas.centro}, ${aGeography(punto)}, ${zonasSuscritas.radioM})
+          and ${categoria} = any(${zonasSuscritas.categorias})`,
+      )
       .orderBy(asc(zonasSuscritas.creadoEn), asc(zonasSuscritas.id));
     return filas.map(aEntidad);
   }

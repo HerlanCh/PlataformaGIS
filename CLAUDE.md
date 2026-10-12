@@ -64,6 +64,8 @@ Requiere Node 24 y pnpm 12. En bash de Windows, pnpm está en `%APPDATA%\npm`.
 - `pnpm db:migrate` aplica las migraciones pendientes en `DATABASE_URL` (plataforma y módulos activos).
 - `pnpm db:generate` genera la migración de avance desde `adapters/schema.ts` de cada módulo. Después hay que
   escribir a mano su reversa `<nombre>.down.sql` y revisar los tipos espaciales (Drizzle Kit omite el SRID).
+- `pnpm seed:load [cantidad]` carga reportes y zonas sintéticos (100.000 por defecto) en la base **local**;
+  `pnpm perf:espacial` mide las consultas espaciales y regenera `docs/rendimiento/consultas-espaciales.md`.
 - `pnpm test` (Vitest con cobertura y umbrales) · `pnpm exec vitest run <ruta>` (una sola prueba)
 - `pnpm lint` (ESLint + Prettier) · `pnpm format` · `pnpm typecheck` (`tsc -b`)
 - `pnpm depcruise` (reglas de arquitectura) · `pnpm duplication` (jscpd)

@@ -42,7 +42,9 @@ escribirJson(tsRaiz, {
 const tsApi = en('apps/api/tsconfig.json');
 const configApi = leerJson(tsApi);
 configApi.references = [
-  ...['testing', 'event-bus', 'platform'].map((p) => ({ path: `../../packages/${p}` })),
+  ...['shared-kernel', 'testing', 'event-bus', 'platform'].map((p) => ({
+    path: `../../packages/${p}`,
+  })),
   ...modulos.map((m) => ({ path: `../../packages/modules/${m}` })),
 ];
 escribirJson(tsApi, configApi);

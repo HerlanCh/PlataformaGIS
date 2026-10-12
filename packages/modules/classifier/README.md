@@ -16,7 +16,7 @@ _Ninguno todavía._
 
 ## Interfaz pública
 
-`classifierModule` en `index.ts`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
+`classifierModulo` en `index.ts`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
 
 ## Tablas propias
 
