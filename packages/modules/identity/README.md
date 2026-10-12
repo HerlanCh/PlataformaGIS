@@ -10,9 +10,9 @@ No guarda nombres, correos ni otros datos personales. La reputación no vive aqu
 
 ## Modelo de dominio
 
-| Elemento | Tipo    | Qué hace                                                                                                                                                   |
-| :------- | :------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `User`   | Entidad | Identificador, hash del dispositivo, rol (`CIUDADANO` o `MODERADOR`) y Telegram ID opcional. Permite vincular Telegram una sola vez y promover a moderador |
+| Elemento  | Tipo    | Qué hace                                                                                                                                                   |
+| :-------- | :------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Usuario` | Entidad | Identificador, hash del dispositivo, rol (`CIUDADANO` o `MODERADOR`) y Telegram ID opcional. Permite vincular Telegram una sola vez y promover a moderador |
 
 ## Eventos que emite
 
@@ -24,9 +24,9 @@ _Ninguno._
 
 ## Puertos
 
-| Puerto           | Para qué                                                            |
-| :--------------- | :------------------------------------------------------------------ |
-| `UserRepository` | Buscar un usuario por ID, por hash de dispositivo o por Telegram ID |
+| Puerto                  | Para qué                                                            |
+| :---------------------- | :------------------------------------------------------------------ |
+| `RepositorioDeUsuarios` | Buscar un usuario por ID, por hash de dispositivo o por Telegram ID |
 
 ## Interfaz pública
 

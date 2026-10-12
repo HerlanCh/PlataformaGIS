@@ -1,14 +1,14 @@
-import { MapView } from './MapView.js';
-import { PingStatus } from './PingStatus.js';
+import { VistaMapa } from './MapView.js';
+import { EstadoDePing } from './PingStatus.js';
 import { usePing } from './usePing.js';
 
-export function App({ apiUrl }: { apiUrl: string }) {
-  const estado = usePing(apiUrl);
+export function App({ urlApi }: { urlApi: string }) {
+  const estado = usePing(urlApi);
 
   return (
     <main className="app">
-      <MapView />
-      <PingStatus estado={estado} />
+      <VistaMapa />
+      <EstadoDePing estado={estado} />
     </main>
   );
 }

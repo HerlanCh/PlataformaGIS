@@ -45,8 +45,8 @@ PWA comunitaria para reportar y consultar incidentes urbanos georreferenciados e
 
 - **Código nuevo en español:** variables, funciones, clases, tipos, archivos, tablas y columnas, sin tildes ni eñes
   en los identificadores (`buscarCercanos`, `ZonaSuscrita`, `caduca_en`). Comentarios y pruebas, en español.
-- El código anterior a la Fase 4 tiene nombres públicos en inglés (`Report`, `findById`, `expiresAt`): no se
-  renombra salvo pedido expreso. Al ampliar una clase existente, los miembros nuevos van en español.
+- Todo el código existente ya está en español (renombrado por pedido expreso, ver `docs/bitacora.md`):
+  `Reporte`, `buscarPorId`, `caducaEn`. Los miembros y clases nuevos siguen la misma regla.
 - Se mantienen en inglés los nombres de los módulos, lo que impone una librería y los campos del contrato del SRS
   (`location`, `public_location`, `author_id`, `idempotency_key`).
 

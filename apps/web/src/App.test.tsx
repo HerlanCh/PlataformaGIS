@@ -29,24 +29,24 @@ describe('PWA mínima', () => {
   afterEach(cleanup);
 
   it('muestra el mapa centrado en La Paz', () => {
-    const { container } = render(<App apiUrl="http://api.test" />);
+    const { container } = render(<App urlApi="http://api.test" />);
 
     expect(screen.getByRole('application', { name: 'Mapa de incidentes' })).toBeTruthy();
     expect(container.querySelector('.leaflet-container')).not.toBeNull();
   });
 
   it('empieza sin conexión y a la espera del primer ping', () => {
-    render(<App apiUrl="http://api.test" />);
+    render(<App urlApi="http://api.test" />);
 
     expect(screen.getByRole('status').textContent).toContain('Sin conexión');
     expect(screen.getByRole('status').textContent).toContain('Esperando el primer ping');
   });
 
   it('muestra el último ping recibido', () => {
-    render(<App apiUrl="http://api.test" />);
+    render(<App urlApi="http://api.test" />);
 
     emitir('connect');
-    emitir('ping', { seq: 7, at: '2026-10-11T16:30:00Z' });
+    emitir('ping', { secuencia: 7, en: '2026-10-11T16:30:00Z' });
 
     const estado = screen.getByRole('status').textContent;
     expect(estado).toContain('Conectado');
@@ -56,8 +56,8 @@ describe('PWA mínima', () => {
   });
 
   it('avisa cuando se pierde la conexión y conserva el último ping', () => {
-    render(<App apiUrl="http://api.test" />);
-    emitir('ping', { seq: 3, at: '2026-10-11T16:30:00Z' });
+    render(<App urlApi="http://api.test" />);
+    emitir('ping', { secuencia: 3, en: '2026-10-11T16:30:00Z' });
 
     emitir('disconnect');
 
@@ -67,7 +67,7 @@ describe('PWA mínima', () => {
   });
 
   it('cierra la conexión al desmontar', () => {
-    const { unmount } = render(<App apiUrl="http://api.test" />);
+    const { unmount } = render(<App urlApi="http://api.test" />);
 
     unmount();
 

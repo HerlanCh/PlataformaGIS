@@ -1,16 +1,16 @@
-export interface Ok<T> {
-  readonly ok: true;
-  readonly value: T;
+export interface Exito<T> {
+  readonly exitoso: true;
+  readonly valor: T;
 }
 
-export interface Err<E> {
-  readonly ok: false;
+export interface Fallo<E> {
+  readonly exitoso: false;
   readonly error: E;
 }
 
 /** Resultado explícito de una operación que puede fallar por una regla de negocio. */
-export type Result<T, E> = Ok<T> | Err<E>;
+export type Resultado<T, E> = Exito<T> | Fallo<E>;
 
-export const ok = <T>(value: T): Ok<T> => ({ ok: true, value });
+export const exito = <T>(value: T): Exito<T> => ({ exitoso: true, valor: value });
 
-export const err = <E>(error: E): Err<E> => ({ ok: false, error });
+export const fallo = <E>(error: E): Fallo<E> => ({ exitoso: false, error });

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const configSchema = z.object({
+const esquemaConfig = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
@@ -9,41 +9,41 @@ const configSchema = z.object({
   APP_VERSION: z.string().min(1).default('0.0.0-dev'),
 });
 
-export interface AppConfig {
+export interface ConfigApp {
   /** Versión desplegada; la informa `/health`. */
   readonly version: string;
-  readonly nodeEnv: 'development' | 'test' | 'production';
-  readonly port: number;
-  readonly logLevel: string;
-  readonly databaseUrl: string;
-  readonly corsOrigin: string;
+  readonly entorno: 'development' | 'test' | 'production';
+  readonly puerto: number;
+  readonly nivelDeLog: string;
+  readonly urlBaseDeDatos: string;
+  readonly origenCors: string;
 }
 
-export type Env = Record<string, string | undefined>;
+export type Entorno = Record<string, string | undefined>;
 
 /** Se lanza al arrancar cuando falta una variable o tiene un valor inválido. */
-export class ConfigError extends Error {
-  constructor(readonly issues: readonly string[]) {
-    super(`Configuración inválida:\n- ${issues.join('\n- ')}`);
-    this.name = 'ConfigError';
+export class ErrorDeConfig extends Error {
+  constructor(readonly problemas: readonly string[]) {
+    super(`Configuración inválida:\n- ${problemas.join('\n- ')}`);
+    this.name = 'ErrorDeConfig';
   }
 }
 
-export const formatIssues = (error: z.ZodError): string[] =>
+export const formatearProblemas = (error: z.ZodError): string[] =>
   error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`);
 
 /** Valida el entorno. La aplicación no arranca si falta una variable obligatoria. */
-export function loadConfig(env: Env = process.env): AppConfig {
-  const resultado = configSchema.safeParse(env);
-  if (!resultado.success) throw new ConfigError(formatIssues(resultado.error));
+export function cargarConfig(env: Entorno = process.env): ConfigApp {
+  const resultado = esquemaConfig.safeParse(env);
+  if (!resultado.success) throw new ErrorDeConfig(formatearProblemas(resultado.error));
 
   const datos = resultado.data;
   return {
     version: datos.APP_VERSION,
-    nodeEnv: datos.NODE_ENV,
-    port: datos.PORT,
-    logLevel: datos.LOG_LEVEL,
-    databaseUrl: datos.DATABASE_URL,
-    corsOrigin: datos.CORS_ORIGIN,
+    entorno: datos.NODE_ENV,
+    puerto: datos.PORT,
+    nivelDeLog: datos.LOG_LEVEL,
+    urlBaseDeDatos: datos.DATABASE_URL,
+    origenCors: datos.CORS_ORIGIN,
   };
 }

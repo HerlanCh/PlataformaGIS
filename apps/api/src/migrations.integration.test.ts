@@ -1,14 +1,14 @@
-import { createDb, loadFeatureFlags, migrateAll } from '@gis/platform';
+import { crearDb, cargarInterruptores, migrarTodo } from '@gis/platform';
 import type { Db } from '@gis/platform';
 import { createTestDatabase, describeIntegration } from '@gis/testing';
 import type { TestDatabase } from '@gis/testing';
 import { sql } from 'drizzle-orm';
 import { afterEach, beforeEach, expect, it } from 'vitest';
-import { migrationSets } from './migrations.js';
-import { modules } from './modules.generated.js';
+import { conjuntosDeMigraciones } from './migrations.js';
+import { modulos } from './modules.generated.js';
 
 const TODOS_ENCENDIDOS = Object.fromEntries(
-  modules.map(({ name }) => [`FEATURE_${name.toUpperCase().replaceAll('-', '_')}`, 'true']),
+  modulos.map(({ nombre: name }) => [`FEATURE_${name.toUpperCase().replaceAll('-', '_')}`, 'true']),
 );
 
 const TABLAS_IMPRESCINDIBLES = [
@@ -25,7 +25,7 @@ describeIntegration('migraciones de toda la plataforma', () => {
   let db: Db;
 
   const migrar = (env: Record<string, string>) =>
-    migrateAll(db, migrationSets(loadFeatureFlags(env), modules));
+    migrarTodo(db, conjuntosDeMigraciones(cargarInterruptores(env), modulos));
 
   const tablas = async (): Promise<string[]> => {
     const { rows } = await db.execute(
@@ -37,7 +37,7 @@ describeIntegration('migraciones de toda la plataforma', () => {
 
   beforeEach(async () => {
     base = await createTestDatabase();
-    db = createDb(base.pool);
+    db = crearDb(base.pool);
   });
 
   afterEach(async () => {

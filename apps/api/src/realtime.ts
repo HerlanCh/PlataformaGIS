@@ -1,25 +1,25 @@
 import type { Server as HttpServer } from 'node:http';
 import { Server } from 'socket.io';
 
-export interface RealtimeOptions {
-  readonly corsOrigin: string;
-  readonly pingIntervalMs?: number;
+export interface OpcionesTiempoReal {
+  readonly origenCors: string;
+  readonly intervaloPingMs?: number;
 }
 
-export interface Realtime {
+export interface TiempoReal {
   readonly io: Server;
   close(): Promise<void>;
 }
 
 /** Servidor Socket.io mínimo: emite `ping` periódicamente a todos los clientes. */
-export function attachRealtime(server: HttpServer, options: RealtimeOptions): Realtime {
-  const io = new Server(server, { cors: { origin: options.corsOrigin } });
+export function adjuntarTiempoReal(servidor: HttpServer, opciones: OpcionesTiempoReal): TiempoReal {
+  const io = new Server(servidor, { cors: { origin: opciones.origenCors } });
 
-  let seq = 0;
+  let secuencia = 0;
   const temporizador = setInterval(() => {
-    seq += 1;
-    io.emit('ping', { seq, at: new Date().toISOString() });
-  }, options.pingIntervalMs ?? 5000);
+    secuencia += 1;
+    io.emit('ping', { secuencia, en: new Date().toISOString() });
+  }, opciones.intervaloPingMs ?? 5000);
 
   return {
     io,

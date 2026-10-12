@@ -1,12 +1,12 @@
 import { spawnSync } from 'node:child_process';
-import { InMemoryEventBus } from '@gis/event-bus';
-import { createLogger, createPool, loadConfig, loadFeatureFlags } from '@gis/platform';
+import { BusDeEventosEnMemoria } from '@gis/event-bus';
+import { crearRegistro, crearPool, cargarConfig, cargarInterruptores } from '@gis/platform';
 import type { Pool } from '@gis/platform';
 import { POSTGIS_IMAGE } from '@gis/testing';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildApp } from './app.js';
+import { construirApp } from './app.js';
 
 // En la CI Docker es obligatorio. En local, sin Docker, la prueba se omite con aviso.
 const hayDocker = spawnSync('docker', ['info'], { stdio: 'ignore' }).status === 0;
@@ -19,7 +19,7 @@ describe.skipIf(!ejecutar)('GET /health contra PostGIS real', () => {
 
   beforeAll(async () => {
     contenedor = await new PostgreSqlContainer(POSTGIS_IMAGE).start();
-    db = createPool(contenedor.getConnectionUri());
+    db = crearPool(contenedor.getConnectionUri());
   }, 180_000);
 
   afterAll(async () => {
@@ -28,16 +28,16 @@ describe.skipIf(!ejecutar)('GET /health contra PostGIS real', () => {
   });
 
   const crear = () =>
-    buildApp({
-      config: loadConfig({
+    construirApp({
+      config: cargarConfig({
         DATABASE_URL: contenedor.getConnectionUri(),
         CORS_ORIGIN: 'http://localhost:5173',
       }),
-      flags: loadFeatureFlags({}),
-      logger: createLogger('silent'),
+      interruptores: cargarInterruptores({}),
+      registro: crearRegistro('silent'),
       db,
-      bus: new InMemoryEventBus(),
-      modules: [],
+      bus: new BusDeEventosEnMemoria(),
+      modulos: [],
     });
 
   it('informa la base de datos arriba', async () => {

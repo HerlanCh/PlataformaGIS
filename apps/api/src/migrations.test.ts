@@ -1,20 +1,20 @@
-import { loadFeatureFlags, platformMigrations } from '@gis/platform';
-import type { ModuleDefinition } from '@gis/platform';
+import { cargarInterruptores, migracionesDePlataforma } from '@gis/platform';
+import type { DefinicionDeModulo } from '@gis/platform';
 import { describe, expect, it } from 'vitest';
-import { migrationSets } from './migrations.js';
+import { conjuntosDeMigraciones } from './migrations.js';
 
-const modulo = (name: string, conMigraciones = true): ModuleDefinition => ({
-  name,
-  register: () => {},
-  ...(conMigraciones ? { migrations: { name, folder: `/migraciones/${name}` } } : {}),
+const modulo = (name: string, conMigraciones = true): DefinicionDeModulo => ({
+  nombre: name,
+  registrar: () => {},
+  ...(conMigraciones ? { migraciones: { nombre: name, carpeta: `/migraciones/${name}` } } : {}),
 });
 
-const nombres = (env: Record<string, string>, modules: ModuleDefinition[]) =>
-  migrationSets(loadFeatureFlags(env), modules).map((conjunto) => conjunto.name);
+const nombres = (env: Record<string, string>, modules: DefinicionDeModulo[]) =>
+  conjuntosDeMigraciones(cargarInterruptores(env), modules).map((conjunto) => conjunto.nombre);
 
 describe('migrationSets', () => {
   it('la plataforma va siempre primero', () => {
-    expect(migrationSets(loadFeatureFlags({}), [])).toEqual([platformMigrations]);
+    expect(conjuntosDeMigraciones(cargarInterruptores({}), [])).toEqual([migracionesDePlataforma]);
     expect(nombres({}, [modulo('reports')])).toEqual(['platform', 'reports']);
   });
 

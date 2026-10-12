@@ -1,86 +1,86 @@
-import type { Executor } from '@gis/platform';
-import { categoryCode, GeoPoint, userId } from '@gis/shared-kernel';
-import type { UserId } from '@gis/shared-kernel';
+import type { Ejecutor } from '@gis/platform';
+import { codigoCategoria, PuntoGeo, idUsuario } from '@gis/shared-kernel';
+import type { IdUsuario } from '@gis/shared-kernel';
 import { asc, eq, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
-import type { SubscriptionRepository } from '../domain/ports.js';
-import { subscriptionId, ZoneSubscription } from '../domain/zone-subscription.js';
-import type { SubscriptionId } from '../domain/zone-subscription.js';
-import { zoneSubscriptions } from './schema.js';
+import type { RepositorioDeSuscripciones } from '../domain/ports.js';
+import { idSuscripcion, ZonaSuscrita } from '../domain/zone-subscription.js';
+import type { IdSuscripcion } from '../domain/zone-subscription.js';
+import { zonasSuscritas } from './schema.js';
 
 // En PostGIS x es la longitud e y la latitud.
 const columnas = {
-  id: zoneSubscriptions.id,
-  userId: zoneSubscriptions.userId,
-  latitude: sql<number>`st_y(${zoneSubscriptions.center}::geometry)`,
-  longitude: sql<number>`st_x(${zoneSubscriptions.center}::geometry)`,
-  radiusM: zoneSubscriptions.radiusM,
-  categories: zoneSubscriptions.categories,
-  createdAt: zoneSubscriptions.createdAt,
+  id: zonasSuscritas.id,
+  idUsuario: zonasSuscritas.idUsuario,
+  latitud: sql<number>`st_y(${zonasSuscritas.centro}::geometry)`,
+  longitud: sql<number>`st_x(${zonasSuscritas.centro}::geometry)`,
+  radioM: zonasSuscritas.radioM,
+  categorias: zonasSuscritas.categorias,
+  creadoEn: zonasSuscritas.creadoEn,
 };
 
 interface Fila {
   readonly id: string;
-  readonly userId: string;
-  readonly latitude: number;
-  readonly longitude: number;
-  readonly radiusM: number;
-  readonly categories: string[];
-  readonly createdAt: Date;
+  readonly idUsuario: string;
+  readonly latitud: number;
+  readonly longitud: number;
+  readonly radioM: number;
+  readonly categorias: string[];
+  readonly creadoEn: Date;
 }
 
-const aGeography = (punto: GeoPoint): SQL =>
-  sql`st_setsrid(st_makepoint(${punto.longitude}, ${punto.latitude}), 4326)::geography`;
+const aGeography = (punto: PuntoGeo): SQL =>
+  sql`st_setsrid(st_makepoint(${punto.longitud}, ${punto.latitud}), 4326)::geography`;
 
 /** Mapeo explícito fila → entidad: el dominio nunca ve tipos de Drizzle. */
-const aEntidad = (fila: Fila): ZoneSubscription =>
-  ZoneSubscription.restore({
-    id: subscriptionId(fila.id),
-    userId: userId(fila.userId),
-    center: GeoPoint.create(fila.latitude, fila.longitude),
-    radiusM: fila.radiusM,
-    categories: fila.categories.map(categoryCode),
-    createdAt: fila.createdAt,
+const aEntidad = (fila: Fila): ZonaSuscrita =>
+  ZonaSuscrita.restaurar({
+    id: idSuscripcion(fila.id),
+    idUsuario: idUsuario(fila.idUsuario),
+    centro: PuntoGeo.crear(fila.latitud, fila.longitud),
+    radioM: fila.radioM,
+    categorias: fila.categorias.map(codigoCategoria),
+    creadoEn: fila.creadoEn,
   });
 
-export class PgSubscriptionRepository implements SubscriptionRepository {
-  constructor(private readonly db: Executor) {}
+export class RepositorioSuscripcionesPg implements RepositorioDeSuscripciones {
+  constructor(private readonly db: Ejecutor) {}
 
-  async findById(id: SubscriptionId): Promise<ZoneSubscription | null> {
+  async buscarPorId(id: IdSuscripcion): Promise<ZonaSuscrita | null> {
     const [fila] = await this.db
       .select(columnas)
-      .from(zoneSubscriptions)
-      .where(eq(zoneSubscriptions.id, id))
+      .from(zonasSuscritas)
+      .where(eq(zonasSuscritas.id, id))
       .limit(1);
     return fila ? aEntidad(fila) : null;
   }
 
-  async findByUser(id: UserId): Promise<readonly ZoneSubscription[]> {
+  async buscarPorUsuario(id: IdUsuario): Promise<readonly ZonaSuscrita[]> {
     const filas = await this.db
       .select(columnas)
-      .from(zoneSubscriptions)
-      .where(eq(zoneSubscriptions.userId, id))
-      .orderBy(asc(zoneSubscriptions.createdAt), asc(zoneSubscriptions.id));
+      .from(zonasSuscritas)
+      .where(eq(zonasSuscritas.idUsuario, id))
+      .orderBy(asc(zonasSuscritas.creadoEn), asc(zonasSuscritas.id));
     return filas.map(aEntidad);
   }
 
   /** Una zona es inmutable: para cambiarla se elimina y se crea otra. */
-  async save(subscription: ZoneSubscription): Promise<void> {
-    await this.db.insert(zoneSubscriptions).values({
-      id: subscription.id,
-      userId: subscription.userId,
-      center: aGeography(subscription.center),
-      radiusM: subscription.radiusM,
-      categories: [...subscription.categories],
-      createdAt: subscription.createdAt,
+  async guardar(zona: ZonaSuscrita): Promise<void> {
+    await this.db.insert(zonasSuscritas).values({
+      id: zona.id,
+      idUsuario: zona.idUsuario,
+      centro: aGeography(zona.centro),
+      radioM: zona.radioM,
+      categorias: [...zona.categorias],
+      creadoEn: zona.creadoEn,
     });
   }
 
-  async delete(id: SubscriptionId): Promise<boolean> {
+  async eliminar(id: IdSuscripcion): Promise<boolean> {
     const borradas = await this.db
-      .delete(zoneSubscriptions)
-      .where(eq(zoneSubscriptions.id, id))
-      .returning({ id: zoneSubscriptions.id });
+      .delete(zonasSuscritas)
+      .where(eq(zonasSuscritas.id, id))
+      .returning({ id: zonasSuscritas.id });
     return borradas.length > 0;
   }
 }

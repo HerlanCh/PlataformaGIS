@@ -1,14 +1,14 @@
 import { fileURLToPath } from 'node:url';
-import type { ModuleDefinition } from '@gis/platform';
+import type { DefinicionDeModulo } from '@gis/platform';
 
 /** Punto de entrada público del módulo `moderation`. Solo lo importa la raíz de composición. */
-export const moderationModule: ModuleDefinition = {
-  name: 'moderation',
-  migrations: {
-    name: 'moderation',
-    folder: fileURLToPath(new URL('./migrations', import.meta.url)),
+export const moderationModulo: DefinicionDeModulo = {
+  nombre: 'moderation',
+  migraciones: {
+    nombre: 'moderation',
+    carpeta: fileURLToPath(new URL('./migrations', import.meta.url)),
   },
-  register() {
+  registrar() {
     // Aquí se registran las rutas, los manejadores de eventos y las tareas del módulo.
   },
 };

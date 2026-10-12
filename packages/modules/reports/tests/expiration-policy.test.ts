@@ -1,10 +1,10 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { MVP_CATEGORIES } from '../domain/category.js';
+import { CATEGORIAS_MVP } from '../domain/category.js';
 import {
-  EXTENSION_FRACTION,
-  ExpirationPolicy,
-  MAX_EXTENSIONS,
+  FRACCION_DE_EXTENSION,
+  PoliticaDeCaducidad,
+  MAX_EXTENSIONES,
 } from '../domain/expiration-policy.js';
 
 const creado = new Date('2026-10-11T12:00:00Z');
@@ -17,39 +17,39 @@ const fecha = fc.date({
 });
 const ttl = fc.integer({ min: 1, max: 7 * 24 * 60 });
 
-describe('ExpirationPolicy', () => {
-  it.each(MVP_CATEGORIES.map((c) => [c.name, c.ttlMinutes] as const))(
+describe('PoliticaDeCaducidad', () => {
+  it.each(CATEGORIAS_MVP.map((c) => [c.nombre, c.ttlMinutos] as const))(
     'HU-04: un reporte de "%s" caduca a los %i minutos',
-    (_nombre, ttlMinutes) => {
-      expect(ExpirationPolicy.initialExpiration(creado, ttlMinutes)).toEqual(
-        minutosDespues(ttlMinutes),
+    (_nombre, ttlMinutos) => {
+      expect(PoliticaDeCaducidad.caducidadInicial(creado, ttlMinutos)).toEqual(
+        minutosDespues(ttlMinutos),
       );
     },
   );
 
   it('HU-03: una extensión añade el 50 % del TTL original', () => {
-    const caducidad = ExpirationPolicy.initialExpiration(creado, 180);
+    const caducidad = PoliticaDeCaducidad.caducidadInicial(creado, 180);
 
-    expect(ExpirationPolicy.extend(caducidad, 180)).toEqual(minutosDespues(270));
+    expect(PoliticaDeCaducidad.extender(caducidad, 180)).toEqual(minutosDespues(270));
   });
 
   it('HU-04: caduca cuando la fecha de caducidad ya pasó', () => {
     const caducidad = minutosDespues(180);
 
-    expect(ExpirationPolicy.isExpired(caducidad, minutosDespues(181))).toBe(true);
+    expect(PoliticaDeCaducidad.haCaducado(caducidad, minutosDespues(181))).toBe(true);
   });
 
   it('HU-04: no caduca antes de tiempo ni en el instante exacto', () => {
     const caducidad = minutosDespues(180);
 
-    expect(ExpirationPolicy.isExpired(caducidad, minutosDespues(179))).toBe(false);
-    expect(ExpirationPolicy.isExpired(caducidad, minutosDespues(180))).toBe(false);
+    expect(PoliticaDeCaducidad.haCaducado(caducidad, minutosDespues(179))).toBe(false);
+    expect(PoliticaDeCaducidad.haCaducado(caducidad, minutosDespues(180))).toBe(false);
   });
 
   it('propiedad: la caducidad nunca es anterior a la creación', () => {
     fc.assert(
-      fc.property(fecha, ttl, (creacion, ttlMinutes) => {
-        const caducidad = ExpirationPolicy.initialExpiration(creacion, ttlMinutes);
+      fc.property(fecha, ttl, (creacion, ttlMinutos) => {
+        const caducidad = PoliticaDeCaducidad.caducidadInicial(creacion, ttlMinutos);
 
         expect(caducidad.getTime()).toBeGreaterThan(creacion.getTime());
       }),
@@ -58,25 +58,25 @@ describe('ExpirationPolicy', () => {
 
   it('propiedad: con todas las extensiones la vida total es el doble del TTL', () => {
     fc.assert(
-      fc.property(fecha, ttl, (creacion, ttlMinutes) => {
-        let caducidad = ExpirationPolicy.initialExpiration(creacion, ttlMinutes);
-        for (let i = 0; i < MAX_EXTENSIONS; i += 1) {
-          caducidad = ExpirationPolicy.extend(caducidad, ttlMinutes);
+      fc.property(fecha, ttl, (creacion, ttlMinutos) => {
+        let caducidad = PoliticaDeCaducidad.caducidadInicial(creacion, ttlMinutos);
+        for (let i = 0; i < MAX_EXTENSIONES; i += 1) {
+          caducidad = PoliticaDeCaducidad.extender(caducidad, ttlMinutos);
         }
 
         const vidaEnMinutos = (caducidad.getTime() - creacion.getTime()) / 60_000;
-        expect(vidaEnMinutos).toBe(ttlMinutes * (1 + MAX_EXTENSIONS * EXTENSION_FRACTION));
-        expect(vidaEnMinutos).toBe(ttlMinutes * 2);
+        expect(vidaEnMinutos).toBe(ttlMinutos * (1 + MAX_EXTENSIONES * FRACCION_DE_EXTENSION));
+        expect(vidaEnMinutos).toBe(ttlMinutos * 2);
       }),
     );
   });
 
   it('propiedad: un reporte recién creado nunca está caducado', () => {
     fc.assert(
-      fc.property(fecha, ttl, (creacion, ttlMinutes) => {
-        const caducidad = ExpirationPolicy.initialExpiration(creacion, ttlMinutes);
+      fc.property(fecha, ttl, (creacion, ttlMinutos) => {
+        const caducidad = PoliticaDeCaducidad.caducidadInicial(creacion, ttlMinutos);
 
-        expect(ExpirationPolicy.isExpired(caducidad, creacion)).toBe(false);
+        expect(PoliticaDeCaducidad.haCaducado(caducidad, creacion)).toBe(false);
       }),
     );
   });

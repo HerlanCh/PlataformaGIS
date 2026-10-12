@@ -30,7 +30,7 @@ Una tarea, historia de usuario o fase se considera **completada (Done)** únicam
 
 ## 3. Seguridad y Privacidad
 
-- [ ] **Privacidad de datos:** No se expone `author_id` ni coordenadas exactas (`location`) en respuestas públicas; se utiliza `public_location` según `PrivacyPolicy` (RNF-14).
+- [ ] **Privacidad de datos:** No se expone `author_id` ni coordenadas exactas (`location`) en respuestas públicas; se utiliza `public_location` según `PoliticaDePrivacidad` (RNF-14).
 - [ ] **Validación de entradas:** Todos los payloads HTTP, eventos y mensajes entrantes son validados estrictamente mediante esquemas Zod en los adaptadores de entrada.
 - [ ] **Auditoría de dependencias:** Cero vulnerabilidades críticas o altas reportadas por `npm audit` y Dependabot.
 

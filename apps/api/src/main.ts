@@ -1,21 +1,28 @@
-import { InMemoryEventBus } from '@gis/event-bus';
-import { createLogger, createPool, loadConfig, loadFeatureFlags } from '@gis/platform';
-import { buildApp } from './app.js';
-import { modules } from './modules.generated.js';
-import { attachRealtime } from './realtime.js';
+import { BusDeEventosEnMemoria } from '@gis/event-bus';
+import { crearRegistro, crearPool, cargarConfig, cargarInterruptores } from '@gis/platform';
+import { construirApp } from './app.js';
+import { modulos } from './modules.generated.js';
+import { adjuntarTiempoReal } from './realtime.js';
 
-const config = loadConfig();
-const flags = loadFeatureFlags();
-const logger = createLogger(config.logLevel);
-const db = createPool(config.databaseUrl, (error) => {
+const config = cargarConfig();
+const flags = cargarInterruptores();
+const logger = crearRegistro(config.nivelDeLog);
+const db = crearPool(config.urlBaseDeDatos, (error) => {
   logger.error({ err: error }, 'error en una conexión inactiva de la base de datos');
 });
-const bus = new InMemoryEventBus((error, event) => {
-  logger.error({ err: error, evento: event.type }, 'falló un manejador de eventos');
+const bus = new BusDeEventosEnMemoria((error, event) => {
+  logger.error({ err: error, evento: event.tipo }, 'falló un manejador de eventos');
 });
 
-const app = await buildApp({ config, flags, logger, db, bus, modules });
-const realtime = attachRealtime(app.server, { corsOrigin: config.corsOrigin });
+const app = await construirApp({
+  config,
+  interruptores: flags,
+  registro: logger,
+  db,
+  bus,
+  modulos: modulos,
+});
+const realtime = adjuntarTiempoReal(app.server, { origenCors: config.origenCors });
 
 const apagar = async (senal: string): Promise<void> => {
   logger.info({ senal }, 'apagando');
@@ -27,4 +34,4 @@ const apagar = async (senal: string): Promise<void> => {
 process.once('SIGTERM', () => void apagar('SIGTERM'));
 process.once('SIGINT', () => void apagar('SIGINT'));
 
-await app.listen({ port: config.port, host: '0.0.0.0' });
+await app.listen({ port: config.puerto, host: '0.0.0.0' });

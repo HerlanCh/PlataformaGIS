@@ -1,15 +1,15 @@
-import { createDb, migrateAll, platformMigrations, revertLast } from '@gis/platform';
+import { crearDb, migrarTodo, migracionesDePlataforma, revertirUltima } from '@gis/platform';
 import type { Db } from '@gis/platform';
-import { GeoPoint } from '@gis/shared-kernel';
+import { PuntoGeo } from '@gis/shared-kernel';
 import { createTestDatabase, describeIntegration } from '@gis/testing';
 import type { TestDatabase } from '@gis/testing';
 import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, expect, it } from 'vitest';
-import { PgSubscriptionRepository } from '../adapters/subscription-repository.js';
-import { subscriptionsModule } from '../index.js';
+import { RepositorioSuscripcionesPg } from '../adapters/subscription-repository.js';
+import { subscriptionsModulo } from '../index.js';
 import { ahora, ana, beto, bloqueo, idZona, zona } from './fixtures.js';
 
-const migraciones = subscriptionsModule.migrations!;
+const migraciones = subscriptionsModulo.migraciones!;
 const minutosDespues = (minutos: number) => new Date(ahora.getTime() + minutos * 60_000);
 
 const existeLaTabla = async (db: Db): Promise<boolean> => {
@@ -20,13 +20,13 @@ const existeLaTabla = async (db: Db): Promise<boolean> => {
 describeIntegration('persistencia de subscriptions', () => {
   let base: TestDatabase;
   let db: Db;
-  let zonas: PgSubscriptionRepository;
+  let zonas: RepositorioSuscripcionesPg;
 
   beforeAll(async () => {
     base = await createTestDatabase();
-    db = createDb(base.pool);
-    await migrateAll(db, [platformMigrations, migraciones]);
-    zonas = new PgSubscriptionRepository(db);
+    db = crearDb(base.pool);
+    await migrarTodo(db, [migracionesDePlataforma, migraciones]);
+    zonas = new RepositorioSuscripcionesPg(db);
   });
 
   afterAll(async () => {
@@ -34,24 +34,24 @@ describeIntegration('persistencia de subscriptions', () => {
   });
 
   it('HU-07: guarda una zona y la recupera sin pérdida', async () => {
-    await zonas.save(zona());
+    await zonas.guardar(zona());
 
-    expect(await zonas.findById(idZona(1))).toEqual(zona());
-    expect(await zonas.findById(idZona(99))).toBeNull();
+    expect(await zonas.buscarPorId(idZona(1))).toEqual(zona());
+    expect(await zonas.buscarPorId(idZona(99))).toBeNull();
   });
 
   it('HU-07: lista las zonas de un usuario en el orden en que las creó', async () => {
     const segunda = zona({
       id: idZona(2),
-      center: GeoPoint.create(-16.5, -68.15),
-      radiusM: 100,
-      categories: [bloqueo],
-      now: minutosDespues(5),
+      centro: PuntoGeo.crear(-16.5, -68.15),
+      radioM: 100,
+      categorias: [bloqueo],
+      ahora: minutosDespues(5),
     });
-    await zonas.save(segunda);
-    await zonas.save(zona({ id: idZona(3), userId: beto }));
+    await zonas.guardar(segunda);
+    await zonas.guardar(zona({ id: idZona(3), idUsuario: beto }));
 
-    expect(await zonas.findByUser(ana)).toEqual([zona(), segunda]);
+    expect(await zonas.buscarPorUsuario(ana)).toEqual([zona(), segunda]);
   });
 
   it('el centro se guarda como punto geográfico WGS84', async () => {
@@ -64,10 +64,10 @@ describeIntegration('persistencia de subscriptions', () => {
   });
 
   it('HU-07: elimina una zona', async () => {
-    expect(await zonas.delete(idZona(3))).toBe(true);
+    expect(await zonas.eliminar(idZona(3))).toBe(true);
 
-    expect(await zonas.findByUser(beto)).toEqual([]);
-    expect(await zonas.delete(idZona(3))).toBe(false);
+    expect(await zonas.buscarPorUsuario(beto)).toEqual([]);
+    expect(await zonas.eliminar(idZona(3))).toBe(false);
   });
 
   it.each([
@@ -103,7 +103,7 @@ describeIntegration('migraciones de subscriptions', () => {
 
   beforeAll(async () => {
     base = await createTestDatabase();
-    db = createDb(base.pool);
+    db = crearDb(base.pool);
   });
 
   afterAll(async () => {
@@ -111,13 +111,13 @@ describeIntegration('migraciones de subscriptions', () => {
   });
 
   it('se aplican sobre una base vacía, se revierten y se vuelven a aplicar', async () => {
-    await migrateAll(db, [platformMigrations, migraciones]);
+    await migrarTodo(db, [migracionesDePlataforma, migraciones]);
     expect(await existeLaTabla(db)).toBe(true);
 
-    expect(await revertLast(db, migraciones)).toBe('0000_zonas_suscritas');
+    expect(await revertirUltima(db, migraciones)).toBe('0000_zonas_suscritas');
     expect(await existeLaTabla(db)).toBe(false);
 
-    await migrateAll(db, [platformMigrations, migraciones]);
+    await migrarTodo(db, [migracionesDePlataforma, migraciones]);
     expect(await existeLaTabla(db)).toBe(true);
   });
 });

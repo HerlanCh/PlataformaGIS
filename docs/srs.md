@@ -29,7 +29,7 @@ El sistema opera dentro del rectángulo envolvente (*Bounding Box*) de la conurb
 - **Latitud:** [-16.6700, -16.3800]
 - **Longitud:** [-68.3300, -68.0000]
 
-Cualquier coordenada fuera de estos límites es rechazada por `GeoPoint` en `shared-kernel`.
+Cualquier coordenada fuera de estos límites es rechazada por `PuntoGeo` en `shared-kernel`.
 
 Los límites se contrastaron el 2026-10-11 con OpenStreetMap (Nominatim) usando barrios de borde: Chasquipampa (-16.539, -68.048) y Ovejuyo (-16.535, -68.039) al este; Senkata (-16.583, -68.185) y Ventilla (-16.614, -68.171) al sur; San Roque, Distrito 7 de El Alto (-16.476, -68.276) al oeste; Achachicala (-16.431, -68.138) al norte. Todos quedan dentro con margen.
 
@@ -81,7 +81,7 @@ Producto nuevo e independiente. Monolito modular hexagonal (ADR-001) con tres pu
 | :--- | :--- | :---: | :---: | :---: | :--- |
 | `bloqueo` | Bloqueo o protesta vial | 360 min (6 h) | 100 m | No | Ubicación exacta |
 | `accidente` | Accidente de tránsito | 180 min (3 h) | 50 m | No | Ubicación exacta |
-| `robo` | Hecho delictivo / robo | 120 min (2 h) | 200 m | **Sí** | Centro de la celda de 200 m (`PrivacyPolicy`) |
+| `robo` | Hecho delictivo / robo | 120 min (2 h) | 200 m | **Sí** | Centro de la celda de 200 m (`PoliticaDePrivacidad`) |
 | `infraestructura` | Derrumbe / vía dañada / fuga | 1440 min (24 h) | 50 m | No | Ubicación exacta |
 | `jauria` | Jauría de perros agresivos | 120 min (2 h) | 150 m | No | Ubicación exacta |
 
@@ -258,7 +258,7 @@ Valores iniciales, ajustables durante el piloto mediante configuración.
   - **Escenario 1: Caducidad por vencimiento de TTL**
     - **Dado** un reporte de "Accidente" creado hace 181 minutos con TTL de 180 minutos sin extensiones,
     - **Cuando** el caso de uso `ExpireReports` se ejecuta,
-    - **Entonces** el reporte pasa de estado `ACTIVO` a `CADUCADO`, emitiendo el evento `ReportExpired.v1` y retirándose del mapa.
+    - **Entonces** el reporte pasa de estado `ACTIVO` a `CADUCADO`, emitiendo el evento `ReporteCaducado.v1` y retirándose del mapa.
   - **Escenario 2: No caduca antes de tiempo**
     - **Dado** un reporte de "Accidente" creado hace 179 minutos sin extensiones,
     - **Cuando** `ExpireReports` se ejecuta,
@@ -379,7 +379,7 @@ Valores iniciales, ajustables durante el piloto mediante configuración.
 - **Criterios de Aceptación:**
   - **Escenario 1: Reporte sospechoso**
     - **Dado** un reporte cuya descripción contiene un enlace o palabras de la lista de spam,
-    - **Cuando** el clasificador lo procesa tras `ReportCreated`,
+    - **Cuando** el clasificador lo procesa tras `ReporteCreado`,
     - **Entonces** el reporte aparece marcado en la cola de moderación.
   - **Escenario 2: La creación no espera al clasificador**
     - **Dado** que el servicio de clasificación está caído,
@@ -407,7 +407,7 @@ Valores iniciales, ajustables durante el piloto mediante configuración.
   - **Escenario 1: Rechazo con motivo**
     - **Dado** un reporte vigente y un usuario con rol `MODERADOR`,
     - **Cuando** lo rechaza indicando un motivo,
-    - **Entonces** el reporte pasa a `RECHAZADO`, se retira del mapa, se emite `ReportRejected.v1`, la acción queda en la auditoría y la reputación del autor baja 0.50.
+    - **Entonces** el reporte pasa a `RECHAZADO`, se retira del mapa, se emite `ReporteRechazado.v1`, la acción queda en la auditoría y la reputación del autor baja 0.50.
   - **Escenario 2: Rol insuficiente**
     - **Dado** un usuario sin rol `MODERADOR`,
     - **Cuando** intenta rechazar un reporte,

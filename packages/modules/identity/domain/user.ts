@@ -1,91 +1,92 @@
-import type { UserId } from '@gis/shared-kernel';
+import type { IdUsuario } from '@gis/shared-kernel';
 import {
-  InvalidDeviceHashError,
-  InvalidTelegramIdError,
-  TelegramAlreadyLinkedError,
+  ErrorHashDeDispositivoInvalido,
+  ErrorIdTelegramInvalido,
+  ErrorTelegramYaVinculado,
 } from './errors.js';
 
-export type Role = 'CIUDADANO' | 'MODERADOR';
+export type Rol = 'CIUDADANO' | 'MODERADOR';
 
-export interface UserProps {
-  readonly id: UserId;
-  readonly deviceHash: string;
-  readonly role: Role;
-  readonly telegramId: string | null;
-  readonly createdAt: Date;
+export interface PropsUsuario {
+  readonly id: IdUsuario;
+  readonly hashDispositivo: string;
+  readonly rol: Rol;
+  readonly idTelegram: string | null;
+  readonly creadoEn: Date;
 }
 
-export interface RegisterDeviceInput {
-  readonly id: UserId;
-  readonly deviceHash: string;
-  readonly telegramId?: string;
-  readonly now: Date;
+export interface EntradaRegistrarDispositivo {
+  readonly id: IdUsuario;
+  readonly hashDispositivo: string;
+  readonly idTelegram?: string;
+  readonly ahora: Date;
 }
 
 // El hash lo genera el cliente; aquí solo se exige que sea opaco y de tamaño razonable.
 const HASH_DE_DISPOSITIVO = /^[A-Za-z0-9_-]{16,128}$/;
 const ID_DE_TELEGRAM = /^\d{1,20}$/;
 
-function validarTelegram(telegramId: string): string {
-  if (!ID_DE_TELEGRAM.test(telegramId)) throw new InvalidTelegramIdError();
-  return telegramId;
+function validarTelegram(idTelegram: string): string {
+  if (!ID_DE_TELEGRAM.test(idTelegram)) throw new ErrorIdTelegramInvalido();
+  return idTelegram;
 }
 
 /** Usuario anónimo: se identifica por su dispositivo y, opcionalmente, por Telegram. */
-export class User {
-  private constructor(private props: UserProps) {}
+export class Usuario {
+  private constructor(private props: PropsUsuario) {}
 
   /** Alta de un usuario nuevo. Todo usuario nace con rol `CIUDADANO`. */
-  static registerDevice(input: RegisterDeviceInput): User {
-    if (!HASH_DE_DISPOSITIVO.test(input.deviceHash)) throw new InvalidDeviceHashError();
-    return new User({
+  static registrarDispositivo(input: EntradaRegistrarDispositivo): Usuario {
+    if (!HASH_DE_DISPOSITIVO.test(input.hashDispositivo))
+      throw new ErrorHashDeDispositivoInvalido();
+    return new Usuario({
       id: input.id,
-      deviceHash: input.deviceHash,
-      role: 'CIUDADANO',
-      telegramId: input.telegramId === undefined ? null : validarTelegram(input.telegramId),
-      createdAt: input.now,
+      hashDispositivo: input.hashDispositivo,
+      rol: 'CIUDADANO',
+      idTelegram: input.idTelegram === undefined ? null : validarTelegram(input.idTelegram),
+      creadoEn: input.ahora,
     });
   }
 
   /** Reconstruye un usuario ya persistido. No valida ni aplica reglas de alta. */
-  static restore(props: UserProps): User {
-    return new User(props);
+  static restaurar(props: PropsUsuario): Usuario {
+    return new Usuario(props);
   }
 
-  get id(): UserId {
+  get id(): IdUsuario {
     return this.props.id;
   }
 
-  get deviceHash(): string {
-    return this.props.deviceHash;
+  get hashDispositivo(): string {
+    return this.props.hashDispositivo;
   }
 
-  get role(): Role {
-    return this.props.role;
+  get rol(): Rol {
+    return this.props.rol;
   }
 
-  get telegramId(): string | null {
-    return this.props.telegramId;
+  get idTelegram(): string | null {
+    return this.props.idTelegram;
   }
 
-  get createdAt(): Date {
-    return this.props.createdAt;
+  get creadoEn(): Date {
+    return this.props.creadoEn;
   }
 
-  get isModerator(): boolean {
-    return this.props.role === 'MODERADOR';
+  get esModerador(): boolean {
+    return this.props.rol === 'MODERADOR';
   }
 
   /** Vincula la cuenta de Telegram. Repetir el mismo ID no tiene efecto. */
-  linkTelegram(telegramId: string): void {
-    const valido = validarTelegram(telegramId);
-    if (this.props.telegramId !== null && this.props.telegramId !== valido) {
-      throw new TelegramAlreadyLinkedError();
+  vincularTelegram(idTelegram: string): void {
+    const valido = validarTelegram(idTelegram);
+    if (this.props.idTelegram !== null && this.props.idTelegram !== valido) {
+      throw new ErrorTelegramYaVinculado();
     }
-    this.props = { ...this.props, telegramId: valido };
+    this.props = { ...this.props, idTelegram: valido };
   }
 
-  promoteToModerator(): void {
-    this.props = { ...this.props, role: 'MODERADOR' };
+  ascenderAModerador(): void {
+    this.props = { ...this.props, rol: 'MODERADOR' };
   }
 }

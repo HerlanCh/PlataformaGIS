@@ -1,36 +1,37 @@
 import { z } from 'zod';
-import { ConfigError, formatIssues } from './config.js';
-import type { Env } from './config.js';
+import { ErrorDeConfig, formatearProblemas } from './config.js';
+import type { Entorno } from './config.js';
 
 /** Módulos Imprescindibles: siempre activos, no tienen interruptor. */
-export const CORE_MODULES: readonly string[] = ['reports', 'verification', 'identity'];
+export const MODULOS_BASE: readonly string[] = ['reports', 'verification', 'identity'];
 
 const PREFIJO = 'FEATURE_';
 
-const flagSchema = z.enum(['true', 'false']).transform((valor) => valor === 'true');
+const esquemaInterruptor = z.enum(['true', 'false']).transform((valor) => valor === 'true');
 
-export interface FeatureFlags {
+export interface InterruptoresDeFunciones {
   /** `true` si el módulo debe registrarse en la raíz de composición. */
-  isEnabled(modulo: string): boolean;
+  estaActivo(modulo: string): boolean;
 }
 
 /** Nombre de la variable de un módulo: `open-data` → `FEATURE_OPEN_DATA`. */
-export const featureVariable = (modulo: string): string =>
+export const variableDeInterruptor = (modulo: string): string =>
   PREFIJO + modulo.toUpperCase().replaceAll('-', '_');
 
 /**
  * Lee las variables `FEATURE_<MODULO>`. Solo admiten `true` o `false`;
  * un módulo opcional sin variable queda apagado.
  */
-export function loadFeatureFlags(env: Env = process.env): FeatureFlags {
+export function cargarInterruptores(env: Entorno = process.env): InterruptoresDeFunciones {
   const definidas = Object.fromEntries(
     Object.entries(env).filter(([clave]) => clave.startsWith(PREFIJO)),
   );
-  const resultado = z.record(z.string(), flagSchema).safeParse(definidas);
-  if (!resultado.success) throw new ConfigError(formatIssues(resultado.error));
+  const resultado = z.record(z.string(), esquemaInterruptor).safeParse(definidas);
+  if (!resultado.success) throw new ErrorDeConfig(formatearProblemas(resultado.error));
 
   const flags = resultado.data;
   return {
-    isEnabled: (modulo) => CORE_MODULES.includes(modulo) || flags[featureVariable(modulo)] === true,
+    estaActivo: (modulo) =>
+      MODULOS_BASE.includes(modulo) || flags[variableDeInterruptor(modulo)] === true,
   };
 }

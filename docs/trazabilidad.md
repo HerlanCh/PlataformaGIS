@@ -54,17 +54,17 @@ Reglas de negocio ya implementadas y probadas en `domain/`. Las pruebas viven en
 
 | Historia | Regla (SRS) | Implementación | Archivo de pruebas |
 | :--- | :--- | :--- | :--- |
-| HU-01 | Solo se aceptan ubicaciones dentro del área de servicio (1.3) | `GeoPoint` en `shared-kernel` | `packages/shared-kernel/src/geo-point.test.ts` |
-| HU-01 | Un reporte nace `ACTIVO` con la caducidad de su categoría (3.1) | `Report.create`, `Category`, `ExpirationPolicy` | `packages/modules/reports/tests/report.test.ts` |
-| HU-01, HU-09 | Registro anónimo por dispositivo y vínculo con Telegram | `User` | `packages/modules/identity/tests/user.test.ts` |
-| HU-02 | En categorías sensibles se muestra el centro de la celda de 200 m (3.1) | `PrivacyPolicy`, `utm19s` | `packages/modules/reports/tests/privacy-policy.test.ts`, `utm19s.test.ts` |
+| HU-01 | Solo se aceptan ubicaciones dentro del área de servicio (1.3) | `PuntoGeo` en `shared-kernel` | `packages/shared-kernel/src/geo-point.test.ts` |
+| HU-01 | Un reporte nace `ACTIVO` con la caducidad de su categoría (3.1) | `Reporte.crear`, `Categoria`, `PoliticaDeCaducidad` | `packages/modules/reports/tests/report.test.ts` |
+| HU-01, HU-09 | Registro anónimo por dispositivo y vínculo con Telegram | `Usuario` | `packages/modules/identity/tests/user.test.ts` |
+| HU-02 | En categorías sensibles se muestra el centro de la celda de 200 m (3.1) | `PoliticaDePrivacidad`, `utm19s` | `packages/modules/reports/tests/privacy-policy.test.ts`, `utm19s.test.ts` |
 | HU-02 | Los eventos públicos no llevan ubicación real ni usuarios (RNF-14) | Audiencia de cada evento en `contracts` | `packages/contracts/src/events.test.ts` |
 | HU-03 | Reglas para emitir un voto: autor, voto único, 1000 m, reporte vigente (3.2.2) | `Vote.cast` | `packages/modules/verification/tests/vote.test.ts` |
-| HU-03 | Confirmar, extender y resolver por votos ponderados y votantes distintos (3.2.3 a 3.2.5) | `VerificationPolicy` | `packages/modules/verification/tests/verification-policy.test.ts` |
-| HU-03 | Máquina de estados y extensiones de vigencia, máximo 2 (3.2.4) | `Report` | `packages/modules/reports/tests/report.test.ts` |
-| HU-03, HU-12 | Ajustes de reputación, silenciado y recuperación (3.2.6 y 3.2.7) | `Reputation`, `ReputationPolicy` | `packages/modules/verification/tests/reputation.test.ts` |
-| HU-04 | Caducidad al vencer el TTL, nunca antes; también en `CONFIRMADO` | `Report.expire`, `ExpirationPolicy` | `packages/modules/reports/tests/report.test.ts`, `expiration-policy.test.ts` |
-| HU-12 | Rechazo con motivo; el rechazo por autor silenciado no penaliza | `Report.reject`, `ReputationPolicy` | `report.test.ts`, `reputation.test.ts` |
+| HU-03 | Confirmar, extender y resolver por votos ponderados y votantes distintos (3.2.3 a 3.2.5) | `PoliticaDeVerificacion` | `packages/modules/verification/tests/verification-policy.test.ts` |
+| HU-03 | Máquina de estados y extensiones de vigencia, máximo 2 (3.2.4) | `Reporte` | `packages/modules/reports/tests/report.test.ts` |
+| HU-03, HU-12 | Ajustes de reputación, silenciado y recuperación (3.2.6 y 3.2.7) | `Reputacion`, `PoliticaDeReputacion` | `packages/modules/verification/tests/reputation.test.ts` |
+| HU-04 | Caducidad al vencer el TTL, nunca antes; también en `CONFIRMADO` | `Reporte.caducar`, `PoliticaDeCaducidad` | `packages/modules/reports/tests/report.test.ts`, `expiration-policy.test.ts` |
+| HU-12 | Rechazo con motivo; el rechazo por autor silenciado no penaliza | `Reporte.rechazar`, `PoliticaDeReputacion` | `report.test.ts`, `reputation.test.ts` |
 
 Quedan para la Fase 5, porque dependen de casos de uso: deduplicación (HU-01), límites de creación y de votos (HU-01), consulta por viewport (HU-02) e idempotencia (HU-05).
 
@@ -72,14 +72,14 @@ Quedan para la Fase 5, porque dependen de casos de uso: deduplicación (HU-01), 
 
 | Módulo | Puerto | Propósito | Se implementa en |
 | :--- | :--- | :--- | :--- |
-| `identity` | `UserRepository` | Buscar y guardar usuarios | Fase 3 |
-| `reports` | `ReportRepository` | Guardar y recuperar reportes | Fase 3 (consultas espaciales en la Fase 4) |
-| `reports` | `CategoryRepository` | Leer categorías | Fase 3 |
-| `reports` | `IdGenerator` | Generar identificadores | Fase 5 |
-| `reports` | `AuthorStanding` | Saber si el autor está silenciado | Fase 5 (conectado a `verification` en la raíz de composición) |
-| `verification` | `VoteRepository` | Guardar y leer votos | Fase 3 |
-| `verification` | `ReputationRepository` | Guardar y leer reputaciones | Fase 3 |
-| `verification` | `ReportLookup` | Autor, estado, ubicación y extensiones de un reporte | Fase 5 (conectado a `reports` en la raíz de composición) |
+| `identity` | `RepositorioDeUsuarios` | Buscar y guardar usuarios | Fase 3 |
+| `reports` | `RepositorioDeReportes` | Guardar y recuperar reportes | Fase 3 (consultas espaciales en la Fase 4) |
+| `reports` | `RepositorioDeCategorias` | Leer categorías | Fase 3 |
+| `reports` | `GeneradorDeId` | Generar identificadores | Fase 5 |
+| `reports` | `ReputacionDelAutor` | Saber si el autor está silenciado | Fase 5 (conectado a `verification` en la raíz de composición) |
+| `verification` | `RepositorioDeVotos` | Guardar y leer votos | Fase 3 |
+| `verification` | `RepositorioDeReputaciones` | Guardar y leer reputaciones | Fase 3 |
+| `verification` | `ConsultaDeReporte` | Autor, estado, ubicación y extensiones de un reporte | Fase 5 (conectado a `reports` en la raíz de composición) |
 | `shared-kernel` | `Clock` | Fecha y hora actuales | Fase 5 |
 
 ### 3.3 Eventos de integración
@@ -88,13 +88,13 @@ Definidos en `packages/contracts/src/events.ts`. Un evento público puede difund
 
 | Evento | Audiencia | Emite | Escucha |
 | :--- | :--- | :--- | :--- |
-| `ReportCreated.v1` | Pública | `reports` | `notifications`, clientes |
-| `ReportConfirmed.v1` | Pública | `reports` | `verification`, `notifications`, clientes |
-| `ReportResolved.v1` | Pública | `reports` | `verification`, clientes |
-| `ReportExpired.v1` | Pública | `reports` | clientes |
-| `ReportRejected.v1` | Pública | `reports` | `verification`, clientes |
-| `ReportDuplicateDetected.v1` | Interna | `reports` | `verification` |
-| `VoteCast.v1` | Interna | `verification` | `reports` |
+| `ReporteCreado.v1` | Pública | `reports` | `notifications`, clientes |
+| `ReporteConfirmado.v1` | Pública | `reports` | `verification`, `notifications`, clientes |
+| `ReporteResuelto.v1` | Pública | `reports` | `verification`, clientes |
+| `ReporteCaducado.v1` | Pública | `reports` | clientes |
+| `ReporteRechazado.v1` | Pública | `reports` | `verification`, clientes |
+| `ReporteDuplicadoDetectado.v1` | Interna | `reports` | `verification` |
+| `VotoEmitido.v1` | Interna | `verification` | `reports` |
 
 ## 4. Fase 3: persistencia
 
@@ -104,13 +104,13 @@ Esquema físico y adaptadores que implementan los puertos de la Fase 2. El detal
 
 | Módulo | Puerto | Adaptador | Tablas | Archivo de pruebas |
 | :--- | :--- | :--- | :--- | :--- |
-| `identity` | `UserRepository` | `PgUserRepository` | `usuarios` | `packages/modules/identity/tests/user-repository.integration.test.ts` |
-| `reports` | `ReportRepository` | `PostgisReportRepository` | `reportes` | `packages/modules/reports/tests/persistence.integration.test.ts` |
-| `reports` | `CategoryRepository` | `PgCategoryRepository` | `categorias` | `packages/modules/reports/tests/persistence.integration.test.ts` |
-| `reports` | `ReportUnitOfWork` | `PgReportUnitOfWork` | `reportes`, `eventos_salida` | `packages/modules/reports/tests/persistence.integration.test.ts` |
-| `verification` | `VoteRepository` | `PgVoteRepository` | `votos` | `packages/modules/verification/tests/persistence.integration.test.ts` |
-| `verification` | `ReputationRepository` | `PgReputationRepository` | `reputaciones` | `packages/modules/verification/tests/persistence.integration.test.ts` |
-| `subscriptions` | `SubscriptionRepository` | `PgSubscriptionRepository` | `zonas_suscritas` | `packages/modules/subscriptions/tests/persistence.integration.test.ts` |
+| `identity` | `RepositorioDeUsuarios` | `RepositorioUsuariosPg` | `usuarios` | `packages/modules/identity/tests/user-repository.integration.test.ts` |
+| `reports` | `RepositorioDeReportes` | `RepositorioReportesPostgis` | `reportes` | `packages/modules/reports/tests/persistence.integration.test.ts` |
+| `reports` | `RepositorioDeCategorias` | `RepositorioCategoriasPg` | `categorias` | `packages/modules/reports/tests/persistence.integration.test.ts` |
+| `reports` | `UnidadDeTrabajoDeReporte` | `UnidadDeTrabajoReportePg` | `reportes`, `eventos_salida` | `packages/modules/reports/tests/persistence.integration.test.ts` |
+| `verification` | `RepositorioDeVotos` | `RepositorioVotosPg` | `votos` | `packages/modules/verification/tests/persistence.integration.test.ts` |
+| `verification` | `RepositorioDeReputaciones` | `RepositorioReputacionesPg` | `reputaciones` | `packages/modules/verification/tests/persistence.integration.test.ts` |
+| `subscriptions` | `RepositorioDeSuscripciones` | `RepositorioSuscripcionesPg` | `zonas_suscritas` | `packages/modules/subscriptions/tests/persistence.integration.test.ts` |
 
 `acciones_moderacion` solo tiene tabla en esta fase; la prueba `packages/modules/moderation/tests/migrations.integration.test.ts` cubre sus restricciones.
 
@@ -122,10 +122,10 @@ Esquema físico y adaptadores que implementan los puertos de la Fase 2. El detal
 | HU-03, HU-12 | La reputación y el peso de un voto están entre 0 y 5 | `CHECK` en `reputaciones.puntaje` y `votos.peso` | `verification/tests/persistence.integration.test.ts` |
 | HU-03, HU-04 | Un reporte solo puede estar en uno de los cinco estados y usar hasta 2 extensiones | `CHECK` en `reportes.estado` y `reportes.extensiones` | `reports/tests/persistence.integration.test.ts` |
 | HU-05 | Una clave de idempotencia no se repite | Índice único en `reportes.clave_idempotencia`; el dominio valida su formato | `reports/tests/persistence.integration.test.ts`, `idempotency-key.test.ts` |
-| HU-07 | El radio de una zona está entre 100 m y 2000 m y la zona tiene al menos una categoría | `ZoneSubscription` en el dominio y `CHECK` en `zonas_suscritas` | `subscriptions/tests/zone-subscription.test.ts`, `persistence.integration.test.ts` |
+| HU-07 | El radio de una zona está entre 100 m y 2000 m y la zona tiene al menos una categoría | `ZonaSuscrita` en el dominio y `CHECK` en `zonas_suscritas` | `subscriptions/tests/zone-subscription.test.ts`, `persistence.integration.test.ts` |
 | HU-12 | Todo rechazo de moderación lleva su motivo | `CHECK` en `acciones_moderacion` | `moderation/tests/migrations.integration.test.ts` |
 | RNF-14 | La ubicación real y la pública se guardan por separado; la pública es la que decidió el dominio | Columnas `ubicacion` y `ubicacion_publica`; el repositorio no la recalcula | `reports/tests/persistence.integration.test.ts` |
-| Atomicidad | Si falla la escritura del evento, el reporte tampoco se guarda | `PgReportUnitOfWork`: una sola transacción con el outbox | `reports/tests/persistence.integration.test.ts` |
+| Atomicidad | Si falla la escritura del evento, el reporte tampoco se guarda | `UnidadDeTrabajoReportePg`: una sola transacción con el outbox | `reports/tests/persistence.integration.test.ts` |
 | ADR-001 | Un módulo apagado no crea sus tablas y el resto del esquema queda completo | Un historial de migraciones por módulo | `apps/api/src/migrations.integration.test.ts` |
 | ADR-001 | Sin claves foráneas entre módulos | Solo existe `reportes.codigo_categoria → categorias.codigo`, dentro de `reports` | Revisión de las migraciones |
 

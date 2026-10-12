@@ -1,27 +1,40 @@
 import { randomUUID } from 'node:crypto';
-import type { EventBus } from '@gis/event-bus';
-import { checkDatabase } from '@gis/platform';
-import type { AppConfig, FeatureFlags, Logger, ModuleDefinition, Queryable } from '@gis/platform';
+import type { BusDeEventos } from '@gis/event-bus';
+import { verificarBaseDeDatos } from '@gis/platform';
+import type {
+  ConfigApp,
+  InterruptoresDeFunciones,
+  Registro,
+  DefinicionDeModulo,
+  Consultable,
+} from '@gis/platform';
 import Fastify from 'fastify';
 import type { FastifyBaseLogger, FastifyInstance } from 'fastify';
 
 const CABECERA_CORRELACION = 'x-request-id';
 
-export interface AppDependencies {
-  readonly config: AppConfig;
-  readonly flags: FeatureFlags;
-  readonly logger: Logger;
-  readonly db: Queryable;
-  readonly bus: EventBus;
-  readonly modules: readonly ModuleDefinition[];
+export interface DependenciasApp {
+  readonly config: ConfigApp;
+  readonly interruptores: InterruptoresDeFunciones;
+  readonly registro: Registro;
+  readonly db: Consultable;
+  readonly bus: BusDeEventos;
+  readonly modulos: readonly DefinicionDeModulo[];
 }
 
 /**
  * Raíz de composición del servidor HTTP: registra los módulos activos.
  * No contiene lógica de negocio.
  */
-export async function buildApp(deps: AppDependencies): Promise<FastifyInstance> {
-  const { config, flags, logger, db, bus, modules } = deps;
+export async function construirApp(dependencias: DependenciasApp): Promise<FastifyInstance> {
+  const {
+    config,
+    interruptores: flags,
+    registro: logger,
+    db,
+    bus,
+    modulos: modules,
+  } = dependencias;
 
   // Se tipa con la interfaz de Fastify para que los módulos reciban un FastifyInstance estándar.
   const loggerInstance: FastifyBaseLogger = logger;
@@ -37,7 +50,7 @@ export async function buildApp(deps: AppDependencies): Promise<FastifyInstance> 
   });
 
   app.get('/health', async (request, reply) => {
-    const database = await checkDatabase(db);
+    const database = await verificarBaseDeDatos(db);
     if (!database.ok) request.log.error({ err: database.error }, 'base de datos no disponible');
 
     return reply.code(database.ok ? 200 : 503).send({
@@ -48,12 +61,12 @@ export async function buildApp(deps: AppDependencies): Promise<FastifyInstance> 
   });
 
   for (const modulo of modules) {
-    if (!flags.isEnabled(modulo.name)) {
-      logger.info({ modulo: modulo.name }, 'módulo apagado por interruptor');
+    if (!flags.estaActivo(modulo.nombre)) {
+      logger.info({ modulo: modulo.nombre }, 'módulo apagado por interruptor');
       continue;
     }
-    await modulo.register(app, bus, config);
-    logger.info({ modulo: modulo.name }, 'módulo registrado');
+    await modulo.registrar(app, bus, config);
+    logger.info({ modulo: modulo.nombre }, 'módulo registrado');
   }
 
   return app;

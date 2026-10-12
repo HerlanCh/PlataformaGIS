@@ -1,25 +1,25 @@
-import type { IntegrationEvent } from '@gis/contracts';
+import type { EventoDeIntegracion } from '@gis/contracts';
 import { createTestDatabase, describeIntegration } from '@gis/testing';
 import type { TestDatabase } from '@gis/testing';
 import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import {
-  appendToOutbox,
-  createDb,
-  migrateAll,
-  migrateUp,
-  migrationsTable,
-  platformMigrations,
-  revertLast,
+  agregarASalida,
+  crearDb,
+  migrarTodo,
+  migrarAvance,
+  tablaDeMigraciones,
+  migracionesDePlataforma,
+  revertirUltima,
 } from './index.js';
 import type { Db } from './index.js';
 
-const evento = (id: string, occurredAt = '2026-10-12T12:00:00.000Z'): IntegrationEvent => ({
+const evento = (id: string, ocurridoEn = '2026-10-12T12:00:00.000Z'): EventoDeIntegracion => ({
   id,
-  type: 'ReportCreated',
+  tipo: 'ReporteCreado',
   version: 1,
-  occurredAt,
-  payload: { reportId: id },
+  ocurridoEn: ocurridoEn,
+  contenido: { idReporte: id },
 });
 
 const ID_1 = '11111111-1111-4111-8111-111111111111';
@@ -34,14 +34,14 @@ describeIntegration('migraciones de la plataforma', () => {
     return rows[0]?.oid !== null;
   };
   const aplicadas = async (): Promise<number> => {
-    const historial = sql.raw(`"drizzle"."${migrationsTable(platformMigrations)}"`);
+    const historial = sql.raw(`"drizzle"."${tablaDeMigraciones(migracionesDePlataforma)}"`);
     const { rows } = await db.execute(sql`select count(*)::int as total from ${historial}`);
     return Number(rows[0]?.total);
   };
 
   beforeAll(async () => {
     base = await createTestDatabase();
-    db = createDb(base.pool);
+    db = crearDb(base.pool);
   });
 
   afterAll(async () => {
@@ -49,7 +49,7 @@ describeIntegration('migraciones de la plataforma', () => {
   });
 
   it('sobre una base vacía crea PostGIS y la tabla del outbox', async () => {
-    await migrateUp(db, platformMigrations);
+    await migrarAvance(db, migracionesDePlataforma);
 
     const { rows } = await db.execute(sql`select postgis_lib_version() as version`);
     expect(String(rows[0]?.version)).toMatch(/^3\./);
@@ -58,31 +58,31 @@ describeIntegration('migraciones de la plataforma', () => {
   });
 
   it('volver a aplicarlas no tiene efecto', async () => {
-    await migrateAll(db, [platformMigrations]);
+    await migrarTodo(db, [migracionesDePlataforma]);
 
     expect(await aplicadas()).toBe(2);
   });
 
   it('revierte la última migración y la quita del historial', async () => {
-    expect(await revertLast(db, platformMigrations)).toBe('0001_eventos_salida');
+    expect(await revertirUltima(db, migracionesDePlataforma)).toBe('0001_eventos_salida');
 
     expect(await existe('eventos_salida')).toBe(false);
     expect(await aplicadas()).toBe(1);
   });
 
   it('tras revertir, aplicar de nuevo deja el mismo esquema', async () => {
-    await migrateUp(db, platformMigrations);
+    await migrarAvance(db, migracionesDePlataforma);
 
     expect(await existe('eventos_salida')).toBe(true);
     expect(await aplicadas()).toBe(2);
   });
 
   it('revertir todo deja la base sin migraciones y avisa cuando no queda ninguna', async () => {
-    expect(await revertLast(db, platformMigrations)).toBe('0001_eventos_salida');
-    expect(await revertLast(db, platformMigrations)).toBe('0000_postgis');
-    expect(await revertLast(db, platformMigrations)).toBeNull();
+    expect(await revertirUltima(db, migracionesDePlataforma)).toBe('0001_eventos_salida');
+    expect(await revertirUltima(db, migracionesDePlataforma)).toBe('0000_postgis');
+    expect(await revertirUltima(db, migracionesDePlataforma)).toBeNull();
 
-    await migrateUp(db, platformMigrations);
+    await migrarAvance(db, migracionesDePlataforma);
   });
 });
 
@@ -99,8 +99,8 @@ describeIntegration('outbox', () => {
 
   beforeAll(async () => {
     base = await createTestDatabase();
-    db = createDb(base.pool);
-    await migrateUp(db, platformMigrations);
+    db = crearDb(base.pool);
+    await migrarAvance(db, migracionesDePlataforma);
   });
 
   afterAll(async () => {
@@ -108,16 +108,16 @@ describeIntegration('outbox', () => {
   });
 
   it('guarda los eventos pendientes de publicar, con su clave y su contenido', async () => {
-    await appendToOutbox(db, [
+    await agregarASalida(db, [
       evento(ID_1, '2026-10-12T12:00:00.000Z'),
       evento(ID_2, '2026-10-12T12:00:01.000Z'),
     ]);
 
     expect(await guardados()).toEqual([
-      { id: ID_1, tipo: 'ReportCreated.v1', contenido: evento(ID_1), publicado_en: null },
+      { id: ID_1, tipo: 'ReporteCreado.v1', contenido: evento(ID_1), publicado_en: null },
       {
         id: ID_2,
-        tipo: 'ReportCreated.v1',
+        tipo: 'ReporteCreado.v1',
         contenido: evento(ID_2, '2026-10-12T12:00:01.000Z'),
         publicado_en: null,
       },
@@ -125,7 +125,7 @@ describeIntegration('outbox', () => {
   });
 
   it('no hace nada si no hay eventos', async () => {
-    await expect(appendToOutbox(db, [])).resolves.toBeUndefined();
+    await expect(agregarASalida(db, [])).resolves.toBeUndefined();
 
     expect(await guardados()).toHaveLength(2);
   });
@@ -135,7 +135,7 @@ describeIntegration('outbox', () => {
 
     await expect(
       db.transaction(async (tx) => {
-        await appendToOutbox(tx, [evento(ID_3)]);
+        await agregarASalida(tx, [evento(ID_3)]);
         throw new Error('falló el resto de la unidad de trabajo');
       }),
     ).rejects.toThrow('falló el resto');
@@ -144,6 +144,6 @@ describeIntegration('outbox', () => {
   });
 
   it('la base de datos rechaza un evento repetido', async () => {
-    await expect(appendToOutbox(db, [evento(ID_1)])).rejects.toThrow();
+    await expect(agregarASalida(db, [evento(ID_1)])).rejects.toThrow();
   });
 });

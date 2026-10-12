@@ -1,31 +1,31 @@
-import { createDb, migrateAll, platformMigrations } from '@gis/platform';
+import { crearDb, migrarTodo, migracionesDePlataforma } from '@gis/platform';
 import type { Db } from '@gis/platform';
-import { userId } from '@gis/shared-kernel';
+import { idUsuario } from '@gis/shared-kernel';
 import { createTestDatabase, describeIntegration } from '@gis/testing';
 import type { TestDatabase } from '@gis/testing';
 import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, expect, it } from 'vitest';
-import { PgUserRepository } from '../adapters/user-repository.js';
-import { User } from '../domain/user.js';
-import { identityModule } from '../index.js';
+import { RepositorioUsuariosPg } from '../adapters/user-repository.js';
+import { Usuario } from '../domain/user.js';
+import { identityModulo } from '../index.js';
 
-const ana = userId('11111111-1111-4111-8111-111111111111');
-const beto = userId('22222222-2222-4222-8222-222222222222');
-const now = new Date('2026-10-12T12:00:00.000Z');
+const ana = idUsuario('11111111-1111-4111-8111-111111111111');
+const beto = idUsuario('22222222-2222-4222-8222-222222222222');
+const ahora = new Date('2026-10-12T12:00:00.000Z');
 
-const nuevo = (id = ana, deviceHash = 'hash-del-dispositivo-de-ana') =>
-  User.registerDevice({ id, deviceHash, now });
+const nuevo = (id = ana, hashDispositivo = 'hash-del-dispositivo-de-ana') =>
+  Usuario.registrarDispositivo({ id, hashDispositivo, ahora });
 
-describeIntegration('PgUserRepository', () => {
+describeIntegration('RepositorioUsuariosPg', () => {
   let base: TestDatabase;
   let db: Db;
-  let repo: PgUserRepository;
+  let repo: RepositorioUsuariosPg;
 
   beforeAll(async () => {
     base = await createTestDatabase();
-    db = createDb(base.pool);
-    await migrateAll(db, [platformMigrations, identityModule.migrations!]);
-    repo = new PgUserRepository(db);
+    db = crearDb(base.pool);
+    await migrarTodo(db, [migracionesDePlataforma, identityModulo.migraciones!]);
+    repo = new RepositorioUsuariosPg(db);
   });
 
   afterAll(async () => {
@@ -33,54 +33,54 @@ describeIntegration('PgUserRepository', () => {
   });
 
   it('guarda un usuario y lo recupera sin pérdida', async () => {
-    await repo.save(nuevo());
+    await repo.guardar(nuevo());
 
-    expect(await repo.findById(ana)).toMatchObject({
+    expect(await repo.buscarPorId(ana)).toMatchObject({
       id: ana,
-      deviceHash: 'hash-del-dispositivo-de-ana',
-      role: 'CIUDADANO',
-      telegramId: null,
-      createdAt: now,
+      hashDispositivo: 'hash-del-dispositivo-de-ana',
+      rol: 'CIUDADANO',
+      idTelegram: null,
+      creadoEn: ahora,
     });
   });
 
   it('lo encuentra por el hash de su dispositivo', async () => {
-    expect((await repo.findByDeviceHash('hash-del-dispositivo-de-ana'))?.id).toBe(ana);
+    expect((await repo.buscarPorHashDispositivo('hash-del-dispositivo-de-ana'))?.id).toBe(ana);
   });
 
   it('devuelve null cuando no existe', async () => {
-    expect(await repo.findById(beto)).toBeNull();
-    expect(await repo.findByDeviceHash('hash-desconocido-0000')).toBeNull();
-    expect(await repo.findByTelegramId('999')).toBeNull();
+    expect(await repo.buscarPorId(beto)).toBeNull();
+    expect(await repo.buscarPorHashDispositivo('hash-desconocido-0000')).toBeNull();
+    expect(await repo.buscarPorIdTelegram('999')).toBeNull();
   });
 
   it('guarda los cambios de un usuario existente', async () => {
-    const usuario = (await repo.findById(ana))!;
-    usuario.linkTelegram('123456789');
-    usuario.promoteToModerator();
+    const usuario = (await repo.buscarPorId(ana))!;
+    usuario.vincularTelegram('123456789');
+    usuario.ascenderAModerador();
 
-    await repo.save(usuario);
+    await repo.guardar(usuario);
 
-    expect(await repo.findByTelegramId('123456789')).toMatchObject({
+    expect(await repo.buscarPorIdTelegram('123456789')).toMatchObject({
       id: ana,
-      role: 'MODERADOR',
-      telegramId: '123456789',
+      rol: 'MODERADOR',
+      idTelegram: '123456789',
     });
   });
 
   it('la base de datos rechaza dos usuarios con el mismo dispositivo', async () => {
-    await expect(repo.save(nuevo(beto, 'hash-del-dispositivo-de-ana'))).rejects.toThrow();
+    await expect(repo.guardar(nuevo(beto, 'hash-del-dispositivo-de-ana'))).rejects.toThrow();
   });
 
   it('la base de datos rechaza dos usuarios con el mismo Telegram', async () => {
-    const otro = User.registerDevice({
+    const otro = Usuario.registrarDispositivo({
       id: beto,
-      deviceHash: 'hash-del-dispositivo-de-beto',
-      telegramId: '123456789',
-      now,
+      hashDispositivo: 'hash-del-dispositivo-de-beto',
+      idTelegram: '123456789',
+      ahora,
     });
 
-    await expect(repo.save(otro)).rejects.toThrow();
+    await expect(repo.guardar(otro)).rejects.toThrow();
   });
 
   it('la base de datos rechaza un rol desconocido', async () => {

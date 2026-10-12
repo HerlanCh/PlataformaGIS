@@ -19,14 +19,14 @@ const ALFA = [N / 2 - (2 * N2) / 3 + (5 * N3) / 16, (13 * N2) / 48 - (3 * N3) / 
 const BETA = [N / 2 - (2 * N2) / 3 + (37 * N3) / 96, N2 / 48 + N3 / 15, (17 * N3) / 480];
 const DELTA = [2 * N - (2 * N2) / 3 - 2 * N3, (7 * N2) / 3 - (8 * N3) / 5, (56 * N3) / 15];
 
-export interface UtmPoint {
-  readonly easting: number;
-  readonly northing: number;
+export interface PuntoUtm {
+  readonly este: number;
+  readonly norte: number;
 }
 
 export interface LatLon {
-  readonly latitude: number;
-  readonly longitude: number;
+  readonly latitud: number;
+  readonly longitud: number;
 }
 
 const aRadianes = (grados: number): number => (grados * Math.PI) / 180;
@@ -46,7 +46,7 @@ function serie(
   );
 }
 
-export function toUtm19s({ latitude, longitude }: LatLon): UtmPoint {
+export function aUtm19s({ latitud: latitude, longitud: longitude }: LatLon): PuntoUtm {
   const senoLat = Math.sin(aRadianes(latitude));
   const dLon = aRadianes(longitude) - MERIDIANO_CENTRAL;
   const t = Math.sinh(Math.atanh(senoLat) - EXC * Math.atanh(EXC * senoLat));
@@ -54,12 +54,12 @@ export function toUtm19s({ latitude, longitude }: LatLon): UtmPoint {
   const eta = Math.atanh(Math.sin(dLon) / Math.sqrt(1 + t * t));
 
   return {
-    easting: ESTE_FALSO + RADIO * (eta + serie(ALFA, xi, eta, Math.cos, Math.sinh)),
-    northing: NORTE_FALSO + RADIO * (xi + serie(ALFA, xi, eta, Math.sin, Math.cosh)),
+    este: ESTE_FALSO + RADIO * (eta + serie(ALFA, xi, eta, Math.cos, Math.sinh)),
+    norte: NORTE_FALSO + RADIO * (xi + serie(ALFA, xi, eta, Math.sin, Math.cosh)),
   };
 }
 
-export function fromUtm19s({ easting, northing }: UtmPoint): LatLon {
+export function desdeUtm19s({ este: easting, norte: northing }: PuntoUtm): LatLon {
   const xi = (northing - NORTE_FALSO) / RADIO;
   const eta = (easting - ESTE_FALSO) / RADIO;
   const xiP = xi - serie(BETA, xi, eta, Math.sin, Math.cosh);
@@ -68,7 +68,7 @@ export function fromUtm19s({ easting, northing }: UtmPoint): LatLon {
   const latitud = chi + DELTA.reduce((suma, d, i) => suma + d * Math.sin(2 * (i + 1) * chi), 0);
 
   return {
-    latitude: aGrados(latitud),
-    longitude: aGrados(MERIDIANO_CENTRAL + Math.atan2(Math.sinh(etaP), Math.cos(xiP))),
+    latitud: aGrados(latitud),
+    longitud: aGrados(MERIDIANO_CENTRAL + Math.atan2(Math.sinh(etaP), Math.cos(xiP))),
   };
 }

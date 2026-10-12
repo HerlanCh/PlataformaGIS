@@ -1,17 +1,17 @@
-export interface DomainEventProps {
+export interface PropsEventoDeDominio {
   readonly id: string;
-  readonly occurredAt: Date;
+  readonly ocurridoEn: Date;
 }
 
 /** Clase base de todo evento. `type` y `version` identifican el contrato publicado. */
-export abstract class DomainEvent {
-  abstract readonly type: string;
+export abstract class EventoDeDominio {
+  abstract readonly tipo: string;
   abstract readonly version: number;
   readonly id: string;
-  readonly occurredAt: Date;
+  readonly ocurridoEn: Date;
 
-  constructor(props: DomainEventProps) {
+  constructor(props: PropsEventoDeDominio) {
     this.id = props.id;
-    this.occurredAt = props.occurredAt;
+    this.ocurridoEn = props.ocurridoEn;
   }
 }

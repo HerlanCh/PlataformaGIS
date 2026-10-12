@@ -11,39 +11,39 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
-export const categories = pgTable(
+export const categorias = pgTable(
   'categorias',
   {
-    code: text('codigo').primaryKey(),
-    name: text('nombre').notNull(),
-    ttlMinutes: integer('ttl_minutos').notNull(),
-    dedupRadiusM: integer('radio_duplicado_m').notNull(),
-    isSensitive: boolean('es_sensible').notNull(),
+    codigo: text('codigo').primaryKey(),
+    nombre: text('nombre').notNull(),
+    ttlMinutos: integer('ttl_minutos').notNull(),
+    radioDuplicadoM: integer('radio_duplicado_m').notNull(),
+    esSensible: boolean('es_sensible').notNull(),
   },
   (tabla) => [
-    check('categorias_ttl_check', sql`${tabla.ttlMinutes} > 0`),
-    check('categorias_radio_duplicado_check', sql`${tabla.dedupRadiusM} > 0`),
+    check('categorias_ttl_check', sql`${tabla.ttlMinutos} > 0`),
+    check('categorias_radio_duplicado_check', sql`${tabla.radioDuplicadoM} > 0`),
   ],
 );
 
-export const reports = pgTable(
+export const reportes = pgTable(
   'reportes',
   {
     id: uuid().primaryKey(),
-    categoryCode: text('codigo_categoria')
+    codigoCategoria: text('codigo_categoria')
       .notNull()
-      .references(() => categories.code),
+      .references(() => categorias.codigo),
     // Usuario del módulo `identity`: se guarda el ID sin clave foránea (ADR-001).
     authorId: uuid('id_autor').notNull(),
-    status: text('estado').notNull(),
-    ttlMinutes: integer('ttl_minutos').notNull(),
-    extensions: integer('extensiones').notNull(),
-    rejectionReason: text('motivo_rechazo'),
-    createdAt: timestamp('creado_en', { withTimezone: true }).notNull(),
-    expiresAt: timestamp('caduca_en', { withTimezone: true }).notNull(),
+    estado: text('estado').notNull(),
+    ttlMinutos: integer('ttl_minutos').notNull(),
+    extensiones: integer('extensiones').notNull(),
+    motivoRechazo: text('motivo_rechazo'),
+    creadoEn: timestamp('creado_en', { withTimezone: true }).notNull(),
+    caducaEn: timestamp('caduca_en', { withTimezone: true }).notNull(),
     /** Ubicación real. Nunca se expone. */
     location: geometry('ubicacion', { type: 'point', mode: 'xy', srid: 4326 }).notNull(),
-    /** Ubicación que se muestra; la calcula `PrivacyPolicy` en el dominio. */
+    /** Ubicación que se muestra; la calcula `PoliticaDePrivacidad` en el dominio. */
     publicLocation: geometry('ubicacion_publica', {
       type: 'point',
       mode: 'xy',
@@ -54,18 +54,18 @@ export const reports = pgTable(
   (tabla) => [
     check(
       'reportes_estado_check',
-      sql`${tabla.status} in ('ACTIVO', 'CONFIRMADO', 'RESUELTO', 'CADUCADO', 'RECHAZADO')`,
+      sql`${tabla.estado} in ('ACTIVO', 'CONFIRMADO', 'RESUELTO', 'CADUCADO', 'RECHAZADO')`,
     ),
-    check('reportes_extensiones_check', sql`${tabla.extensions} between 0 and 2`),
+    check('reportes_extensiones_check', sql`${tabla.extensiones} between 0 and 2`),
     check(
       'reportes_motivo_rechazo_check',
-      sql`${tabla.rejectionReason} is null or ${tabla.rejectionReason} in ('MODERACION', 'AUTOR_SILENCIADO')`,
+      sql`${tabla.motivoRechazo} is null or ${tabla.motivoRechazo} in ('MODERACION', 'AUTOR_SILENCIADO')`,
     ),
     index('reportes_ubicacion_idx').using('gist', tabla.location),
     index('reportes_ubicacion_publica_idx').using('gist', tabla.publicLocation),
     // Solo los reportes vigentes: los que se muestran en el mapa y los que pueden caducar.
     index('reportes_vigentes_idx')
-      .on(tabla.status, tabla.expiresAt)
-      .where(sql`${tabla.status} in ('ACTIVO', 'CONFIRMADO')`),
+      .on(tabla.estado, tabla.caducaEn)
+      .where(sql`${tabla.estado} in ('ACTIVO', 'CONFIRMADO')`),
   ],
 );

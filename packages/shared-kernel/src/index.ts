@@ -1,9 +1,9 @@
-export type { Clock } from './clock.js';
-export { DomainError } from './domain-error.js';
-export { DomainEvent } from './domain-event.js';
-export type { DomainEventProps } from './domain-event.js';
-export { GeoPoint, OutOfServiceAreaError, SERVICE_AREA } from './geo-point.js';
-export { categoryCode, InvalidIdentifierError, reportId, userId } from './ids.js';
-export type { Brand, CategoryCode, ReportId, UserId } from './ids.js';
-export { err, ok } from './result.js';
-export type { Err, Ok, Result } from './result.js';
+export type { Reloj } from './clock.js';
+export { ErrorDeDominio } from './domain-error.js';
+export { EventoDeDominio } from './domain-event.js';
+export type { PropsEventoDeDominio } from './domain-event.js';
+export { PuntoGeo, ErrorFueraDelAreaDeServicio, AREA_DE_SERVICIO } from './geo-point.js';
+export { codigoCategoria, ErrorIdentificadorInvalido, idReporte, idUsuario } from './ids.js';
+export type { Marca, CodigoCategoria, IdReporte, IdUsuario } from './ids.js';
+export { fallo, exito } from './result.js';
+export type { Fallo, Exito, Resultado } from './result.js';

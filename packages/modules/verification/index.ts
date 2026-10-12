@@ -1,14 +1,14 @@
 import { fileURLToPath } from 'node:url';
-import type { ModuleDefinition } from '@gis/platform';
+import type { DefinicionDeModulo } from '@gis/platform';
 
 /** Punto de entrada público del módulo `verification`. Solo lo importa la raíz de composición. */
-export const verificationModule: ModuleDefinition = {
-  name: 'verification',
-  migrations: {
-    name: 'verification',
-    folder: fileURLToPath(new URL('./migrations', import.meta.url)),
+export const verificationModulo: DefinicionDeModulo = {
+  nombre: 'verification',
+  migraciones: {
+    nombre: 'verification',
+    carpeta: fileURLToPath(new URL('./migrations', import.meta.url)),
   },
-  register() {
+  registrar() {
     // Aquí se registran las rutas, los manejadores de eventos y las tareas del módulo.
   },
 };

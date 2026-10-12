@@ -1,25 +1,28 @@
-import { DomainError } from '@gis/shared-kernel';
+import { ErrorDeDominio } from '@gis/shared-kernel';
 
-export class AuthorCannotVoteError extends DomainError {
+export class ErrorAutorNoPuedeVotar extends ErrorDeDominio {
   constructor() {
-    super('AUTHOR_CANNOT_VOTE', 'El autor de un reporte no puede votar sobre su propio reporte');
+    super('AUTOR_NO_PUEDE_VOTAR', 'El autor de un reporte no puede votar sobre su propio reporte');
   }
 }
 
-export class AlreadyVotedError extends DomainError {
+export class ErrorYaVoto extends ErrorDeDominio {
   constructor() {
-    super('ALREADY_VOTED', 'El usuario ya votó sobre este reporte');
+    super('YA_VOTO', 'El usuario ya votó sobre este reporte');
   }
 }
 
-export class TooFarToVoteError extends DomainError {
+export class ErrorDemasiadoLejosParaVotar extends ErrorDeDominio {
   constructor(maximoM: number) {
-    super('TOO_FAR_TO_VOTE', `Para votar hay que estar a ${maximoM} m o menos del incidente`);
+    super(
+      'DEMASIADO_LEJOS_PARA_VOTAR',
+      `Para votar hay que estar a ${maximoM} m o menos del incidente`,
+    );
   }
 }
 
-export class ReportNotActiveError extends DomainError {
+export class ErrorReporteNoActivo extends ErrorDeDominio {
   constructor() {
-    super('REPORT_NOT_ACTIVE', 'Solo se puede votar sobre un reporte vigente');
+    super('REPORTE_NO_ACTIVO', 'Solo se puede votar sobre un reporte vigente');
   }
 }
