@@ -1,6 +1,6 @@
 {
   "name": "plataforma-gis",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "private": true,
   "description": "Plataforma GIS de alerta temprana para La Paz y El Alto",
   "license": "MIT",

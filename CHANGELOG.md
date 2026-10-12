@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/HerlanCh/PlataformaGIS/compare/v1.4.0...v1.5.0) (2026-10-12)
+
+
+### Features
+
+* persistencia de verification, subscriptions y moderation ([1e3f025](https://github.com/HerlanCh/PlataformaGIS/commit/1e3f025519658ceb0a1020dfff270a6ec199d648))
+
 # [1.4.0](https://github.com/HerlanCh/PlataformaGIS/compare/v1.3.0...v1.4.0) (2026-10-12)
 
 
