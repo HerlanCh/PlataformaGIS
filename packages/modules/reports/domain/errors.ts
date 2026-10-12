@@ -12,6 +12,12 @@ export class ExtensionLimitReachedError extends DomainError {
   }
 }
 
+export class InvalidIdempotencyKeyError extends DomainError {
+  constructor() {
+    super('INVALID_IDEMPOTENCY_KEY', 'La clave de idempotencia del reporte no es válida');
+  }
+}
+
 export class NotExpiredYetError extends DomainError {
   constructor() {
     super('NOT_EXPIRED_YET', 'El reporte todavía no alcanzó su fecha de caducidad');

@@ -410,6 +410,13 @@ importers:
       '@gis/shared-kernel':
         specifier: workspace:*
         version: link:../../shared-kernel
+      drizzle-orm:
+        specifier: ^0.45.4
+        version: 0.45.4(@types/pg@8.23.1)(pg@8.23.1)
+    devDependencies:
+      '@gis/testing':
+        specifier: workspace:*
+        version: link:../../testing
 
   packages/modules/moderation:
     dependencies:
@@ -425,6 +432,13 @@ importers:
       '@gis/shared-kernel':
         specifier: workspace:*
         version: link:../../shared-kernel
+      drizzle-orm:
+        specifier: ^0.45.4
+        version: 0.45.4(@types/pg@8.23.1)(pg@8.23.1)
+    devDependencies:
+      '@gis/testing':
+        specifier: workspace:*
+        version: link:../../testing
 
   packages/modules/notifications:
     dependencies:
@@ -470,6 +484,13 @@ importers:
       '@gis/shared-kernel':
         specifier: workspace:*
         version: link:../../shared-kernel
+      drizzle-orm:
+        specifier: ^0.45.4
+        version: 0.45.4(@types/pg@8.23.1)(pg@8.23.1)
+    devDependencies:
+      '@gis/testing':
+        specifier: workspace:*
+        version: link:../../testing
 
   packages/modules/subscriptions:
     dependencies:
@@ -485,6 +506,13 @@ importers:
       '@gis/shared-kernel':
         specifier: workspace:*
         version: link:../../shared-kernel
+      drizzle-orm:
+        specifier: ^0.45.4
+        version: 0.45.4(@types/pg@8.23.1)(pg@8.23.1)
+    devDependencies:
+      '@gis/testing':
+        specifier: workspace:*
+        version: link:../../testing
 
   packages/modules/verification:
     dependencies:
@@ -500,6 +528,13 @@ importers:
       '@gis/shared-kernel':
         specifier: workspace:*
         version: link:../../shared-kernel
+      drizzle-orm:
+        specifier: ^0.45.4
+        version: 0.45.4(@types/pg@8.23.1)(pg@8.23.1)
+    devDependencies:
+      '@gis/testing':
+        specifier: workspace:*
+        version: link:../../testing
 
   packages/platform:
     dependencies:
