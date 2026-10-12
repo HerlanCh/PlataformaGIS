@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/HerlanCh/PlataformaGIS/compare/v1.2.0...v1.3.0) (2026-10-12)
+
+
+### Features
+
+* infraestructura de persistencia con migraciones reversibles y outbox ([c38d2ef](https://github.com/HerlanCh/PlataformaGIS/commit/c38d2efd8e6e53e07d081975566161c02e74944d))
+
 # [1.2.0](https://github.com/HerlanCh/PlataformaGIS/compare/v1.1.0...v1.2.0) (2026-10-11)
 
 
