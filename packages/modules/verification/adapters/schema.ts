@@ -5,31 +5,31 @@ import { check, numeric, pgTable, primaryKey, text, timestamp, uuid } from 'driz
 const puntaje = (nombre: string) => numeric(nombre, { precision: 3, scale: 2, mode: 'number' });
 
 export const votes = pgTable(
-  'votes',
+  'votos',
   {
     // Reporte del módulo `reports` y usuario de `identity`: IDs sin clave foránea (ADR-001).
-    reportId: uuid('report_id').notNull(),
-    userId: uuid('user_id').notNull(),
-    value: text().notNull(),
+    reportId: uuid('id_reporte').notNull(),
+    userId: uuid('id_usuario').notNull(),
+    value: text('valor').notNull(),
     /** Reputación del votante en el momento de votar. */
-    weight: puntaje('weight').notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
+    weight: puntaje('peso').notNull(),
+    createdAt: timestamp('creado_en', { withTimezone: true }).notNull(),
   },
   (tabla) => [
     // Un usuario vota una sola vez por reporte.
-    primaryKey({ name: 'votes_pkey', columns: [tabla.reportId, tabla.userId] }),
-    check('votes_value_check', sql`${tabla.value} in ('CONFIRMACION', 'NEGACION')`),
-    check('votes_weight_check', sql`${tabla.weight} between 0 and 5`),
+    primaryKey({ name: 'votos_pkey', columns: [tabla.reportId, tabla.userId] }),
+    check('votos_valor_check', sql`${tabla.value} in ('CONFIRMACION', 'NEGACION')`),
+    check('votos_peso_check', sql`${tabla.weight} between 0 and 5`),
   ],
 );
 
 export const reputations = pgTable(
-  'reputations',
+  'reputaciones',
   {
-    userId: uuid('user_id').primaryKey(),
-    score: puntaje('score').notNull(),
-    lastPenaltyAt: timestamp('last_penalty_at', { withTimezone: true }),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    userId: uuid('id_usuario').primaryKey(),
+    score: puntaje('puntaje').notNull(),
+    lastPenaltyAt: timestamp('ultima_penalizacion_en', { withTimezone: true }),
+    updatedAt: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
   },
-  (tabla) => [check('reputations_score_check', sql`${tabla.score} between 0 and 5`)],
+  (tabla) => [check('reputaciones_puntaje_check', sql`${tabla.score} between 0 and 5`)],
 );

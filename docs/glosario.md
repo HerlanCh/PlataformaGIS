@@ -15,9 +15,9 @@ Este glosario establece el lenguaje ubicuo compartido entre el equipo de desarro
 | **Ponderación de Voto (`VoteWeight`)** | Peso de un voto, igual a la reputación del votante en el momento de votar. | `verification` |
 | **Reputación (`Reputation`)** | Puntuación de un usuario entre 0.0 y 5.0, calculada a partir del acierto histórico de sus reportes y votos. Determina el peso de sus votos. | `verification` |
 | **Silenciado** | Usuario con reputación 0.0. Sus votos no cuentan y sus reportes se rechazan de inmediato sin difundirse. Se recupera a 0.5 tras 30 días sin penalizaciones. | `verification` |
-| **Caducidad (`Expiration`)** | Transición automática de un reporte vigente a `CADUCADO` al cumplirse su `expires_at`, sin intervención humana. | `reports` |
-| **Extensión de vigencia** | Aumento de `expires_at` en un 50 % del TTL original. Máximo 2 por reporte. | `reports` |
-| **Deduplicación (`Deduplication`)** | Proceso por el cual un nuevo reporte dentro del radio `dedup_radius_m` de otro reporte vigente de la misma categoría no crea un incidente nuevo, sino una confirmación del existente. | `reports` |
+| **Caducidad (`Expiration`)** | Transición automática de un reporte vigente a `CADUCADO` al cumplirse su fecha de caducidad (`caduca_en`), sin intervención humana. | `reports` |
+| **Extensión de vigencia** | Aumento de la fecha de caducidad (`caduca_en`) en un 50 % del TTL original. Máximo 2 por reporte. | `reports` |
+| **Deduplicación (`Deduplication`)** | Proceso por el cual un nuevo reporte dentro del radio de deduplicación (`radio_duplicado_m`) de otro reporte vigente de la misma categoría no crea un incidente nuevo, sino una confirmación del existente. | `reports` |
 | **Clave de Idempotencia (`IdempotencyKey`)** | Identificador único generado por el cliente para cada reporte. Garantiza que un reenvío por fallos de red se procese exactamente una vez. | `reports` |
 | **Modo Fuera de Línea (`Offline Mode`)** | Capacidad de la PWA para guardar reportes en `IndexedDB` sin conectividad y enviarlos al restablecerse la red. | `apps/web` |
 | **Zona Suscrita (`ZoneSubscription`)** | Área de interés de un usuario definida por un punto central, un radio en metros y una lista de categorías, usada para el envío de alertas. | `subscriptions` |

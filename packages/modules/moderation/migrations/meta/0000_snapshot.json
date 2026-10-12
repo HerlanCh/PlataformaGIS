@@ -1,11 +1,11 @@
 {
-  "id": "27ec9dab-718d-4aa2-9213-2c8e0356605e",
+  "id": "5ccb6b89-7a46-4840-a64c-b3b7a44154cb",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.moderation_actions": {
-      "name": "moderation_actions",
+    "public.acciones_moderacion": {
+      "name": "acciones_moderacion",
       "schema": "",
       "columns": {
         "id": {
@@ -14,43 +14,43 @@
           "primaryKey": true,
           "notNull": true
         },
-        "report_id": {
-          "name": "report_id",
+        "id_reporte": {
+          "name": "id_reporte",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "moderator_id": {
-          "name": "moderator_id",
+        "id_moderador": {
+          "name": "id_moderador",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "action": {
-          "name": "action",
+        "accion": {
+          "name": "accion",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "reason": {
-          "name": "reason",
+        "motivo": {
+          "name": "motivo",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "created_at": {
-          "name": "created_at",
+        "creado_en": {
+          "name": "creado_en",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         }
       },
       "indexes": {
-        "moderation_actions_report_idx": {
-          "name": "moderation_actions_report_idx",
+        "acciones_moderacion_reporte_idx": {
+          "name": "acciones_moderacion_reporte_idx",
           "columns": [
             {
-              "expression": "report_id",
+              "expression": "id_reporte",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -67,13 +67,13 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "moderation_actions_action_check": {
-          "name": "moderation_actions_action_check",
-          "value": "\"moderation_actions\".\"action\" in ('RECHAZAR', 'MANTENER')"
+        "acciones_moderacion_accion_check": {
+          "name": "acciones_moderacion_accion_check",
+          "value": "\"acciones_moderacion\".\"accion\" in ('RECHAZAR', 'MANTENER')"
         },
-        "moderation_actions_reason_check": {
-          "name": "moderation_actions_reason_check",
-          "value": "\"moderation_actions\".\"action\" <> 'RECHAZAR' or coalesce(length(trim(\"moderation_actions\".\"reason\")), 0) > 0"
+        "acciones_moderacion_motivo_check": {
+          "name": "acciones_moderacion_motivo_check",
+          "value": "\"acciones_moderacion\".\"accion\" <> 'RECHAZAR' or coalesce(length(trim(\"acciones_moderacion\".\"motivo\")), 0) > 0"
         }
       },
       "isRLSEnabled": false

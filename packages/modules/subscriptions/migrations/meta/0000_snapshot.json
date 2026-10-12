@@ -1,11 +1,11 @@
 {
-  "id": "20ce0f59-f383-494f-a1d0-8bcc1c84d7ff",
+  "id": "561cf97c-680c-4002-869e-e906ee3c562e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.zone_subscriptions": {
-      "name": "zone_subscriptions",
+    "public.zonas_suscritas": {
+      "name": "zonas_suscritas",
       "schema": "",
       "columns": {
         "id": {
@@ -14,43 +14,43 @@
           "primaryKey": true,
           "notNull": true
         },
-        "user_id": {
-          "name": "user_id",
+        "id_usuario": {
+          "name": "id_usuario",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "center": {
-          "name": "center",
+        "centro": {
+          "name": "centro",
           "type": "geography(Point, 4326)",
           "primaryKey": false,
           "notNull": true
         },
-        "radius_m": {
-          "name": "radius_m",
+        "radio_m": {
+          "name": "radio_m",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "categories": {
-          "name": "categories",
+        "categorias": {
+          "name": "categorias",
           "type": "text[]",
           "primaryKey": false,
           "notNull": true
         },
-        "created_at": {
-          "name": "created_at",
+        "creado_en": {
+          "name": "creado_en",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         }
       },
       "indexes": {
-        "zone_subscriptions_center_idx": {
-          "name": "zone_subscriptions_center_idx",
+        "zonas_suscritas_centro_idx": {
+          "name": "zonas_suscritas_centro_idx",
           "columns": [
             {
-              "expression": "center",
+              "expression": "centro",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -61,11 +61,11 @@
           "method": "gist",
           "with": {}
         },
-        "zone_subscriptions_user_idx": {
-          "name": "zone_subscriptions_user_idx",
+        "zonas_suscritas_usuario_idx": {
+          "name": "zonas_suscritas_usuario_idx",
           "columns": [
             {
-              "expression": "user_id",
+              "expression": "id_usuario",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -82,13 +82,13 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "zone_subscriptions_radius_check": {
-          "name": "zone_subscriptions_radius_check",
-          "value": "\"zone_subscriptions\".\"radius_m\" between 100 and 2000"
+        "zonas_suscritas_radio_check": {
+          "name": "zonas_suscritas_radio_check",
+          "value": "\"zonas_suscritas\".\"radio_m\" between 100 and 2000"
         },
-        "zone_subscriptions_categories_check": {
-          "name": "zone_subscriptions_categories_check",
-          "value": "cardinality(\"zone_subscriptions\".\"categories\") > 0"
+        "zonas_suscritas_categorias_check": {
+          "name": "zonas_suscritas_categorias_check",
+          "value": "cardinality(\"zonas_suscritas\".\"categorias\") > 0"
         }
       },
       "isRLSEnabled": false

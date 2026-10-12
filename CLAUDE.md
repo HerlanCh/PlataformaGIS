@@ -27,6 +27,8 @@ PWA comunitaria para reportar y consultar incidentes urbanos georreferenciados e
 - Dentro de un módulo: `adapters → application → domain`. El dominio solo importa `shared-kernel`.
 - Un módulo **nunca** importa a otro módulo. Se comunican por eventos versionados de `packages/contracts`.
 - Cada módulo es dueño de sus tablas. Sin claves foráneas entre módulos.
+- Tablas y columnas en español (`reportes.caduca_en`). La equivalencia con el código está en
+  `adapters/schema.ts` de cada módulo y en `docs/diccionario-datos.md`.
 - Solo `apps/*` (raíces de composición) importa el `index.ts` de los módulos.
 - Cada módulo opcional tiene interruptor `FEATURE_<MODULO>`.
 - Para crear un módulo nuevo usa el generador (`pnpm gen:module`), no lo armes a mano.
@@ -39,9 +41,19 @@ PWA comunitaria para reportar y consultar incidentes urbanos georreferenciados e
 - JS inicial de la PWA < 250 KB comprimido
 - Escribe la prueba primero cuando corrijas un error. Nombra las pruebas con el ID de la historia (`HU-03: ...`).
 
+## Idioma del código
+
+- **Código nuevo en español:** variables, funciones, clases, tipos, archivos, tablas y columnas, sin tildes ni eñes
+  en los identificadores (`buscarCercanos`, `ZonaSuscrita`, `caduca_en`). Comentarios y pruebas, en español.
+- El código anterior a la Fase 4 tiene nombres públicos en inglés (`Report`, `findById`, `expiresAt`): no se
+  renombra salvo pedido expreso. Al ampliar una clase existente, los miembros nuevos van en español.
+- Se mantienen en inglés los nombres de los módulos, lo que impone una librería y los campos del contrato del SRS
+  (`location`, `public_location`, `author_id`, `idempotency_key`).
+
 ## Privacidad y ética
 
-- Nunca exponer `location` real ni `author_id` en respuestas públicas; solo `public_location`.
+- Nunca exponer `location` real ni `author_id` en respuestas públicas; solo `public_location`
+  (columnas `ubicacion`, `id_autor` y `ubicacion_publica`).
 - Nunca publicar fotos o descripciones de personas.
 
 ## Comandos

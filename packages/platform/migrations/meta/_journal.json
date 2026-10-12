@@ -12,8 +12,8 @@
     {
       "idx": 1,
       "version": "7",
-      "when": 1791827302455,
-      "tag": "0001_outbox",
+      "when": 1791830293681,
+      "tag": "0001_eventos_salida",
       "breakpoints": true
     }
   ]

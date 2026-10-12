@@ -85,7 +85,7 @@ describeIntegration('PgUserRepository', () => {
 
   it('la base de datos rechaza un rol desconocido', async () => {
     const insertar = db.execute(
-      sql`insert into users (id, device_hash, role, created_at)
+      sql`insert into usuarios (id, hash_dispositivo, rol, creado_en)
           values (${beto}, 'hash-de-prueba-de-rol-00', 'ADMIN', now())`,
     );
 

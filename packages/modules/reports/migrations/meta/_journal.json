@@ -5,15 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1791827765782,
-      "tag": "0000_categories_reports",
+      "when": 1791830297739,
+      "tag": "0000_categorias_reportes",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1791827766541,
-      "tag": "0001_seed_categories",
+      "when": 1791830298502,
+      "tag": "0001_semilla_categorias",
       "breakpoints": true
     }
   ]

@@ -81,19 +81,19 @@ describeIntegration('persistencia de verification', () => {
   it.each([
     [
       'un voto con un valor desconocido',
-      sql`insert into votes values (${OTRO_REPORTE}, ${usuario(8)}, 'ABSTENCION', 1, now())`,
+      sql`insert into votos values (${OTRO_REPORTE}, ${usuario(8)}, 'ABSTENCION', 1, now())`,
     ],
     [
       'un voto con peso negativo',
-      sql`insert into votes values (${OTRO_REPORTE}, ${usuario(8)}, 'NEGACION', -0.5, now())`,
+      sql`insert into votos values (${OTRO_REPORTE}, ${usuario(8)}, 'NEGACION', -0.5, now())`,
     ],
     [
       'una reputación mayor que 5',
-      sql`insert into reputations (user_id, score) values (${usuario(8)}, 5.01)`,
+      sql`insert into reputaciones (id_usuario, puntaje) values (${usuario(8)}, 5.01)`,
     ],
     [
       'una reputación negativa',
-      sql`insert into reputations (user_id, score) values (${usuario(8)}, -0.01)`,
+      sql`insert into reputaciones (id_usuario, puntaje) values (${usuario(8)}, -0.01)`,
     ],
   ])('la base de datos rechaza %s', async (_caso, sentencia) => {
     await expect(db.execute(sentencia)).rejects.toThrow();
@@ -138,7 +138,7 @@ describeIntegration('migraciones de verification', () => {
   const tablas = async (): Promise<string[]> => {
     const { rows } = await db.execute(
       sql`select tablename from pg_tables where schemaname = 'public'
-          and tablename in ('votes', 'reputations') order by tablename`,
+          and tablename in ('votos', 'reputaciones') order by tablename`,
     );
     return rows.map((fila) => String(fila.tablename));
   };
@@ -154,12 +154,12 @@ describeIntegration('migraciones de verification', () => {
 
   it('se aplican sobre una base vacía, se revierten y se vuelven a aplicar', async () => {
     await migrateAll(db, [platformMigrations, migraciones]);
-    expect(await tablas()).toEqual(['reputations', 'votes']);
+    expect(await tablas()).toEqual(['reputaciones', 'votos']);
 
-    expect(await revertLast(db, migraciones)).toBe('0000_votes_reputations');
+    expect(await revertLast(db, migraciones)).toBe('0000_votos_reputaciones');
     expect(await tablas()).toEqual([]);
 
     await migrateAll(db, [platformMigrations, migraciones]);
-    expect(await tablas()).toEqual(['reputations', 'votes']);
+    expect(await tablas()).toEqual(['reputaciones', 'votos']);
   });
 });

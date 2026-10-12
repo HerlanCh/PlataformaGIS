@@ -20,7 +20,7 @@ _Ninguno todavía._
 
 ## Tablas propias
 
-`moderation_actions`: auditoría de quién decidió qué sobre qué reporte y por qué. Columnas y restricciones en `docs/diccionario-datos.md`. Su dominio y su repositorio llegan en la Fase 10.
+`acciones_moderacion`: auditoría de quién decidió qué sobre qué reporte y por qué. Columnas y restricciones en `docs/diccionario-datos.md`. Su dominio y su repositorio llegan en la Fase 10.
 
 ## Interruptor
 

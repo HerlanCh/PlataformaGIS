@@ -1,11 +1,11 @@
 {
-  "id": "2c2431aa-1a0c-4db3-8e33-48de11cc7634",
+  "id": "e6cad363-924b-4728-801c-5f50aed51ec1",
   "prevId": "32f6e173-25ad-40d4-a701-90a60da260d9",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.outbox_events": {
-      "name": "outbox_events",
+    "public.eventos_salida": {
+      "name": "eventos_salida",
       "schema": "",
       "columns": {
         "id": {
@@ -14,45 +14,45 @@
           "primaryKey": true,
           "notNull": true
         },
-        "type": {
-          "name": "type",
+        "tipo": {
+          "name": "tipo",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "payload": {
-          "name": "payload",
+        "contenido": {
+          "name": "contenido",
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
         },
-        "created_at": {
-          "name": "created_at",
+        "creado_en": {
+          "name": "creado_en",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
-        "published_at": {
-          "name": "published_at",
+        "publicado_en": {
+          "name": "publicado_en",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         }
       },
       "indexes": {
-        "outbox_events_pendientes_idx": {
-          "name": "outbox_events_pendientes_idx",
+        "eventos_salida_pendientes_idx": {
+          "name": "eventos_salida_pendientes_idx",
           "columns": [
             {
-              "expression": "created_at",
+              "expression": "creado_en",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "where": "\"outbox_events\".\"published_at\" is null",
+          "where": "\"eventos_salida\".\"publicado_en\" is null",
           "concurrently": false,
           "method": "btree",
           "with": {}
