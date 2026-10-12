@@ -1,0 +1,83 @@
+import { createDb, loadFeatureFlags, migrateAll } from '@gis/platform';
+import type { Db } from '@gis/platform';
+import { createTestDatabase, describeIntegration } from '@gis/testing';
+import type { TestDatabase } from '@gis/testing';
+import { sql } from 'drizzle-orm';
+import { afterEach, beforeEach, expect, it } from 'vitest';
+import { migrationSets } from './migrations.js';
+import { modules } from './modules.generated.js';
+
+const TODOS_ENCENDIDOS = Object.fromEntries(
+  modules.map(({ name }) => [`FEATURE_${name.toUpperCase().replaceAll('-', '_')}`, 'true']),
+);
+
+const TABLAS_IMPRESCINDIBLES = [
+  'categories',
+  'outbox_events',
+  'reports',
+  'reputations',
+  'users',
+  'votes',
+];
+
+describeIntegration('migraciones de toda la plataforma', () => {
+  let base: TestDatabase;
+  let db: Db;
+
+  const migrar = (env: Record<string, string>) =>
+    migrateAll(db, migrationSets(loadFeatureFlags(env), modules));
+
+  const tablas = async (): Promise<string[]> => {
+    const { rows } = await db.execute(
+      sql`select tablename from pg_tables where schemaname = 'public'
+          and tablename <> 'spatial_ref_sys' order by tablename`,
+    );
+    return rows.map((fila) => String(fila.tablename));
+  };
+
+  beforeEach(async () => {
+    base = await createTestDatabase();
+    db = createDb(base.pool);
+  });
+
+  afterEach(async () => {
+    await base?.close();
+  });
+
+  it('con todos los módulos encendidos crea el esquema completo desde cero', async () => {
+    await migrar(TODOS_ENCENDIDOS);
+
+    expect(await tablas()).toEqual(
+      [...TABLAS_IMPRESCINDIBLES, 'moderation_actions', 'zone_subscriptions'].sort(),
+    );
+  });
+
+  it('repetir la migración no cambia nada', async () => {
+    await migrar(TODOS_ENCENDIDOS);
+    const antes = await tablas();
+
+    await migrar(TODOS_ENCENDIDOS);
+
+    expect(await tablas()).toEqual(antes);
+  });
+
+  it('sin interruptores solo crea las tablas de los módulos imprescindibles', async () => {
+    await migrar({});
+
+    expect(await tablas()).toEqual(TABLAS_IMPRESCINDIBLES);
+  });
+
+  it('con FEATURE_SUBSCRIPTIONS=false no crea su tabla y el resto queda completo', async () => {
+    await migrar({ ...TODOS_ENCENDIDOS, FEATURE_SUBSCRIPTIONS: 'false' });
+
+    expect(await tablas()).toEqual([...TABLAS_IMPRESCINDIBLES, 'moderation_actions'].sort());
+  });
+
+  it('encender un módulo más tarde añade solo sus tablas', async () => {
+    await migrar({ ...TODOS_ENCENDIDOS, FEATURE_SUBSCRIPTIONS: 'false' });
+
+    await migrar(TODOS_ENCENDIDOS);
+
+    expect(await tablas()).toContain('zone_subscriptions');
+  });
+});
