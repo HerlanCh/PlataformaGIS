@@ -3,13 +3,13 @@ import { check, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 /** Usuarios anónimos. Sin datos personales: solo el hash del dispositivo y, si existe, Telegram. */
 export const users = pgTable(
-  'users',
+  'usuarios',
   {
     id: uuid().primaryKey(),
-    deviceHash: text('device_hash').notNull().unique(),
-    telegramId: text('telegram_id').unique(),
-    role: text().notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
+    deviceHash: text('hash_dispositivo').notNull().unique(),
+    telegramId: text('id_telegram').unique(),
+    role: text('rol').notNull(),
+    createdAt: timestamp('creado_en', { withTimezone: true }).notNull(),
   },
-  (tabla) => [check('users_role_check', sql`${tabla.role} in ('CIUDADANO', 'MODERADOR')`)],
+  (tabla) => [check('usuarios_rol_check', sql`${tabla.role} in ('CIUDADANO', 'MODERADOR')`)],
 );

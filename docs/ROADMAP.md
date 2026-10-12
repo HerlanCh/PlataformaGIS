@@ -251,28 +251,28 @@ Resultado: el esquema físico versionado y los adaptadores de repositorio que im
 **Codificación (migraciones versionadas con Drizzle Kit)**
 
 1. Migración 001: `CREATE EXTENSION postgis`.
-2. Tabla `categories`: `code` PK, `name`, `ttl_minutes`, `dedup_radius_m`, `is_sensitive`.
-3. Tabla `users`: `id` UUID, `device_hash`, `telegram_id` único y nulo, `role`, `created_at`. La reputación no vive aquí: es del módulo `verification`.
-4. Tabla `reports`:
-   1. `id` UUID, `category_code` FK, `author_id` (ID del usuario, sin clave foránea: es de otro módulo), `status`, `ttl_minutes`, `extensions`, `rejection_reason`, `created_at`, `expires_at`. La columna `description` se añadirá con una migración cuando el SRS fije su regla.
-   2. `location geometry(Point, 4326)` (ubicación real, nunca expuesta).
-   3. `public_location geometry(Point, 4326)` (ubicación mostrada; redondeada si la categoría es sensible).
-   4. `idempotency_key` único (evita duplicados al reenviar reportes guardados sin conexión).
-   5. `CHECK` sobre `status` con los valores de la máquina de estados.
-5. Tabla `votes`: PK compuesta (`report_id`, `user_id`; ambos son ID de otros módulos, sin clave foránea), `value` (confirma/niega), `weight`, `created_at`. Tabla `reputations` (también de `verification`): `user_id` PK, `score`, `last_penalty_at`, `updated_at`.
-6. Tabla `zone_subscriptions`: `id`, `user_id`, `center geography(Point)`, `radius_m` con `CHECK` de mínimo y máximo, `categories text[]`.
-7. Tabla `outbox_events`: `id`, `type`, `payload jsonb`, `created_at`, `published_at` (patrón outbox para la Fase 7).
-8. Tabla `moderation_actions`: auditoría de quién rechazó qué y por qué.
-9. Índices: GiST en `reports.location` y `reports.public_location`; GiST en `zone_subscriptions.center`; B-tree parcial en `reports (status, expires_at) WHERE status IN ('ACTIVO','CONFIRMADO')`; B-tree parcial en `outbox_events (created_at) WHERE published_at IS NULL`.
+2. Tabla `categorias`: `codigo` PK, `nombre`, `ttl_minutos`, `radio_duplicado_m`, `es_sensible`.
+3. Tabla `usuarios`: `id` UUID, `hash_dispositivo`, `id_telegram` único y nulo, `rol`, `creado_en`. La reputación no vive aquí: es del módulo `verification`.
+4. Tabla `reportes`:
+   1. `id` UUID, `codigo_categoria` FK, `id_autor` (ID del usuario, sin clave foránea: es de otro módulo), `estado`, `ttl_minutos`, `extensiones`, `motivo_rechazo`, `creado_en`, `caduca_en`. La columna `description` se añadirá con una migración cuando el SRS fije su regla.
+   2. `ubicacion geometry(Point, 4326)` (ubicación real, nunca expuesta).
+   3. `ubicacion_publica geometry(Point, 4326)` (ubicación mostrada; redondeada si la categoría es sensible).
+   4. `clave_idempotencia` único (evita duplicados al reenviar reportes guardados sin conexión).
+   5. `CHECK` sobre `estado` con los valores de la máquina de estados.
+5. Tabla `votos`: PK compuesta (`id_reporte`, `id_usuario`; ambos son ID de otros módulos, sin clave foránea), `valor` (confirma/niega), `peso`, `creado_en`. Tabla `reputaciones` (también de `verification`): `id_usuario` PK, `puntaje`, `ultima_penalizacion_en`, `actualizado_en`.
+6. Tabla `zonas_suscritas`: `id`, `id_usuario`, `centro geography(Point)`, `radio_m` con `CHECK` de mínimo y máximo, `categorias text[]`.
+7. Tabla `eventos_salida`: `id`, `tipo`, `contenido jsonb`, `creado_en`, `publicado_en` (patrón outbox para la Fase 7).
+8. Tabla `acciones_moderacion`: auditoría de quién rechazó qué y por qué.
+9. Índices: GiST en `reportes.ubicacion` y `reportes.ubicacion_publica`; GiST en `zonas_suscritas.centro`; B-tree parcial en `reportes (estado, caduca_en) WHERE estado IN ('ACTIVO','CONFIRMADO')`; B-tree parcial en `eventos_salida (creado_en) WHERE publicado_en IS NULL`.
 10. Semilla: las cinco categorías del MVP con sus TTL.
 11. Adaptadores de repositorio dentro de `adapters/` de cada módulo (`reports`, `identity`, `verification`, `subscriptions`). Cada módulo guarda sus migraciones en su propia carpeta `migrations/` y solo toca sus tablas; no hay claves foráneas entre tablas de módulos distintos (se guarda el ID y se valida por evento o interfaz pública). Mapeo explícito fila ↔ entidad: el dominio nunca ve tipos de Drizzle.
-12. Unidad de trabajo transaccional: guardar el agregado y sus eventos en `outbox_events` en la misma transacción.
+12. Unidad de trabajo transaccional: guardar el agregado y sus eventos en `eventos_salida` en la misma transacción.
 
 **Pruebas**
 
 1. Pruebas de integración de cada repositorio contra PostGIS real con Testcontainers.
 2. Prueba de migración: aplicar todas las migraciones sobre una base vacía y luego revertir la última sin errores.
-3. Prueba de restricciones: un voto duplicado, un estado inválido y una `idempotency_key` repetida son rechazados por la base de datos.
+3. Prueba de restricciones: un voto duplicado, un estado inválido y una `clave_idempotencia` repetida son rechazados por la base de datos.
 4. Prueba de atomicidad: si falla la escritura del evento, el reporte tampoco se guarda.
 5. Prueba de independencia: con `FEATURE_SUBSCRIPTIONS=false`, sus migraciones no se ejecutan y el resto del sistema arranca y pasa todas sus pruebas.
 
@@ -289,15 +289,15 @@ Resultado: todas las consultas espaciales implementadas, indexadas y medidas con
 **Codificación**
 
 1. Añadir al puerto `ReportRepository` los métodos espaciales y luego implementarlos en el adaptador PostGIS:
-   1. `findInViewport(bbox, categorias, estados)`: `public_location && ST_MakeEnvelope(...)` para usar el índice GiST.
+   1. `findInViewport(bbox, categorias, estados)`: `ubicacion_publica && ST_MakeEnvelope(...)` para usar el índice GiST.
    2. `findNearby(punto, radio_m)`: `ST_DWithin(location::geography, punto::geography, radio_m)`.
-   3. `findDuplicate(categoria, punto, ventana)`: mismo tipo, dentro de `dedup_radius_m` y activo. Si existe, el nuevo reporte se convierte en confirmación del existente.
-   4. `findExpired(now)`: reportes activos con `expires_at < now`, en lotes.
+   3. `findDuplicate(categoria, punto, ventana)`: mismo tipo, dentro de `radio_duplicado_m` y activo. Si existe, el nuevo reporte se convierte en confirmación del existente.
+   4. `findExpired(now)`: reportes activos con `caduca_en < now`, en lotes.
 2. Puerto y adaptador `HeatmapQuery.aggregate(bbox, tamaño_celda, desde, hasta, categorias)`: agrupar con `ST_SnapToGrid` y devolver solo celdas con al menos 3 reportes (umbral de anonimato y antiestigmatización).
-3. Puerto y adaptador `SubscriptionRepository.matchSubscribers(punto, categoria)`: suscripciones cuyo círculo contiene el punto (`ST_DWithin` contra `center` y `radius_m`).
+3. Puerto y adaptador `SubscriptionRepository.matchSubscribers(punto, categoria)`: suscripciones cuyo círculo contiene el punto (`ST_DWithin` contra `centro` y `radio_m`).
 4. Función pura en el dominio `cellOf(GeoPoint, precision)`: codificación geohash propia (sin librería) para agrupar clientes de WebSocket por celda en la Fase 7. Precisión por defecto: 6.
 5. Función pura `cellsCovering(bbox)`: lista de celdas que cubren el área visible del mapa.
-6. Guardar en `public_location` la ubicación que entrega `PrivacyPolicy` del dominio (calculada en la Fase 2 con una cuadrícula UTM 19 Sur). `ST_SnapToGrid` se usa solo en el mapa de calor.
+6. Guardar en `ubicacion_publica` la ubicación que entrega `PrivacyPolicy` del dominio (calculada en la Fase 2 con una cuadrícula UTM 19 Sur). `ST_SnapToGrid` se usa solo en el mapa de calor.
 
 **Pruebas**
 
@@ -386,7 +386,7 @@ Resultado: cada cambio de un reporte llega a los clientes que miran esa zona en 
 
 **Codificación**
 
-1. Despachador de outbox (`OutboxDispatcher`): lee `outbox_events` sin publicar con `SELECT ... FOR UPDATE SKIP LOCKED`, los publica y marca `published_at`. Es la implementación definitiva del puerto EventBus: entrega cada evento, al menos una vez, a Socket.io y a los manejadores de los demás módulos; cada evento lleva su `id` para que el cliente descarte duplicados.
+1. Despachador de outbox (`OutboxDispatcher`): lee `eventos_salida` sin publicar con `SELECT ... FOR UPDATE SKIP LOCKED`, los publica y marca `publicado_en`. Es la implementación definitiva del puerto EventBus: entrega cada evento, al menos una vez, a Socket.io y a los manejadores de los demás módulos; cada evento lleva su `id` para que el cliente descarte duplicados.
 2. Adaptador `SocketIoEventPublisher` que implementa `EventPublisher`: emite cada evento a la sala `cell:<geohash>` de la celda del reporte.
 3. Protocolo del cliente: al mover el mapa, el cliente envía `viewport:update` con su bbox; el servidor calcula `cellsCovering(bbox)` y actualiza las salas del socket (con un máximo de celdas por cliente).
 4. Autenticación del handshake de Socket.io con el mismo JWT de la API.
@@ -482,7 +482,7 @@ Resultado: las funciones Deseables. Cada bloque se conecta por un puerto ya exis
 **Moderación**
 
 1. Vista `/moderacion` en la PWA, visible solo con rol `MODERADOR`: cola de reportes con más negaciones o marcados por el clasificador.
-2. Acciones: rechazar (con motivo) o mantener. Todo queda en `moderation_actions`.
+2. Acciones: rechazar (con motivo) o mantener. Todo queda en `acciones_moderacion`.
 3. Regla de publicación: descripciones y fotos con rostros o datos de personas se rechazan (regla ética de la Fase 0).
 
 **Datos abiertos**
@@ -502,7 +502,7 @@ Resultado: las funciones Deseables. Cada bloque se conecta por un puerto ya exis
 **Pruebas**
 
 1. Prueba de anonimato: ninguna fila de `open_data_reports` permite recuperar un punto exacto ni un usuario.
-2. Prueba de permisos: el usuario de Metabase no puede leer `reports` ni `users`.
+2. Prueba de permisos: el usuario de Metabase no puede leer `reportes` ni `usuarios`.
 3. Evaluación del clasificador con un conjunto de prueba separado: reportar precisión y exhaustividad (recall) en `docs/`.
 4. Prueba de tolerancia a fallos: con el servicio de IA caído, crear reportes sigue funcionando.
 

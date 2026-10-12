@@ -12,12 +12,12 @@ const TODOS_ENCENDIDOS = Object.fromEntries(
 );
 
 const TABLAS_IMPRESCINDIBLES = [
-  'categories',
-  'outbox_events',
-  'reports',
-  'reputations',
-  'users',
-  'votes',
+  'categorias',
+  'eventos_salida',
+  'reportes',
+  'reputaciones',
+  'usuarios',
+  'votos',
 ];
 
 describeIntegration('migraciones de toda la plataforma', () => {
@@ -48,7 +48,7 @@ describeIntegration('migraciones de toda la plataforma', () => {
     await migrar(TODOS_ENCENDIDOS);
 
     expect(await tablas()).toEqual(
-      [...TABLAS_IMPRESCINDIBLES, 'moderation_actions', 'zone_subscriptions'].sort(),
+      [...TABLAS_IMPRESCINDIBLES, 'acciones_moderacion', 'zonas_suscritas'].sort(),
     );
   });
 
@@ -70,7 +70,7 @@ describeIntegration('migraciones de toda la plataforma', () => {
   it('con FEATURE_SUBSCRIPTIONS=false no crea su tabla y el resto queda completo', async () => {
     await migrar({ ...TODOS_ENCENDIDOS, FEATURE_SUBSCRIPTIONS: 'false' });
 
-    expect(await tablas()).toEqual([...TABLAS_IMPRESCINDIBLES, 'moderation_actions'].sort());
+    expect(await tablas()).toEqual([...TABLAS_IMPRESCINDIBLES, 'acciones_moderacion'].sort());
   });
 
   it('encender un módulo más tarde añade solo sus tablas', async () => {
@@ -78,6 +78,6 @@ describeIntegration('migraciones de toda la plataforma', () => {
 
     await migrar(TODOS_ENCENDIDOS);
 
-    expect(await tablas()).toContain('zone_subscriptions');
+    expect(await tablas()).toContain('zonas_suscritas');
   });
 });

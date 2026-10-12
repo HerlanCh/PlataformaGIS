@@ -1,6 +1,7 @@
 @startuml modelo-datos
 ' Modelo entidad-relación de la Plataforma GIS (Fase 3).
 ' Derivado del modelo de dominio de la Fase 2. El detalle de cada columna está en diccionario-datos.md.
+' Las tablas y columnas están en español; los módulos conservan su nombre en inglés, como en el código.
 ' Para verlo: extensión PlantUML de VS Code o https://www.plantuml.com/plantuml
 
 title Modelo entidad-relación — Plataforma GIS de alerta temprana
@@ -16,109 +17,109 @@ skinparam class {
   ArrowColor #444444
 }
 
-package "platform (compartido)" #F4F4F4 {
-  entity "outbox_events" as outbox {
+package "platform — plataforma (compartido)" #F4F4F4 {
+  entity "eventos_salida" as eventos {
     * id : uuid <<PK>>
     --
-    * type : text
-    * payload : jsonb
-    * created_at : timestamptz
-    published_at : timestamptz
+    * tipo : text
+    * contenido : jsonb
+    * creado_en : timestamptz
+    publicado_en : timestamptz
   }
 }
 
-package "identity" #EAF2FB {
-  entity "users" as users {
+package "identity — identidad" #EAF2FB {
+  entity "usuarios" as usuarios {
     * id : uuid <<PK>>
     --
-    * device_hash : text <<UQ>>
-    telegram_id : text <<UQ>>
-    * role : text
-    * created_at : timestamptz
+    * hash_dispositivo : text <<UQ>>
+    id_telegram : text <<UQ>>
+    * rol : text
+    * creado_en : timestamptz
   }
 }
 
-package "reports" #EAF7EA {
-  entity "categories" as categories {
-    * code : text <<PK>>
+package "reports — reportes" #EAF7EA {
+  entity "categorias" as categorias {
+    * codigo : text <<PK>>
     --
-    * name : text
-    * ttl_minutes : integer
-    * dedup_radius_m : integer
-    * is_sensitive : boolean
+    * nombre : text
+    * ttl_minutos : integer
+    * radio_duplicado_m : integer
+    * es_sensible : boolean
   }
 
-  entity "reports" as reports {
+  entity "reportes" as reportes {
     * id : uuid <<PK>>
     --
-    * category_code : text <<FK>>
-    * author_id : uuid <<ref>>
-    * status : text
-    * ttl_minutes : integer
-    * extensions : integer
-    rejection_reason : text
-    * created_at : timestamptz
-    * expires_at : timestamptz
-    * location : geometry(Point, 4326)
-    * public_location : geometry(Point, 4326)
-    * idempotency_key : text <<UQ>>
+    * codigo_categoria : text <<FK>>
+    * id_autor : uuid <<ref>>
+    * estado : text
+    * ttl_minutos : integer
+    * extensiones : integer
+    motivo_rechazo : text
+    * creado_en : timestamptz
+    * caduca_en : timestamptz
+    * ubicacion : geometry(Point, 4326)
+    * ubicacion_publica : geometry(Point, 4326)
+    * clave_idempotencia : text <<UQ>>
   }
 }
 
-package "verification" #FFF6E0 {
-  entity "votes" as votes {
-    * report_id : uuid <<PK>> <<ref>>
-    * user_id : uuid <<PK>> <<ref>>
+package "verification — verificación" #FFF6E0 {
+  entity "votos" as votos {
+    * id_reporte : uuid <<PK>> <<ref>>
+    * id_usuario : uuid <<PK>> <<ref>>
     --
-    * value : text
-    * weight : numeric(3, 2)
-    * created_at : timestamptz
+    * valor : text
+    * peso : numeric(3, 2)
+    * creado_en : timestamptz
   }
 
-  entity "reputations" as reputations {
-    * user_id : uuid <<PK>> <<ref>>
+  entity "reputaciones" as reputaciones {
+    * id_usuario : uuid <<PK>> <<ref>>
     --
-    * score : numeric(3, 2)
-    last_penalty_at : timestamptz
-    * updated_at : timestamptz
-  }
-}
-
-package "subscriptions (opcional)" #F6ECFA {
-  entity "zone_subscriptions" as zones {
-    * id : uuid <<PK>>
-    --
-    * user_id : uuid <<ref>>
-    * center : geography(Point, 4326)
-    * radius_m : integer
-    * categories : text[] <<ref>>
-    * created_at : timestamptz
+    * puntaje : numeric(3, 2)
+    ultima_penalizacion_en : timestamptz
+    * actualizado_en : timestamptz
   }
 }
 
-package "moderation (opcional)" #FBECEC {
-  entity "moderation_actions" as actions {
+package "subscriptions — suscripciones (opcional)" #F6ECFA {
+  entity "zonas_suscritas" as zonas {
     * id : uuid <<PK>>
     --
-    * report_id : uuid <<ref>>
-    * moderator_id : uuid <<ref>>
-    * action : text
-    reason : text
-    * created_at : timestamptz
+    * id_usuario : uuid <<ref>>
+    * centro : geography(Point, 4326)
+    * radio_m : integer
+    * categorias : text[] <<ref>>
+    * creado_en : timestamptz
+  }
+}
+
+package "moderation — moderación (opcional)" #FBECEC {
+  entity "acciones_moderacion" as acciones {
+    * id : uuid <<PK>>
+    --
+    * id_reporte : uuid <<ref>>
+    * id_moderador : uuid <<ref>>
+    * accion : text
+    motivo : text
+    * creado_en : timestamptz
   }
 }
 
 ' Relación con clave foránea: ambas tablas son del mismo módulo.
-categories ||--o{ reports : clasifica
+categorias ||--o{ reportes : clasifica
 
 ' Relaciones lógicas entre módulos: se guarda el identificador, sin clave foránea (ADR-001).
-users ||..o{ reports : "autor (author_id)"
-users ||..o| reputations : "tiene"
-users ||..o{ votes : "emite"
-reports ||..o{ votes : "recibe"
-users ||..o{ zones : "suscribe"
-reports ||..o{ actions : "es moderado en"
-users ||..o{ actions : "modera (moderator_id)"
+usuarios ||..o{ reportes : "autor (id_autor)"
+usuarios ||..o| reputaciones : "tiene"
+usuarios ||..o{ votos : "emite"
+reportes ||..o{ votos : "recibe"
+usuarios ||..o{ zonas : "suscribe"
+reportes ||..o{ acciones : "es moderado en"
+usuarios ||..o{ acciones : "modera (id_moderador)"
 
 legend right
   | Símbolo | Significado |

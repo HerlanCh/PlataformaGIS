@@ -1,39 +1,39 @@
 {
-  "id": "b6ec9d2a-dba3-4415-a6cd-8085a910858a",
+  "id": "e7e6e138-a10b-469f-8f9b-f7ad10ae2bf8",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.categories": {
-      "name": "categories",
+    "public.categorias": {
+      "name": "categorias",
       "schema": "",
       "columns": {
-        "code": {
-          "name": "code",
+        "codigo": {
+          "name": "codigo",
           "type": "text",
           "primaryKey": true,
           "notNull": true
         },
-        "name": {
-          "name": "name",
+        "nombre": {
+          "name": "nombre",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "ttl_minutes": {
-          "name": "ttl_minutes",
+        "ttl_minutos": {
+          "name": "ttl_minutos",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "dedup_radius_m": {
-          "name": "dedup_radius_m",
+        "radio_duplicado_m": {
+          "name": "radio_duplicado_m",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "is_sensitive": {
-          "name": "is_sensitive",
+        "es_sensible": {
+          "name": "es_sensible",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true
@@ -45,19 +45,19 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "categories_ttl_check": {
-          "name": "categories_ttl_check",
-          "value": "\"categories\".\"ttl_minutes\" > 0"
+        "categorias_ttl_check": {
+          "name": "categorias_ttl_check",
+          "value": "\"categorias\".\"ttl_minutos\" > 0"
         },
-        "categories_dedup_radius_check": {
-          "name": "categories_dedup_radius_check",
-          "value": "\"categories\".\"dedup_radius_m\" > 0"
+        "categorias_radio_duplicado_check": {
+          "name": "categorias_radio_duplicado_check",
+          "value": "\"categorias\".\"radio_duplicado_m\" > 0"
         }
       },
       "isRLSEnabled": false
     },
-    "public.reports": {
-      "name": "reports",
+    "public.reportes": {
+      "name": "reportes",
       "schema": "",
       "columns": {
         "id": {
@@ -66,79 +66,79 @@
           "primaryKey": true,
           "notNull": true
         },
-        "category_code": {
-          "name": "category_code",
+        "codigo_categoria": {
+          "name": "codigo_categoria",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "author_id": {
-          "name": "author_id",
+        "id_autor": {
+          "name": "id_autor",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "status": {
-          "name": "status",
+        "estado": {
+          "name": "estado",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "ttl_minutes": {
-          "name": "ttl_minutes",
+        "ttl_minutos": {
+          "name": "ttl_minutos",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "extensions": {
-          "name": "extensions",
+        "extensiones": {
+          "name": "extensiones",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "rejection_reason": {
-          "name": "rejection_reason",
+        "motivo_rechazo": {
+          "name": "motivo_rechazo",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "created_at": {
-          "name": "created_at",
+        "creado_en": {
+          "name": "creado_en",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         },
-        "expires_at": {
-          "name": "expires_at",
+        "caduca_en": {
+          "name": "caduca_en",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         },
-        "location": {
-          "name": "location",
+        "ubicacion": {
+          "name": "ubicacion",
           "type": "geometry(point)",
           "primaryKey": false,
           "notNull": true
         },
-        "public_location": {
-          "name": "public_location",
+        "ubicacion_publica": {
+          "name": "ubicacion_publica",
           "type": "geometry(point)",
           "primaryKey": false,
           "notNull": true
         },
-        "idempotency_key": {
-          "name": "idempotency_key",
+        "clave_idempotencia": {
+          "name": "clave_idempotencia",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         }
       },
       "indexes": {
-        "reports_location_idx": {
-          "name": "reports_location_idx",
+        "reportes_ubicacion_idx": {
+          "name": "reportes_ubicacion_idx",
           "columns": [
             {
-              "expression": "location",
+              "expression": "ubicacion",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -149,11 +149,11 @@
           "method": "gist",
           "with": {}
         },
-        "reports_public_location_idx": {
-          "name": "reports_public_location_idx",
+        "reportes_ubicacion_publica_idx": {
+          "name": "reportes_ubicacion_publica_idx",
           "columns": [
             {
-              "expression": "public_location",
+              "expression": "ubicacion_publica",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -164,39 +164,39 @@
           "method": "gist",
           "with": {}
         },
-        "reports_vigentes_idx": {
-          "name": "reports_vigentes_idx",
+        "reportes_vigentes_idx": {
+          "name": "reportes_vigentes_idx",
           "columns": [
             {
-              "expression": "status",
+              "expression": "estado",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             },
             {
-              "expression": "expires_at",
+              "expression": "caduca_en",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "where": "\"reports\".\"status\" in ('ACTIVO', 'CONFIRMADO')",
+          "where": "\"reportes\".\"estado\" in ('ACTIVO', 'CONFIRMADO')",
           "concurrently": false,
           "method": "btree",
           "with": {}
         }
       },
       "foreignKeys": {
-        "reports_category_code_categories_code_fk": {
-          "name": "reports_category_code_categories_code_fk",
-          "tableFrom": "reports",
-          "tableTo": "categories",
+        "reportes_codigo_categoria_categorias_codigo_fk": {
+          "name": "reportes_codigo_categoria_categorias_codigo_fk",
+          "tableFrom": "reportes",
+          "tableTo": "categorias",
           "columnsFrom": [
-            "category_code"
+            "codigo_categoria"
           ],
           "columnsTo": [
-            "code"
+            "codigo"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -204,27 +204,27 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "reports_idempotency_key_unique": {
-          "name": "reports_idempotency_key_unique",
+        "reportes_clave_idempotencia_unique": {
+          "name": "reportes_clave_idempotencia_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "idempotency_key"
+            "clave_idempotencia"
           ]
         }
       },
       "policies": {},
       "checkConstraints": {
-        "reports_status_check": {
-          "name": "reports_status_check",
-          "value": "\"reports\".\"status\" in ('ACTIVO', 'CONFIRMADO', 'RESUELTO', 'CADUCADO', 'RECHAZADO')"
+        "reportes_estado_check": {
+          "name": "reportes_estado_check",
+          "value": "\"reportes\".\"estado\" in ('ACTIVO', 'CONFIRMADO', 'RESUELTO', 'CADUCADO', 'RECHAZADO')"
         },
-        "reports_extensions_check": {
-          "name": "reports_extensions_check",
-          "value": "\"reports\".\"extensions\" between 0 and 2"
+        "reportes_extensiones_check": {
+          "name": "reportes_extensiones_check",
+          "value": "\"reportes\".\"extensiones\" between 0 and 2"
         },
-        "reports_rejection_reason_check": {
-          "name": "reports_rejection_reason_check",
-          "value": "\"reports\".\"rejection_reason\" is null or \"reports\".\"rejection_reason\" in ('MODERACION', 'AUTOR_SILENCIADO')"
+        "reportes_motivo_rechazo_check": {
+          "name": "reportes_motivo_rechazo_check",
+          "value": "\"reportes\".\"motivo_rechazo\" is null or \"reportes\".\"motivo_rechazo\" in ('MODERACION', 'AUTOR_SILENCIADO')"
         }
       },
       "isRLSEnabled": false

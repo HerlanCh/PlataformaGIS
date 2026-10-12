@@ -122,8 +122,8 @@ describeIntegration('persistencia de reports', () => {
 
   it('las ubicaciones se guardan como puntos WGS84', async () => {
     const { rows } = await db.execute(
-      sql`select distinct st_srid(location) as real, st_srid(public_location) as publica,
-                 geometrytype(location) as tipo from reports`,
+      sql`select distinct st_srid(ubicacion) as real, st_srid(ubicacion_publica) as publica,
+                 geometrytype(ubicacion) as tipo from reportes`,
     );
 
     expect(rows).toEqual([{ real: 4326, publica: 4326, tipo: 'POINT' }]);
@@ -174,57 +174,57 @@ describeIntegration('persistencia de reports', () => {
   });
 
   it.each([
-    ['un estado inválido', sql`update reports set status = 'BORRADO'`],
-    ['más de dos extensiones', sql`update reports set extensions = 3`],
-    ['un motivo de rechazo desconocido', sql`update reports set rejection_reason = 'PORQUE_SI'`],
-    ['una categoría inexistente', sql`update reports set category_code = 'ovni'`],
+    ['un estado inválido', sql`update reportes set estado = 'BORRADO'`],
+    ['más de dos extensiones', sql`update reportes set extensiones = 3`],
+    ['un motivo de rechazo desconocido', sql`update reportes set motivo_rechazo = 'PORQUE_SI'`],
+    ['una categoría inexistente', sql`update reportes set codigo_categoria = 'ovni'`],
     [
       'una ubicación con otro sistema de referencia',
-      sql`update reports set location = st_setsrid(st_makepoint(0, 0), 3857)`,
+      sql`update reportes set ubicacion = st_setsrid(st_makepoint(0, 0), 3857)`,
     ],
-    ['una categoría con TTL de cero', sql`update categories set ttl_minutes = 0`],
+    ['una categoría con TTL de cero', sql`update categorias set ttl_minutos = 0`],
   ])('la base de datos rechaza %s', async (_caso, sentencia) => {
     await expect(db.execute(sentencia)).rejects.toThrow();
   });
 
   it('las consultas de vigentes y las espaciales tienen sus índices', async () => {
     const { rows } = await db.execute(
-      sql`select indexname from pg_indexes where tablename = 'reports' order by indexname`,
+      sql`select indexname from pg_indexes where tablename = 'reportes' order by indexname`,
     );
 
     expect(rows.map((fila) => fila.indexname)).toEqual([
-      'reports_idempotency_key_unique',
-      'reports_location_idx',
-      'reports_pkey',
-      'reports_public_location_idx',
-      'reports_vigentes_idx',
+      'reportes_clave_idempotencia_unique',
+      'reportes_pkey',
+      'reportes_ubicacion_idx',
+      'reportes_ubicacion_publica_idx',
+      'reportes_vigentes_idx',
     ]);
   });
 
   it('la unidad de trabajo guarda el reporte y su evento juntos', async () => {
     const reporte = nuevoReporte();
-    const antes = await contar('outbox_events');
+    const antes = await contar('eventos_salida');
 
     await new PgReportUnitOfWork(db).commit(reporte, [
       evento('cccccccc-cccc-4ccc-8ccc-000000000001'),
     ]);
 
     expect(await reportes.findById(reporte.id)).not.toBeNull();
-    expect(await contar('outbox_events')).toBe(antes + 1);
+    expect(await contar('eventos_salida')).toBe(antes + 1);
   });
 
   it('atomicidad: si falla la escritura del evento, el reporte tampoco se guarda', async () => {
     const idRepetido = 'cccccccc-cccc-4ccc-8ccc-000000000002';
     await appendToOutbox(db, [evento(idRepetido)]);
     const reporte = nuevoReporte();
-    const antes = await contar('outbox_events');
+    const antes = await contar('eventos_salida');
 
     await expect(
       new PgReportUnitOfWork(db).commit(reporte, [evento(idRepetido)]),
     ).rejects.toThrow();
 
     expect(await reportes.findById(reporte.id)).toBeNull();
-    expect(await contar('outbox_events')).toBe(antes);
+    expect(await contar('eventos_salida')).toBe(antes);
   });
 });
 
@@ -235,7 +235,7 @@ describeIntegration('migraciones de reports', () => {
   const tablas = async (): Promise<string[]> => {
     const { rows } = await db.execute(
       sql`select tablename from pg_tables where schemaname = 'public'
-          and tablename in ('categories', 'reports') order by tablename`,
+          and tablename in ('categorias', 'reportes') order by tablename`,
     );
     return rows.map((fila) => String(fila.tablename));
   };
@@ -251,19 +251,19 @@ describeIntegration('migraciones de reports', () => {
 
   it('se aplican sobre una base vacía y se revierten por completo', async () => {
     await migrateAll(db, [platformMigrations, migraciones]);
-    expect(await tablas()).toEqual(['categories', 'reports']);
+    expect(await tablas()).toEqual(['categorias', 'reportes']);
 
-    expect(await revertLast(db, migraciones)).toBe('0001_seed_categories');
+    expect(await revertLast(db, migraciones)).toBe('0001_semilla_categorias');
     expect(await new PgCategoryRepository(db).findAll()).toEqual([]);
 
-    expect(await revertLast(db, migraciones)).toBe('0000_categories_reports');
+    expect(await revertLast(db, migraciones)).toBe('0000_categorias_reportes');
     expect(await tablas()).toEqual([]);
   });
 
   it('tras revertir, aplicarlas de nuevo deja el mismo esquema y la semilla', async () => {
     await migrateAll(db, [platformMigrations, migraciones]);
 
-    expect(await tablas()).toEqual(['categories', 'reports']);
+    expect(await tablas()).toEqual(['categorias', 'reportes']);
     expect(await new PgCategoryRepository(db).findAll()).toHaveLength(5);
   });
 });

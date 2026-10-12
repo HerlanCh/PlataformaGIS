@@ -52,9 +52,9 @@ Los eventos públicos solo llevan `publicLocation`: nunca la ubicación real ni 
 
 ## Tablas propias
 
-`reports` y `categories`. Columnas, índices y restricciones en `docs/diccionario-datos.md`.
+`reportes` y `categorias`. Columnas, índices y restricciones en `docs/diccionario-datos.md`.
 
-`reports.author_id` guarda el ID de un usuario de `identity` sin clave foránea.
+`reportes.id_autor` guarda el ID de un usuario de `identity` sin clave foránea.
 
 ## Interruptor
 

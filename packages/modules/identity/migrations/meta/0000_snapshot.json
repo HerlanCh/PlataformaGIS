@@ -1,11 +1,11 @@
 {
-  "id": "933ff6b4-ec33-4a97-8858-a8b83a00fc35",
+  "id": "f40d4a64-8b87-47d1-809d-62ffcc562a5c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.users": {
-      "name": "users",
+    "public.usuarios": {
+      "name": "usuarios",
       "schema": "",
       "columns": {
         "id": {
@@ -14,26 +14,26 @@
           "primaryKey": true,
           "notNull": true
         },
-        "device_hash": {
-          "name": "device_hash",
+        "hash_dispositivo": {
+          "name": "hash_dispositivo",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "telegram_id": {
-          "name": "telegram_id",
+        "id_telegram": {
+          "name": "id_telegram",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "role": {
-          "name": "role",
+        "rol": {
+          "name": "rol",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "created_at": {
-          "name": "created_at",
+        "creado_en": {
+          "name": "creado_en",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
@@ -43,26 +43,26 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "users_device_hash_unique": {
-          "name": "users_device_hash_unique",
+        "usuarios_hash_dispositivo_unique": {
+          "name": "usuarios_hash_dispositivo_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "device_hash"
+            "hash_dispositivo"
           ]
         },
-        "users_telegram_id_unique": {
-          "name": "users_telegram_id_unique",
+        "usuarios_id_telegram_unique": {
+          "name": "usuarios_id_telegram_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "telegram_id"
+            "id_telegram"
           ]
         }
       },
       "policies": {},
       "checkConstraints": {
-        "users_role_check": {
-          "name": "users_role_check",
-          "value": "\"users\".\"role\" in ('CIUDADANO', 'MODERADOR')"
+        "usuarios_rol_check": {
+          "name": "usuarios_rol_check",
+          "value": "\"usuarios\".\"rol\" in ('CIUDADANO', 'MODERADOR')"
         }
       },
       "isRLSEnabled": false

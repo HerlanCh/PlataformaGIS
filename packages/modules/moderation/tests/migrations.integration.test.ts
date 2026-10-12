@@ -12,15 +12,15 @@ const REPORTE = '6f1c2f0e-3b7a-4d2a-9c58-0a4f5b1d2e3f';
 const MODERADOR = '11111111-1111-4111-8111-111111111111';
 
 const accion = (action: string, reason: string | null): SQL =>
-  sql`insert into moderation_actions (id, report_id, moderator_id, action, reason, created_at)
+  sql`insert into acciones_moderacion (id, id_reporte, id_moderador, accion, motivo, creado_en)
       values (gen_random_uuid(), ${REPORTE}, ${MODERADOR}, ${action}, ${reason}, now())`;
 
-describeIntegration('tabla moderation_actions', () => {
+describeIntegration('tabla acciones_moderacion', () => {
   let base: TestDatabase;
   let db: Db;
 
   const existeLaTabla = async (): Promise<boolean> => {
-    const { rows } = await db.execute(sql`select to_regclass('public.moderation_actions') as t`);
+    const { rows } = await db.execute(sql`select to_regclass('public.acciones_moderacion') as t`);
     return rows[0]?.t !== null;
   };
 
@@ -39,12 +39,12 @@ describeIntegration('tabla moderation_actions', () => {
     await db.execute(accion('MANTENER', null));
 
     const { rows } = await db.execute(
-      sql`select action, reason from moderation_actions where report_id = ${REPORTE}
-          order by action`,
+      sql`select accion, motivo from acciones_moderacion where id_reporte = ${REPORTE}
+          order by accion`,
     );
     expect(rows).toEqual([
-      { action: 'MANTENER', reason: null },
-      { action: 'RECHAZAR', reason: 'Reporte falso' },
+      { accion: 'MANTENER', motivo: null },
+      { accion: 'RECHAZAR', motivo: 'Reporte falso' },
     ]);
   });
 
@@ -57,7 +57,7 @@ describeIntegration('tabla moderation_actions', () => {
   });
 
   it('las migraciones se revierten y se vuelven a aplicar', async () => {
-    expect(await revertLast(db, migraciones)).toBe('0000_moderation_actions');
+    expect(await revertLast(db, migraciones)).toBe('0000_acciones_moderacion');
     expect(await existeLaTabla()).toBe(false);
 
     await migrateAll(db, [platformMigrations, migraciones]);

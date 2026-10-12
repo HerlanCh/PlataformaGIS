@@ -53,7 +53,7 @@ describeIntegration('migraciones de la plataforma', () => {
 
     const { rows } = await db.execute(sql`select postgis_lib_version() as version`);
     expect(String(rows[0]?.version)).toMatch(/^3\./);
-    expect(await existe('outbox_events')).toBe(true);
+    expect(await existe('eventos_salida')).toBe(true);
     expect(await aplicadas()).toBe(2);
   });
 
@@ -64,21 +64,21 @@ describeIntegration('migraciones de la plataforma', () => {
   });
 
   it('revierte la última migración y la quita del historial', async () => {
-    expect(await revertLast(db, platformMigrations)).toBe('0001_outbox');
+    expect(await revertLast(db, platformMigrations)).toBe('0001_eventos_salida');
 
-    expect(await existe('outbox_events')).toBe(false);
+    expect(await existe('eventos_salida')).toBe(false);
     expect(await aplicadas()).toBe(1);
   });
 
   it('tras revertir, aplicar de nuevo deja el mismo esquema', async () => {
     await migrateUp(db, platformMigrations);
 
-    expect(await existe('outbox_events')).toBe(true);
+    expect(await existe('eventos_salida')).toBe(true);
     expect(await aplicadas()).toBe(2);
   });
 
   it('revertir todo deja la base sin migraciones y avisa cuando no queda ninguna', async () => {
-    expect(await revertLast(db, platformMigrations)).toBe('0001_outbox');
+    expect(await revertLast(db, platformMigrations)).toBe('0001_eventos_salida');
     expect(await revertLast(db, platformMigrations)).toBe('0000_postgis');
     expect(await revertLast(db, platformMigrations)).toBeNull();
 
@@ -92,7 +92,7 @@ describeIntegration('outbox', () => {
 
   const guardados = async () => {
     const { rows } = await db.execute(
-      sql`select id, type, payload, published_at from outbox_events order by created_at`,
+      sql`select id, tipo, contenido, publicado_en from eventos_salida order by creado_en`,
     );
     return rows;
   };
@@ -114,12 +114,12 @@ describeIntegration('outbox', () => {
     ]);
 
     expect(await guardados()).toEqual([
-      { id: ID_1, type: 'ReportCreated.v1', payload: evento(ID_1), published_at: null },
+      { id: ID_1, tipo: 'ReportCreated.v1', contenido: evento(ID_1), publicado_en: null },
       {
         id: ID_2,
-        type: 'ReportCreated.v1',
-        payload: evento(ID_2, '2026-10-12T12:00:01.000Z'),
-        published_at: null,
+        tipo: 'ReportCreated.v1',
+        contenido: evento(ID_2, '2026-10-12T12:00:01.000Z'),
+        publicado_en: null,
       },
     ]);
   });

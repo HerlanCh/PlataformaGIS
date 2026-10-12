@@ -19,22 +19,22 @@ const geographyPoint = customType<{ data: string }>({
 });
 
 export const zoneSubscriptions = pgTable(
-  'zone_subscriptions',
+  'zonas_suscritas',
   {
     id: uuid().primaryKey(),
     // Usuario del módulo `identity`: se guarda el ID sin clave foránea (ADR-001).
-    userId: uuid('user_id').notNull(),
+    userId: uuid('id_usuario').notNull(),
     /** `geography`: las distancias al centro se miden en metros. */
-    center: geographyPoint().notNull(),
-    radiusM: integer('radius_m').notNull(),
+    center: geographyPoint('centro').notNull(),
+    radiusM: integer('radio_m').notNull(),
     // Códigos de categoría del módulo `reports`, sin clave foránea (ADR-001).
-    categories: text().array().notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
+    categories: text('categorias').array().notNull(),
+    createdAt: timestamp('creado_en', { withTimezone: true }).notNull(),
   },
   (tabla) => [
-    check('zone_subscriptions_radius_check', sql`${tabla.radiusM} between 100 and 2000`),
-    check('zone_subscriptions_categories_check', sql`cardinality(${tabla.categories}) > 0`),
-    index('zone_subscriptions_center_idx').using('gist', tabla.center),
-    index('zone_subscriptions_user_idx').on(tabla.userId),
+    check('zonas_suscritas_radio_check', sql`${tabla.radiusM} between 100 and 2000`),
+    check('zonas_suscritas_categorias_check', sql`cardinality(${tabla.categories}) > 0`),
+    index('zonas_suscritas_centro_idx').using('gist', tabla.center),
+    index('zonas_suscritas_usuario_idx').on(tabla.userId),
   ],
 );

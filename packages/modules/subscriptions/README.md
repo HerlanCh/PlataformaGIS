@@ -34,9 +34,9 @@ _Ninguno todavía._
 
 ## Tablas propias
 
-`zone_subscriptions`. Columnas, índices y restricciones en `docs/diccionario-datos.md`.
+`zonas_suscritas`. Columnas, índices y restricciones en `docs/diccionario-datos.md`.
 
-`user_id` y `categories` guardan identificadores de `identity` y de `reports` sin clave foránea.
+`id_usuario` y `categorias` guardan identificadores de `identity` y de `reports` sin clave foránea.
 
 ## Interruptor
 

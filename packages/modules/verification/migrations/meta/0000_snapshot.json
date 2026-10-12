@@ -1,33 +1,33 @@
 {
-  "id": "e286e1dc-7fba-45e1-a4e7-ca5ccee8ed72",
+  "id": "a476c3f6-3281-4f72-a7a3-c7b986487aae",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.reputations": {
-      "name": "reputations",
+    "public.reputaciones": {
+      "name": "reputaciones",
       "schema": "",
       "columns": {
-        "user_id": {
-          "name": "user_id",
+        "id_usuario": {
+          "name": "id_usuario",
           "type": "uuid",
           "primaryKey": true,
           "notNull": true
         },
-        "score": {
-          "name": "score",
+        "puntaje": {
+          "name": "puntaje",
           "type": "numeric(3, 2)",
           "primaryKey": false,
           "notNull": true
         },
-        "last_penalty_at": {
-          "name": "last_penalty_at",
+        "ultima_penalizacion_en": {
+          "name": "ultima_penalizacion_en",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         },
-        "updated_at": {
-          "name": "updated_at",
+        "actualizado_en": {
+          "name": "actualizado_en",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
@@ -40,43 +40,43 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "reputations_score_check": {
-          "name": "reputations_score_check",
-          "value": "\"reputations\".\"score\" between 0 and 5"
+        "reputaciones_puntaje_check": {
+          "name": "reputaciones_puntaje_check",
+          "value": "\"reputaciones\".\"puntaje\" between 0 and 5"
         }
       },
       "isRLSEnabled": false
     },
-    "public.votes": {
-      "name": "votes",
+    "public.votos": {
+      "name": "votos",
       "schema": "",
       "columns": {
-        "report_id": {
-          "name": "report_id",
+        "id_reporte": {
+          "name": "id_reporte",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "user_id": {
-          "name": "user_id",
+        "id_usuario": {
+          "name": "id_usuario",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "value": {
-          "name": "value",
+        "valor": {
+          "name": "valor",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "weight": {
-          "name": "weight",
+        "peso": {
+          "name": "peso",
           "type": "numeric(3, 2)",
           "primaryKey": false,
           "notNull": true
         },
-        "created_at": {
-          "name": "created_at",
+        "creado_en": {
+          "name": "creado_en",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
@@ -85,24 +85,24 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {
-        "votes_pkey": {
-          "name": "votes_pkey",
+        "votos_pkey": {
+          "name": "votos_pkey",
           "columns": [
-            "report_id",
-            "user_id"
+            "id_reporte",
+            "id_usuario"
           ]
         }
       },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "votes_value_check": {
-          "name": "votes_value_check",
-          "value": "\"votes\".\"value\" in ('CONFIRMACION', 'NEGACION')"
+        "votos_valor_check": {
+          "name": "votos_valor_check",
+          "value": "\"votos\".\"valor\" in ('CONFIRMACION', 'NEGACION')"
         },
-        "votes_weight_check": {
-          "name": "votes_weight_check",
-          "value": "\"votes\".\"weight\" between 0 and 5"
+        "votos_peso_check": {
+          "name": "votos_peso_check",
+          "value": "\"votos\".\"peso\" between 0 and 5"
         }
       },
       "isRLSEnabled": false

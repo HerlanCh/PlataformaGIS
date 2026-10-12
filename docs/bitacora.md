@@ -204,3 +204,36 @@ Cuatro PR (#12 a #15). Tras cada fusión se esperó a que terminara el flujo de 
 - **Consultas espaciales** (viewport, cercanía, duplicados, vencidos y zonas que contienen un punto): Fase 4. Los índices GiST ya existen.
 - **Límite de 5 zonas por usuario y reputación inicial de un usuario sin fila:** son reglas de los casos de uso (Fase 5 en adelante).
 - **Contraseña de la base de datos de staging:** sigue pendiente de rotar por decisión del autor.
+
+---
+
+## [2026-10-12] — Esquema de base de datos en español
+
+### Motivo
+A pedido del autor, para leer el modelo de datos con más facilidad: las tablas y columnas pasan a llamarse en español. Las clases, funciones y propiedades del código siguen en inglés; la equivalencia queda en `adapters/schema.ts` de cada módulo (la propiedad `expiresAt` es la columna `caduca_en`).
+
+### Qué cambió
+- **Convención:** español sin tildes ni eñes, en `snake_case`; los identificadores llevan el prefijo `id_` y las fechas terminan en `_en`. Los nombres de restricciones e índices siguen al de su tabla.
+- **Tablas:**
+
+| Antes | Ahora |
+| :--- | :--- |
+| `outbox_events` | `eventos_salida` |
+| `users` | `usuarios` |
+| `categories` | `categorias` |
+| `reports` | `reportes` |
+| `votes` | `votos` |
+| `reputations` | `reputaciones` |
+| `zone_subscriptions` | `zonas_suscritas` |
+| `moderation_actions` | `acciones_moderacion` |
+
+- **Migraciones regeneradas, no encadenadas.** Como ninguna base con datos las tenía aplicadas (staging sigue sin migrar), se reescribieron las migraciones iniciales en lugar de añadir otras de renombrado. La base local se recreó vacía.
+- **Documentos:** `modelo-datos.puml`, `diccionario-datos.md`, la lista de tablas de la Fase 3 y las referencias a columnas de las Fases 4, 7 y 10 del roadmap, la sección 4 de `trazabilidad.md`, el glosario y los README de los módulos.
+
+### Qué no cambió
+- Los nombres del SRS y de la API (`location`, `public_location`, `author_id`, `idempotency_key`) se mantienen: son campos del contrato, no columnas.
+- Los módulos (`reports`, `identity`...) y sus historiales de migraciones (`drizzle.migrations_reports`) conservan su nombre.
+- Las entradas anteriores de esta bitácora usan los nombres antiguos de las tablas.
+
+### Verificación
+`pnpm lint`, `pnpm typecheck`, `pnpm depcruise`, `pnpm duplication` y `pnpm test` en verde: 562 pruebas, misma cobertura. `pnpm db:migrate` sobre la base local crea las 8 tablas y los 18 índices con los nombres nuevos.

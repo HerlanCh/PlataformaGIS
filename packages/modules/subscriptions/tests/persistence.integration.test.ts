@@ -13,7 +13,7 @@ const migraciones = subscriptionsModule.migrations!;
 const minutosDespues = (minutos: number) => new Date(ahora.getTime() + minutos * 60_000);
 
 const existeLaTabla = async (db: Db): Promise<boolean> => {
-  const { rows } = await db.execute(sql`select to_regclass('public.zone_subscriptions') as tabla`);
+  const { rows } = await db.execute(sql`select to_regclass('public.zonas_suscritas') as tabla`);
   return rows[0]?.tabla !== null;
 };
 
@@ -56,8 +56,8 @@ describeIntegration('persistencia de subscriptions', () => {
 
   it('el centro se guarda como punto geográfico WGS84', async () => {
     const { rows } = await db.execute(
-      sql`select distinct st_srid(center::geometry) as srid, geometrytype(center::geometry) as tipo
-          from zone_subscriptions`,
+      sql`select distinct st_srid(centro::geometry) as srid, geometrytype(centro::geometry) as tipo
+          from zonas_suscritas`,
     );
 
     expect(rows).toEqual([{ srid: 4326, tipo: 'POINT' }]);
@@ -71,13 +71,13 @@ describeIntegration('persistencia de subscriptions', () => {
   });
 
   it.each([
-    ['un radio mayor que 2000 m', sql`update zone_subscriptions set radius_m = 2001`],
-    ['un radio menor que 100 m', sql`update zone_subscriptions set radius_m = 99`],
-    ['una zona sin categorías', sql`update zone_subscriptions set categories = '{}'`],
+    ['un radio mayor que 2000 m', sql`update zonas_suscritas set radio_m = 2001`],
+    ['un radio menor que 100 m', sql`update zonas_suscritas set radio_m = 99`],
+    ['una zona sin categorías', sql`update zonas_suscritas set categorias = '{}'`],
     [
       'un centro que no es un punto',
-      sql`update zone_subscriptions
-          set center = 'SRID=4326;LINESTRING(-68.15 -16.5, -68.14 -16.5)'::geography`,
+      sql`update zonas_suscritas
+          set centro = 'SRID=4326;LINESTRING(-68.15 -16.5, -68.14 -16.5)'::geography`,
     ],
   ])('la base de datos rechaza %s', async (_caso, sentencia) => {
     await expect(db.execute(sentencia)).rejects.toThrow();
@@ -85,14 +85,14 @@ describeIntegration('persistencia de subscriptions', () => {
 
   it('las búsquedas por usuario y por cercanía tienen sus índices', async () => {
     const { rows } = await db.execute(
-      sql`select indexname from pg_indexes where tablename = 'zone_subscriptions'
+      sql`select indexname from pg_indexes where tablename = 'zonas_suscritas'
           order by indexname`,
     );
 
     expect(rows.map((fila) => fila.indexname)).toEqual([
-      'zone_subscriptions_center_idx',
-      'zone_subscriptions_pkey',
-      'zone_subscriptions_user_idx',
+      'zonas_suscritas_centro_idx',
+      'zonas_suscritas_pkey',
+      'zonas_suscritas_usuario_idx',
     ]);
   });
 });
@@ -114,7 +114,7 @@ describeIntegration('migraciones de subscriptions', () => {
     await migrateAll(db, [platformMigrations, migraciones]);
     expect(await existeLaTabla(db)).toBe(true);
 
-    expect(await revertLast(db, migraciones)).toBe('0000_zone_subscriptions');
+    expect(await revertLast(db, migraciones)).toBe('0000_zonas_suscritas');
     expect(await existeLaTabla(db)).toBe(false);
 
     await migrateAll(db, [platformMigrations, migraciones]);
