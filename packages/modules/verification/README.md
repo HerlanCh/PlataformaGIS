@@ -48,7 +48,9 @@ Los votos de usuarios silenciados se registran con peso 0 y no cuentan como vota
 
 ## Tablas propias
 
-`votes` y `reputations` (Fase 3).
+`votes` y `reputations`. Columnas y restricciones en `docs/diccionario-datos.md`.
+
+`report_id` y `user_id` guardan identificadores de `reports` y de `identity` sin clave foránea.
 
 ## Interruptor
 

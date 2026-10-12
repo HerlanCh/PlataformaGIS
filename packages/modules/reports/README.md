@@ -44,6 +44,7 @@ Los eventos públicos solo llevan `publicLocation`: nunca la ubicación real ni 
 | `CategoryRepository` | Leer las categorías                                                                     |
 | `IdGenerator`        | Generar identificadores                                                                 |
 | `AuthorStanding`     | Saber si el autor está silenciado. Lo conecta la raíz de composición con `verification` |
+| `ReportUnitOfWork`   | Guardar un reporte y sus eventos de integración en una sola transacción (outbox)        |
 
 ## Interfaz pública
 
@@ -51,7 +52,9 @@ Los eventos públicos solo llevan `publicLocation`: nunca la ubicación real ni 
 
 ## Tablas propias
 
-`reports` y `categories` (Fase 3).
+`reports` y `categories`. Columnas, índices y restricciones en `docs/diccionario-datos.md`.
+
+`reports.author_id` guarda el ID de un usuario de `identity` sin clave foránea.
 
 ## Interruptor
 

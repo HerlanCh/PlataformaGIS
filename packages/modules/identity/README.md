@@ -34,7 +34,7 @@ _Ninguno._
 
 ## Tablas propias
 
-`users` (Fase 3).
+`users`. Columnas y restricciones en `docs/diccionario-datos.md`.
 
 ## Interruptor
 

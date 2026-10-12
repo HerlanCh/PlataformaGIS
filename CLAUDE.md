@@ -48,7 +48,10 @@ PWA comunitaria para reportar y consultar incidentes urbanos georreferenciados e
 
 Requiere Node 24 y pnpm 12. En bash de Windows, pnpm está en `%APPDATA%\npm`.
 
-- `pnpm install` · `docker compose up -d` (PostGIS local) · `pnpm dev` (API en :3000, web en :5173)
+- `pnpm install` · `docker compose up -d` (PostGIS local en el puerto **5433**) · `pnpm dev` (API en :3000, web en :5173)
+- `pnpm db:migrate` aplica las migraciones pendientes en `DATABASE_URL` (plataforma y módulos activos).
+- `pnpm db:generate` genera la migración de avance desde `adapters/schema.ts` de cada módulo. Después hay que
+  escribir a mano su reversa `<nombre>.down.sql` y revisar los tipos espaciales (Drizzle Kit omite el SRID).
 - `pnpm test` (Vitest con cobertura y umbrales) · `pnpm exec vitest run <ruta>` (una sola prueba)
 - `pnpm lint` (ESLint + Prettier) · `pnpm format` · `pnpm typecheck` (`tsc -b`)
 - `pnpm depcruise` (reglas de arquitectura) · `pnpm duplication` (jscpd)
@@ -56,7 +59,8 @@ Requiere Node 24 y pnpm 12. En bash de Windows, pnpm está en `%APPDATA%\npm`.
 - `pnpm gen:module <nombre>` crea un módulo y lo registra. Para eliminar uno: borrar su carpeta y
   ejecutar `node tools/modules/sync-modules.mjs && pnpm install`.
 - `apps/api/src/modules.generated.ts` y las referencias de `tsconfig.json` son generados: no editarlos a mano.
-- La prueba de integración de `/health` necesita Docker; sin Docker se omite en local y es obligatoria en la CI.
+- Las pruebas de integración (`*.integration.test.ts`) usan PostGIS real con Testcontainers: necesitan Docker.
+  Sin Docker se omiten en local; en la CI son obligatorias.
 - TypeScript está fijado en la serie 6: typescript-eslint aún no admite la 7.
 
 ## Flujo de Git

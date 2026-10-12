@@ -1,0 +1,134 @@
+@startuml modelo-datos
+' Modelo entidad-relación de la Plataforma GIS (Fase 3).
+' Derivado del modelo de dominio de la Fase 2. El detalle de cada columna está en diccionario-datos.md.
+' Para verlo: extensión PlantUML de VS Code o https://www.plantuml.com/plantuml
+
+title Modelo entidad-relación — Plataforma GIS de alerta temprana
+
+hide circle
+hide methods
+skinparam linetype ortho
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam class {
+  BackgroundColor White
+  BorderColor #444444
+  ArrowColor #444444
+}
+
+package "platform (compartido)" #F4F4F4 {
+  entity "outbox_events" as outbox {
+    * id : uuid <<PK>>
+    --
+    * type : text
+    * payload : jsonb
+    * created_at : timestamptz
+    published_at : timestamptz
+  }
+}
+
+package "identity" #EAF2FB {
+  entity "users" as users {
+    * id : uuid <<PK>>
+    --
+    * device_hash : text <<UQ>>
+    telegram_id : text <<UQ>>
+    * role : text
+    * created_at : timestamptz
+  }
+}
+
+package "reports" #EAF7EA {
+  entity "categories" as categories {
+    * code : text <<PK>>
+    --
+    * name : text
+    * ttl_minutes : integer
+    * dedup_radius_m : integer
+    * is_sensitive : boolean
+  }
+
+  entity "reports" as reports {
+    * id : uuid <<PK>>
+    --
+    * category_code : text <<FK>>
+    * author_id : uuid <<ref>>
+    * status : text
+    * ttl_minutes : integer
+    * extensions : integer
+    rejection_reason : text
+    * created_at : timestamptz
+    * expires_at : timestamptz
+    * location : geometry(Point, 4326)
+    * public_location : geometry(Point, 4326)
+    * idempotency_key : text <<UQ>>
+  }
+}
+
+package "verification" #FFF6E0 {
+  entity "votes" as votes {
+    * report_id : uuid <<PK>> <<ref>>
+    * user_id : uuid <<PK>> <<ref>>
+    --
+    * value : text
+    * weight : numeric(3, 2)
+    * created_at : timestamptz
+  }
+
+  entity "reputations" as reputations {
+    * user_id : uuid <<PK>> <<ref>>
+    --
+    * score : numeric(3, 2)
+    last_penalty_at : timestamptz
+    * updated_at : timestamptz
+  }
+}
+
+package "subscriptions (opcional)" #F6ECFA {
+  entity "zone_subscriptions" as zones {
+    * id : uuid <<PK>>
+    --
+    * user_id : uuid <<ref>>
+    * center : geography(Point, 4326)
+    * radius_m : integer
+    * categories : text[] <<ref>>
+    * created_at : timestamptz
+  }
+}
+
+package "moderation (opcional)" #FBECEC {
+  entity "moderation_actions" as actions {
+    * id : uuid <<PK>>
+    --
+    * report_id : uuid <<ref>>
+    * moderator_id : uuid <<ref>>
+    * action : text
+    reason : text
+    * created_at : timestamptz
+  }
+}
+
+' Relación con clave foránea: ambas tablas son del mismo módulo.
+categories ||--o{ reports : clasifica
+
+' Relaciones lógicas entre módulos: se guarda el identificador, sin clave foránea (ADR-001).
+users ||..o{ reports : "autor (author_id)"
+users ||..o| reputations : "tiene"
+users ||..o{ votes : "emite"
+reports ||..o{ votes : "recibe"
+users ||..o{ zones : "suscribe"
+reports ||..o{ actions : "es moderado en"
+users ||..o{ actions : "modera (moderator_id)"
+
+legend right
+  | Símbolo | Significado |
+  | * | Columna obligatoria (NOT NULL) |
+  | <<PK>> | Clave primaria |
+  | <<UQ>> | Valor único |
+  | <<FK>> | Clave foránea, dentro del mismo módulo |
+  | <<ref>> | Identificador de otro módulo, sin clave foránea (ADR-001) |
+  | línea continua | Relación con clave foránea |
+  | línea punteada | Relación lógica entre módulos |
+endlegend
+
+@enduml
