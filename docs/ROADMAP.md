@@ -254,16 +254,16 @@ Resultado: el esquema físico versionado y los adaptadores de repositorio que im
 2. Tabla `categories`: `code` PK, `name`, `ttl_minutes`, `dedup_radius_m`, `is_sensitive`.
 3. Tabla `users`: `id` UUID, `device_hash`, `telegram_id` único y nulo, `role`, `created_at`. La reputación no vive aquí: es del módulo `verification`.
 4. Tabla `reports`:
-   1. `id` UUID, `category_code` FK, `author_id` FK, `status`, `description`, `created_at`, `expires_at`.
+   1. `id` UUID, `category_code` FK, `author_id` (ID del usuario, sin clave foránea: es de otro módulo), `status`, `ttl_minutes`, `extensions`, `rejection_reason`, `created_at`, `expires_at`. La columna `description` se añadirá con una migración cuando el SRS fije su regla.
    2. `location geometry(Point, 4326)` (ubicación real, nunca expuesta).
    3. `public_location geometry(Point, 4326)` (ubicación mostrada; redondeada si la categoría es sensible).
    4. `idempotency_key` único (evita duplicados al reenviar reportes guardados sin conexión).
    5. `CHECK` sobre `status` con los valores de la máquina de estados.
-5. Tabla `votes`: PK compuesta (`report_id`, `user_id`), `value` (confirma/niega), `weight`, `created_at`. Tabla `reputations` (también de `verification`): `user_id` PK, `score`, `last_penalty_at`, `updated_at`.
-6. Tabla `zone_subscriptions`: `id`, `user_id`, `center geography(Point)`, `radius_m` con `CHECK` de máximo, `categories text[]`.
+5. Tabla `votes`: PK compuesta (`report_id`, `user_id`; ambos son ID de otros módulos, sin clave foránea), `value` (confirma/niega), `weight`, `created_at`. Tabla `reputations` (también de `verification`): `user_id` PK, `score`, `last_penalty_at`, `updated_at`.
+6. Tabla `zone_subscriptions`: `id`, `user_id`, `center geography(Point)`, `radius_m` con `CHECK` de mínimo y máximo, `categories text[]`.
 7. Tabla `outbox_events`: `id`, `type`, `payload jsonb`, `created_at`, `published_at` (patrón outbox para la Fase 7).
 8. Tabla `moderation_actions`: auditoría de quién rechazó qué y por qué.
-9. Índices: GiST en `reports.location` y `reports.public_location`; GiST en `zone_subscriptions.center`; B-tree parcial en `reports (status, expires_at) WHERE status IN ('ACTIVO','CONFIRMADO')`; B-tree en `outbox_events (published_at) WHERE published_at IS NULL`.
+9. Índices: GiST en `reports.location` y `reports.public_location`; GiST en `zone_subscriptions.center`; B-tree parcial en `reports (status, expires_at) WHERE status IN ('ACTIVO','CONFIRMADO')`; B-tree parcial en `outbox_events (created_at) WHERE published_at IS NULL`.
 10. Semilla: las cinco categorías del MVP con sus TTL.
 11. Adaptadores de repositorio dentro de `adapters/` de cada módulo (`reports`, `identity`, `verification`, `subscriptions`). Cada módulo guarda sus migraciones en su propia carpeta `migrations/` y solo toca sus tablas; no hay claves foráneas entre tablas de módulos distintos (se guarda el ID y se valida por evento o interfaz pública). Mapeo explícito fila ↔ entidad: el dominio nunca ve tipos de Drizzle.
 12. Unidad de trabajo transaccional: guardar el agregado y sus eventos en `outbox_events` en la misma transacción.
@@ -278,9 +278,9 @@ Resultado: el esquema físico versionado y los adaptadores de repositorio que im
 
 **Criterio de salida**
 
-- [ ] Diagrama E-R y diccionario de datos publicados
-- [ ] Migraciones reproducibles desde cero en CI
-- [ ] Todos los repositorios pasan las pruebas de integración
+- [x] Diagrama E-R y diccionario de datos publicados
+- [x] Migraciones reproducibles desde cero en CI
+- [x] Todos los repositorios pasan las pruebas de integración
 
 ## Fase 4: Core geoespacial
 

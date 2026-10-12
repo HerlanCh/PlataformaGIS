@@ -141,3 +141,66 @@ El primer PR de la fase publicó `v1.1.0`: semantic-release escribió el `CHANGE
 
 ### Pendientes que pasan a la siguiente fase
 - **Alinear la versión de PostgreSQL:** resuelto el 2026-10-12. Docker local y las pruebas usan `postgis/postgis:18-3.6`, igual que Neon en staging (PostgreSQL 18.6, PostGIS 3.6). Los vectores de referencia de la proyección UTM son idénticos en PostGIS 3.5 y 3.6.
+
+---
+
+## [2026-10-12] — Cierre de Fase 3: Modelado de datos y persistencia PostGIS
+
+### Resultado
+El modelo de dominio de la Fase 2 ya se guarda en PostgreSQL 18 + PostGIS 3.6. Hay un esquema físico versionado, con migraciones reversibles por módulo, y los adaptadores de repositorio que implementan los puertos. Todavía no hay casos de uso ni rutas (Fases 5 y 6) ni consultas espaciales (Fase 4).
+
+### Qué se construyó
+- **`platform`:** ejecutor de migraciones (`migrateUp`, `migrateAll`, `revertLast`) con un historial por conjunto, la extensión PostGIS, la tabla `outbox_events` y `appendToOutbox`.
+- **`testing`** (paquete nuevo, solo para pruebas): un único contenedor PostGIS por ejecución y una base de datos aislada por archivo de pruebas.
+- **`identity`:** tabla `users` y `PgUserRepository`.
+- **`reports`:** tablas `categories` (con su semilla) y `reports`, `PostgisReportRepository`, `PgCategoryRepository` y `PgReportUnitOfWork`. El agregado `Report` conserva ahora la clave de idempotencia.
+- **`verification`:** tablas `votes` y `reputations`, `PgVoteRepository` y `PgReputationRepository`.
+- **`subscriptions`:** dominio mínimo `ZoneSubscription`, tabla `zone_subscriptions` y `PgSubscriptionRepository`.
+- **`moderation`:** tabla de auditoría `moderation_actions`.
+- **Documentos:** `modelo-datos.puml` (diagrama E-R) y `diccionario-datos.md`.
+- **Comandos:** `pnpm db:migrate` y `pnpm db:generate`.
+
+### Evidencia del criterio de salida
+- [x] **Diagrama E-R y diccionario de datos publicados.** `docs/modelo-datos.puml` y `docs/diccionario-datos.md`: 8 tablas, con el módulo dueño de cada una.
+- [x] **Migraciones reproducibles desde cero en CI.** `apps/api/src/migrations.integration.test.ts` aplica el esquema completo sobre una base vacía en cada ejecución; además cada conjunto se aplica, se revierte y se vuelve a aplicar en su propia prueba. En local, `docker compose up -d` y `pnpm db:migrate` crean las 8 tablas y sus 18 índices.
+- [x] **Todos los repositorios pasan las pruebas de integración.** Los siete adaptadores, contra PostGIS real con Testcontainers. La suite completa pasa con 562 pruebas y una cobertura global de 99,6 % de sentencias y 99,8 % de líneas.
+
+### Pruebas destacadas
+- **Restricciones de la base de datos:** rechaza un voto duplicado, un estado inválido, una clave de idempotencia repetida, un radio fuera de rango, una reputación fuera de [0, 5], una ubicación con otro sistema de referencia y un rechazo de moderación sin motivo.
+- **Atomicidad:** si falla la escritura del evento en el outbox, el reporte tampoco se guarda.
+- **Independencia de módulos:** con `FEATURE_SUBSCRIPTIONS=false` su tabla no se crea y el resto del esquema queda completo; encenderlo después añade solo sus tablas.
+- **Semilla:** las categorías de la base coinciden con `MVP_CATEGORIES` del dominio.
+- **Privacidad (RNF-14):** el repositorio guarda la ubicación pública que entrega el dominio, sin recalcularla.
+
+### Decisiones de diseño (aprobadas en el plan de la fase)
+1. **Reversas escritas a mano.** Drizzle Kit solo genera la migración de avance; cada una lleva su `<nombre>.down.sql`.
+2. **Un historial de migraciones por módulo** (esquema `drizzle`). Un módulo apagado no ejecuta las suyas.
+3. **Sin claves foráneas entre módulos**, aunque el roadmap las mencionaba en `reports.author_id` y `votes`. Se corrigió el texto del roadmap. La única clave foránea es `reports.category_code`, dentro de `reports`.
+4. **`outbox_events` y la extensión PostGIS son de `platform`** y se aplican siempre primero.
+5. **`idempotency_key` entra al agregado `Report`.** El dominio valida su formato y la base de datos su unicidad; procesar "una sola vez" sigue siendo de la Fase 5.
+6. **`subscriptions` se modeló solo en lo mínimo** que pide su tabla; `moderation` solo tiene tabla.
+7. **Unidad de trabajo como puerto de la capa de aplicación** (`ReportUnitOfWork`).
+
+### Reglas precisadas al implementar
+- **Radio de una zona en metros enteros.** El SRS da el rango (100 a 2000 m) pero no la precisión.
+- **Una zona necesita al menos una categoría**, y las repetidas se guardan una sola vez.
+- **Zonas y votos son inmutables:** solo se insertan (y las zonas se eliminan).
+- **Dos votos simultáneos del mismo usuario:** la clave primaria rechaza el segundo y el adaptador lo traduce al mismo error de dominio que el caso normal (`AlreadyVotedError`).
+- **Acciones de moderación:** `RECHAZAR` y `MANTENER`; el motivo es obligatorio solo al rechazar. Revisar al construir la moderación (Fase 10).
+- **Índice del outbox:** sobre `created_at` para los eventos sin publicar (el roadmap decía `published_at`), porque se recorren en orden de llegada.
+
+### Hallazgos
+- **Drizzle Kit y los tipos espaciales.** Genera `geometry(point)` sin SRID y entrecomilla el tipo `geography`. Las dos migraciones afectadas se corrigieron a mano y lo indican en su primera línea; una prueba verifica que las columnas sean puntos con SRID 4326.
+- **PostgreSQL 18 en Docker.** El volumen debe montarse en `/var/lib/postgresql` (no en `.../data`). La alineación de versiones previa solo se había probado con Testcontainers, no con `docker compose`.
+- **Puerto local 5433.** El equipo de desarrollo ya tiene un PostgreSQL nativo en el 5432, así que el contenedor se publica en el 5433 (`docker-compose.yml` y `.env.example`).
+- **SonarCloud contaba la utilería de pruebas como código de producción.** `packages/testing` se analiza ahora como código de prueba, y las exclusiones de cobertura coinciden con las de Vitest.
+
+### Publicación de versiones
+Cuatro PR (#12 a #15). Tras cada fusión se esperó a que terminara el flujo de publicación antes de fusionar el siguiente, y el choque de la Fase 2 no se repitió.
+
+### Pendientes que pasan a la siguiente fase
+- **Migrar staging.** Las migraciones no se aplicaron en Neon; se hará cuando la API empiece a usar las tablas (Fase 6), como parte del despliegue.
+- **Columna `description` de `reports`:** sigue sin modelarse; se añadirá con una migración cuando el SRS fije su regla.
+- **Consultas espaciales** (viewport, cercanía, duplicados, vencidos y zonas que contienen un punto): Fase 4. Los índices GiST ya existen.
+- **Límite de 5 zonas por usuario y reputación inicial de un usuario sin fila:** son reglas de los casos de uso (Fase 5 en adelante).
+- **Contraseña de la base de datos de staging:** sigue pendiente de rotar por decisión del autor.

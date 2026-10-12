@@ -95,3 +95,40 @@ Definidos en `packages/contracts/src/events.ts`. Un evento público puede difund
 | `ReportRejected.v1` | Pública | `reports` | `verification`, clientes |
 | `ReportDuplicateDetected.v1` | Interna | `reports` | `verification` |
 | `VoteCast.v1` | Interna | `verification` | `reports` |
+
+## 4. Fase 3: persistencia
+
+Esquema físico y adaptadores que implementan los puertos de la Fase 2. El detalle de tablas y columnas está en [`diccionario-datos.md`](diccionario-datos.md) y el diagrama en [`modelo-datos.puml`](modelo-datos.puml). Todas las pruebas de esta sección son de integración y corren contra PostGIS real con Testcontainers.
+
+### 4.1 Puertos implementados
+
+| Módulo | Puerto | Adaptador | Tablas | Archivo de pruebas |
+| :--- | :--- | :--- | :--- | :--- |
+| `identity` | `UserRepository` | `PgUserRepository` | `users` | `packages/modules/identity/tests/user-repository.integration.test.ts` |
+| `reports` | `ReportRepository` | `PostgisReportRepository` | `reports` | `packages/modules/reports/tests/persistence.integration.test.ts` |
+| `reports` | `CategoryRepository` | `PgCategoryRepository` | `categories` | `packages/modules/reports/tests/persistence.integration.test.ts` |
+| `reports` | `ReportUnitOfWork` | `PgReportUnitOfWork` | `reports`, `outbox_events` | `packages/modules/reports/tests/persistence.integration.test.ts` |
+| `verification` | `VoteRepository` | `PgVoteRepository` | `votes` | `packages/modules/verification/tests/persistence.integration.test.ts` |
+| `verification` | `ReputationRepository` | `PgReputationRepository` | `reputations` | `packages/modules/verification/tests/persistence.integration.test.ts` |
+| `subscriptions` | `SubscriptionRepository` | `PgSubscriptionRepository` | `zone_subscriptions` | `packages/modules/subscriptions/tests/persistence.integration.test.ts` |
+
+`moderation_actions` solo tiene tabla en esta fase; la prueba `packages/modules/moderation/tests/migrations.integration.test.ts` cubre sus restricciones.
+
+### 4.2 Requisitos garantizados por la base de datos
+
+| Requisito | Garantía | Mecanismo | Archivo de pruebas |
+| :--- | :--- | :--- | :--- |
+| HU-03 | Un solo voto por usuario y reporte, también si llegan dos a la vez | Clave primaria (`report_id`, `user_id`) en `votes`; el adaptador la traduce a `AlreadyVotedError` | `verification/tests/persistence.integration.test.ts` |
+| HU-03, HU-12 | La reputación y el peso de un voto están entre 0 y 5 | `CHECK` en `reputations.score` y `votes.weight` | `verification/tests/persistence.integration.test.ts` |
+| HU-03, HU-04 | Un reporte solo puede estar en uno de los cinco estados y usar hasta 2 extensiones | `CHECK` en `reports.status` y `reports.extensions` | `reports/tests/persistence.integration.test.ts` |
+| HU-05 | Una clave de idempotencia no se repite | Índice único en `reports.idempotency_key`; el dominio valida su formato | `reports/tests/persistence.integration.test.ts`, `idempotency-key.test.ts` |
+| HU-07 | El radio de una zona está entre 100 m y 2000 m y la zona tiene al menos una categoría | `ZoneSubscription` en el dominio y `CHECK` en `zone_subscriptions` | `subscriptions/tests/zone-subscription.test.ts`, `persistence.integration.test.ts` |
+| HU-12 | Todo rechazo de moderación lleva su motivo | `CHECK` en `moderation_actions` | `moderation/tests/migrations.integration.test.ts` |
+| RNF-14 | La ubicación real y la pública se guardan por separado; la pública es la que decidió el dominio | Columnas `location` y `public_location`; el repositorio no la recalcula | `reports/tests/persistence.integration.test.ts` |
+| Atomicidad | Si falla la escritura del evento, el reporte tampoco se guarda | `PgReportUnitOfWork`: una sola transacción con el outbox | `reports/tests/persistence.integration.test.ts` |
+| ADR-001 | Un módulo apagado no crea sus tablas y el resto del esquema queda completo | Un historial de migraciones por módulo | `apps/api/src/migrations.integration.test.ts` |
+| ADR-001 | Sin claves foráneas entre módulos | Solo existe `reports.category_code → categories.code`, dentro de `reports` | Revisión de las migraciones |
+
+### 4.3 Migraciones
+
+Cada conjunto (plataforma y cada módulo) se aplica sobre una base vacía, se revierte y se vuelve a aplicar en su prueba de integración. `apps/api/src/migrations.integration.test.ts` aplica el esquema completo desde cero en cada ejecución de la CI.
