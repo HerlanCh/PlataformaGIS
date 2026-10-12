@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { InMemoryEventBus } from '@gis/event-bus';
 import { createLogger, createPool, loadConfig, loadFeatureFlags } from '@gis/platform';
 import type { Pool } from '@gis/platform';
+import { POSTGIS_IMAGE } from '@gis/testing';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -17,7 +18,7 @@ describe.skipIf(!ejecutar)('GET /health contra PostGIS real', () => {
   let db: Pool;
 
   beforeAll(async () => {
-    contenedor = await new PostgreSqlContainer('postgis/postgis:18-3.6').start();
+    contenedor = await new PostgreSqlContainer(POSTGIS_IMAGE).start();
     db = createPool(contenedor.getConnectionUri());
   }, 180_000);
 

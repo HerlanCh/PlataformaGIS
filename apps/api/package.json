@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=../../.env src/main.ts",
     "build": "tsup",
-    "start": "node dist/main.js"
+    "start": "node dist/main.js",
+    "db:migrate": "tsx --env-file-if-exists=../../.env src/migrate.ts"
   },
   "dependencies": {
     "@gis/event-bus": "workspace:*",
@@ -20,6 +21,7 @@
     "@gis/module-subscriptions": "workspace:*",
     "@gis/module-verification": "workspace:*",
     "@gis/platform": "workspace:*",
+    "drizzle-orm": "^0.45.4",
     "fastify": "^5.12.5",
     "pg": "^8.23.1",
     "pino": "^10.4.0",
@@ -27,6 +29,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@gis/testing": "workspace:*",
     "@testcontainers/postgresql": "^12.2.0",
     "@types/pg": "^8.23.1",
     "socket.io-client": "^4.8.4",

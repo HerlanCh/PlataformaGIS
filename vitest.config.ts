@@ -9,6 +9,8 @@ const umbral = (porcentaje: number) => ({
 
 export default defineConfig({
   test: {
+    // Un solo PostGIS para toda la ejecución; cada archivo crea su propia base de datos.
+    globalSetup: ['packages/testing/src/global-setup.ts'],
     projects: [
       'packages/*',
       'packages/modules/*',
@@ -27,7 +29,12 @@ export default defineConfig({
         '**/*.d.ts',
         // Arranque del proceso y registro generado: sin lógica que probar.
         '**/src/main.{ts,tsx}',
+        '**/src/migrate.ts',
         '**/*.generated.ts',
+        // Infraestructura de pruebas y definiciones de tablas (sin lógica).
+        'packages/testing/**',
+        '**/schema.ts',
+        '**/drizzle.config.ts',
       ],
       // RNF-04: umbrales por capa.
       thresholds: {

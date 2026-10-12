@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const en = (...partes) => path.join(raiz, ...partes);
 
-const COMPARTIDOS = ['shared-kernel', 'contracts', 'event-bus', 'platform'];
+const COMPARTIDOS = ['shared-kernel', 'contracts', 'testing', 'event-bus', 'platform'];
 const APPS = ['api', 'bot', 'web'];
 
 const leerJson = (archivo) => JSON.parse(readFileSync(archivo, 'utf8'));
@@ -42,7 +42,7 @@ escribirJson(tsRaiz, {
 const tsApi = en('apps/api/tsconfig.json');
 const configApi = leerJson(tsApi);
 configApi.references = [
-  ...['event-bus', 'platform'].map((p) => ({ path: `../../packages/${p}` })),
+  ...['testing', 'event-bus', 'platform'].map((p) => ({ path: `../../packages/${p}` })),
   ...modulos.map((m) => ({ path: `../../packages/modules/${m}` })),
 ];
 escribirJson(tsApi, configApi);

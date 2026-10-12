@@ -7,13 +7,19 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@gis/contracts": "workspace:*",
     "@gis/event-bus": "workspace:*",
+    "drizzle-orm": "^0.45.4",
     "fastify": "^5.12.5",
     "pg": "^8.23.1",
     "pino": "^10.4.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@gis/testing": "workspace:*",
     "@types/pg": "^8.23.1"
+  },
+  "scripts": {
+    "db:generate": "drizzle-kit generate"
   }
 }

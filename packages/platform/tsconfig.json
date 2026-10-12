@@ -8,10 +8,13 @@
   "include": ["src"],
   "references": [
     {
+      "path": "../contracts"
+    },
+    {
       "path": "../event-bus"
     },
     {
-      "path": "../contracts"
+      "path": "../testing"
     }
   ]
 }
