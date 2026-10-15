@@ -1,3 +1,15 @@
+# [2.1.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.0.0...v2.1.0) (2026-10-15)
+
+
+### Bug Fixes
+
+* compuerta de calidad de SonarCloud en la Fase 4 ([667ecbb](https://github.com/HerlanCh/PlataformaGIS/commit/667ecbbd04e5d9add2ac17217390cc2c56abb5ff))
+
+
+### Features
+
+* consultas espaciales, mapa de calor y celdas geohash (Fase 4) ([91cae8a](https://github.com/HerlanCh/PlataformaGIS/commit/91cae8adce243c76c0dc0a8d951f3b758ec8cd45))
+
 # [2.0.0](https://github.com/HerlanCh/PlataformaGIS/compare/v1.5.0...v2.0.0) (2026-10-12)
 
 
