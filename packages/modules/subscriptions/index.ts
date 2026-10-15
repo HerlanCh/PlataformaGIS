@@ -12,3 +12,7 @@ export const subscriptionsModulo: DefinicionDeModulo = {
     // Aquí se registran las rutas, los manejadores de eventos y las tareas del módulo.
   },
 };
+
+// Interfaz pública para la raíz de composición: adaptador y puerto.
+export { RepositorioSuscripcionesPg } from './adapters/subscription-repository.js';
+export type { RepositorioDeSuscripciones } from './domain/ports.js';

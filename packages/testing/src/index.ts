@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import pg from 'pg';
 import { describe, inject } from 'vitest';
 
+export { desplazar } from './geografia.js';
 export { POSTGIS_IMAGE } from './image.js';
 
 export interface TestDatabase {

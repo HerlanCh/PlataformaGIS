@@ -196,8 +196,9 @@ describeIntegration('persistencia de reports', () => {
 
     expect(rows.map((fila) => fila.indexname)).toEqual([
       'reportes_clave_idempotencia_unique',
+      'reportes_creado_en_idx',
       'reportes_pkey',
-      'reportes_ubicacion_idx',
+      'reportes_ubicacion_geography_idx',
       'reportes_ubicacion_publica_idx',
       'reportes_vigentes_idx',
     ]);
@@ -254,6 +255,8 @@ describeIntegration('migraciones de reports', () => {
   it('se aplican sobre una base vacía y se revierten por completo', async () => {
     await migrarTodo(db, [migracionesDePlataforma, migraciones]);
     expect(await tablas()).toEqual(['categorias', 'reportes']);
+
+    expect(await revertirUltima(db, migraciones)).toBe('0002_indices_de_consulta');
 
     expect(await revertirUltima(db, migraciones)).toBe('0001_semilla_categorias');
     expect(await new RepositorioCategoriasPg(db).buscarTodas()).toEqual([]);

@@ -73,14 +73,14 @@ Quedan para la Fase 5, porque dependen de casos de uso: deduplicación (HU-01), 
 | Módulo | Puerto | Propósito | Se implementa en |
 | :--- | :--- | :--- | :--- |
 | `identity` | `RepositorioDeUsuarios` | Buscar y guardar usuarios | Fase 3 |
-| `reports` | `RepositorioDeReportes` | Guardar y recuperar reportes | Fase 3 (consultas espaciales en la Fase 4) |
+| `reports` | `RepositorioDeReportes` | Guardar y recuperar reportes | Fase 3 (consultas espaciales: Fase 4) |
 | `reports` | `RepositorioDeCategorias` | Leer categorías | Fase 3 |
 | `reports` | `GeneradorDeId` | Generar identificadores | Fase 5 |
 | `reports` | `ReputacionDelAutor` | Saber si el autor está silenciado | Fase 5 (conectado a `verification` en la raíz de composición) |
 | `verification` | `RepositorioDeVotos` | Guardar y leer votos | Fase 3 |
 | `verification` | `RepositorioDeReputaciones` | Guardar y leer reputaciones | Fase 3 |
 | `verification` | `ConsultaDeReporte` | Autor, estado, ubicación y extensiones de un reporte | Fase 5 (conectado a `reports` en la raíz de composición) |
-| `shared-kernel` | `Clock` | Fecha y hora actuales | Fase 5 |
+| `shared-kernel` | `Reloj` | Fecha y hora actuales | Fase 5 |
 
 ### 3.3 Eventos de integración
 
@@ -118,7 +118,7 @@ Esquema físico y adaptadores que implementan los puertos de la Fase 2. El detal
 
 | Requisito | Garantía | Mecanismo | Archivo de pruebas |
 | :--- | :--- | :--- | :--- |
-| HU-03 | Un solo voto por usuario y reporte, también si llegan dos a la vez | Clave primaria (`id_reporte`, `id_usuario`) en `votos`; el adaptador la traduce a `AlreadyVotedError` | `verification/tests/persistence.integration.test.ts` |
+| HU-03 | Un solo voto por usuario y reporte, también si llegan dos a la vez | Clave primaria (`id_reporte`, `id_usuario`) en `votos`; el adaptador la traduce a `ErrorYaVoto` | `verification/tests/persistence.integration.test.ts` |
 | HU-03, HU-12 | La reputación y el peso de un voto están entre 0 y 5 | `CHECK` en `reputaciones.puntaje` y `votos.peso` | `verification/tests/persistence.integration.test.ts` |
 | HU-03, HU-04 | Un reporte solo puede estar en uno de los cinco estados y usar hasta 2 extensiones | `CHECK` en `reportes.estado` y `reportes.extensiones` | `reports/tests/persistence.integration.test.ts` |
 | HU-05 | Una clave de idempotencia no se repite | Índice único en `reportes.clave_idempotencia`; el dominio valida su formato | `reports/tests/persistence.integration.test.ts`, `idempotency-key.test.ts` |
@@ -132,3 +132,29 @@ Esquema físico y adaptadores que implementan los puertos de la Fase 2. El detal
 ### 4.3 Migraciones
 
 Cada conjunto (plataforma y cada módulo) se aplica sobre una base vacía, se revierte y se vuelve a aplicar en su prueba de integración. `apps/api/src/migrations.integration.test.ts` aplica el esquema completo desde cero en cada ejecución de la CI.
+
+## 5. Fase 4: consultas espaciales
+
+Consultas espaciales sobre PostGIS, con sus índices y su medición con 100.000 reportes. Los planes de ejecución y los tiempos están en [`rendimiento/consultas-espaciales.md`](rendimiento/consultas-espaciales.md), que genera `pnpm perf:espacial`.
+
+### 5.1 Consultas implementadas
+
+| Requisito | Consulta | Puerto → adaptador | Índice que usa | Archivo de pruebas |
+| :--- | :--- | :--- | :--- | :--- |
+| HU-02 | Reportes de la ventana del mapa, por categoría y estado, con tope de filas | `RepositorioDeReportes.buscarEnVentana` → `RepositorioReportesPostgis` | `reportes_ubicacion_publica_idx`; `reportes_creado_en_idx` si la ventana abarca casi toda la ciudad | `reports/tests/consultas-espaciales.integration.test.ts` |
+| Sin historia todavía | Reportes vigentes a una distancia de un punto (ubicación real, uso interno). La pide el roadmap; ningún caso de uso la consume aún | `RepositorioDeReportes.buscarCercanos` → `RepositorioReportesPostgis` | `reportes_ubicacion_geography_idx`, `reportes_vigentes_idx` | `reports/tests/consultas-espaciales.integration.test.ts` |
+| HU-01 | Duplicado: misma categoría, vigente y dentro de su radio | `RepositorioDeReportes.buscarDuplicado` → `RepositorioReportesPostgis` | `reportes_ubicacion_geography_idx`, `reportes_vigentes_idx` | `reports/tests/consultas-espaciales.integration.test.ts` |
+| HU-04 | Reportes vigentes con la caducidad vencida, en lotes | `RepositorioDeReportes.buscarCaducados` → `RepositorioReportesPostgis` | `reportes_vigentes_idx` | `reports/tests/consultas-espaciales.integration.test.ts` |
+| HU-06 | Mapa de calor por celdas, con umbral de 3 reportes | `ConsultaDeMapaDeCalor.agregar` → `ConsultaMapaCalorPg` | `reportes_ubicacion_publica_idx`, `reportes_creado_en_idx` | `heatmap/tests/consulta-mapa-calor.integration.test.ts`, `consulta-de-calor.test.ts`, `apps/api/src/mapa-calor.integration.test.ts` |
+| HU-08 | Zonas suscritas que contienen un punto, por categoría | `RepositorioDeSuscripciones.buscarSuscriptores` → `RepositorioSuscripcionesPg` | `zonas_suscritas_centro_idx` | `subscriptions/tests/suscriptores.integration.test.ts` |
+| HU-02 | Celda geohash de un punto y celdas que cubren una ventana (para la Fase 7) | `celdaDe`, `celdasQueCubren` en `shared-kernel` | No aplica (función pura) | `packages/shared-kernel/src/geohash.test.ts` |
+
+### 5.2 Requisitos garantizados
+
+| Requisito | Garantía | Mecanismo | Archivo de pruebas |
+| :--- | :--- | :--- | :--- |
+| RNF-14 | La consulta por ventana solo devuelve la ubicación pública, nunca la real ni el autor, y exige indicar los estados | Proyección `ReportePublico`; el filtro espacial usa `ubicacion_publica`; sin estados lanza un error en lugar de incluir los rechazados | `reports/tests/consultas-espaciales.integration.test.ts` |
+| HU-06 | Una celda con menos de 3 reportes no se publica | `HAVING count(*) >= 3` en la consulta; celda mínima de 100 m validada en el dominio | `heatmap/tests/consulta-mapa-calor.integration.test.ts` |
+| HU-06 | Mover la ventana no cambia las celdas ni sus conteos, así que no sirve para aislar un reporte | Cuadrícula fija para toda la ciudad (`cuadriculaPara`) y ventana ampliada a celdas enteras | `heatmap/tests/consulta-mapa-calor.integration.test.ts`, `consulta-de-calor.test.ts` |
+| Eficiencia | Cada consulta, también en su peor caso, usa un índice y su p95 es menor a 100 ms con 100.000 reportes | `pnpm seed:load` y `pnpm perf:espacial`, que falla si no se cumple | `docs/rendimiento/consultas-espaciales.md` |
+| ADR-003 | `heatmap` lee `reportes` sin importar código de `reports`, y un cambio de esquema en `reports` se detecta | Solo `SELECT` de columnas públicas; `dependency-cruiser` sin violaciones; prueba con las migraciones reales | `pnpm depcruise`, `apps/api/src/mapa-calor.integration.test.ts` |

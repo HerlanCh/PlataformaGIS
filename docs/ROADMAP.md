@@ -289,29 +289,29 @@ Resultado: todas las consultas espaciales implementadas, indexadas y medidas con
 **Codificación**
 
 1. Añadir al puerto `RepositorioDeReportes` los métodos espaciales y luego implementarlos en el adaptador PostGIS:
-   1. `findInViewport(bbox, categorias, estados)`: `ubicacion_publica && ST_MakeEnvelope(...)` para usar el índice GiST.
-   2. `findNearby(punto, radio_m)`: `ST_DWithin(location::geography, punto::geography, radio_m)`.
-   3. `findDuplicate(categoria, punto, ventana)`: mismo tipo, dentro de `radio_duplicado_m` y activo. Si existe, el nuevo reporte se convierte en confirmación del existente.
-   4. `findExpired(now)`: reportes activos con `caduca_en < now`, en lotes.
-2. Puerto y adaptador `HeatmapQuery.aggregate(bbox, tamaño_celda, desde, hasta, categorias)`: agrupar con `ST_SnapToGrid` y devolver solo celdas con al menos 3 reportes (umbral de anonimato y antiestigmatización).
-3. Puerto y adaptador `RepositorioDeSuscripciones.matchSubscribers(punto, categoria)`: suscripciones cuyo círculo contiene el punto (`ST_DWithin` contra `centro` y `radio_m`).
-4. Función pura en el dominio `cellOf(PuntoGeo, precision)`: codificación geohash propia (sin librería) para agrupar clientes de WebSocket por celda en la Fase 7. Precisión por defecto: 6.
-5. Función pura `cellsCovering(bbox)`: lista de celdas que cubren el área visible del mapa.
+   1. `buscarEnVentana(caja, categorias, estados)`: `ubicacion_publica && ST_MakeEnvelope(...)` para usar el índice GiST.
+   2. `buscarCercanos(punto, radioM)`: `ST_DWithin(ubicacion::geography, punto::geography, radio_m)`.
+   3. `buscarDuplicado(categoria, punto, ahora)`: mismo tipo, dentro de `radio_duplicado_m` y activo. Si existe, el nuevo reporte se convierte en confirmación del existente.
+   4. `buscarCaducados(ahora, limite)`: reportes activos con `caduca_en < ahora`, en lotes.
+2. Puerto y adaptador `ConsultaDeMapaDeCalor.agregar(caja, tamanoCeldaM, desde, hasta, categorias)`: agrupar con `ST_SnapToGrid` y devolver solo celdas con al menos 3 reportes (umbral de anonimato y antiestigmatización).
+3. Puerto y adaptador `RepositorioDeSuscripciones.buscarSuscriptores(punto, categoria)`: suscripciones cuyo círculo contiene el punto (`ST_DWithin` contra `centro` y `radio_m`).
+4. Función pura en el dominio `celdaDe(PuntoGeo, precision)`: codificación geohash propia (sin librería) para agrupar clientes de WebSocket por celda en la Fase 7. Precisión por defecto: 6.
+5. Función pura `celdasQueCubren(caja)`: lista de celdas que cubren el área visible del mapa.
 6. Guardar en `ubicacion_publica` la ubicación que entrega `PoliticaDePrivacidad` del dominio (calculada en la Fase 2 con una cuadrícula UTM 19 Sur). `ST_SnapToGrid` se usa solo en el mapa de calor.
 
 **Pruebas**
 
 1. Pruebas de integración con geometrías conocidas: puntos dentro, en el borde y fuera de cada consulta.
-2. Prueba de `cellOf` contra vectores de referencia de geohash publicados.
+2. Prueba de `celdaDe` contra vectores de referencia de geohash publicados.
 3. Script `seed:load` que genera 100.000 reportes sintéticos distribuidos sobre La Paz y El Alto.
 4. Ejecutar `EXPLAIN ANALYZE` de cada consulta con esa carga: debe usar el índice (Index Scan / Bitmap Index Scan) y cumplir p95 < 100 ms. Guardar los planes en `docs/rendimiento/`.
 5. Prueba del heatmap: una celda con 2 reportes no aparece; con 3, sí.
 
 **Criterio de salida**
 
-- [ ] Todas las consultas espaciales usan índice y cumplen p95 < 100 ms con 100.000 reportes
-- [ ] Deduplicación y umbral del heatmap probados
-- [ ] Planes de ejecución archivados como evidencia de eficiencia (ISO/IEC 25010)
+- [x] Todas las consultas espaciales usan índice y cumplen p95 < 100 ms con 100.000 reportes
+- [x] Deduplicación y umbral del heatmap probados
+- [x] Planes de ejecución archivados como evidencia de eficiencia (ISO/IEC 25010)
 
 ## Fase 5: Casos de uso
 
@@ -320,13 +320,13 @@ Resultado: la lógica completa de la aplicación en la carpeta `application/` de
 **Codificación** (cada caso de uso: una clase con un método `execute(input)`, entrada validada con Zod, dependencias inyectadas por constructor como puertos)
 
 1. `RegisterDevice`: crea o recupera un usuario anónimo a partir del hash del dispositivo.
-2. `CreateReport`: valida la categoría y el `PuntoGeo` → consulta `findDuplicate` → si hay duplicado, no crea el reporte y emite `ReporteDuplicadoDetectado`, que `verification` registra como confirmación; si no, crea el agregado, aplica `PoliticaDePrivacidad` y `PoliticaDeCaducidad`, y guarda reporte y evento en una transacción. Idempotente por `idempotency_key`.
+2. `CreateReport`: valida la categoría y el `PuntoGeo` → consulta `buscarDuplicado` → si hay duplicado, no crea el reporte y emite `ReporteDuplicadoDetectado`, que `verification` registra como confirmación; si no, crea el agregado, aplica `PoliticaDePrivacidad` y `PoliticaDeCaducidad`, y guarda reporte y evento en una transacción. Idempotente por `idempotency_key`.
 3. `ConfirmReport` y `DenyReport` ("¿Sigue ahí?"): registran el voto ponderado, aplican `PoliticaDeVerificacion` y `PoliticaDeReputacion`, y emiten el evento correspondiente.
 4. `ListReportsInViewport`: devuelve reportes activos y confirmados del área visible.
 5. `GetHeatmap`: devuelve celdas agregadas para un rango de fechas.
 6. `SubscribeZone` y `UnsubscribeZone`: con límite de zonas por usuario.
 7. `ExpireReports`: procesa en lotes los reportes vencidos y emite `ReporteCaducado`.
-8. `NotifySubscribers`: ante `ReporteCreado` o `ReporteConfirmado`, busca suscriptores con `matchSubscribers` y envía por `NotificationSender`.
+8. `NotifySubscribers`: ante `ReporteCreado` o `ReporteConfirmado`, busca suscriptores con `buscarSuscriptores` y envía por `NotificationSender`.
 9. `RejectReport` (moderador): cambia el estado, registra la acción y ajusta la reputación.
 10. Puerto `RateLimiter` y su uso en `CreateReport` y en los votos (límite por usuario y por ventana de tiempo).
 11. Errores de aplicación tipados (`NotFound`, `Forbidden`, `Conflict`, `ValidationFailed`, `RateLimited`) que los adaptadores traducen a su protocolo.
@@ -388,7 +388,7 @@ Resultado: cada cambio de un reporte llega a los clientes que miran esa zona en 
 
 1. Despachador de outbox (`OutboxDispatcher`): lee `eventos_salida` sin publicar con `SELECT ... FOR UPDATE SKIP LOCKED`, los publica y marca `publicado_en`. Es la implementación definitiva del puerto BusDeEventos: entrega cada evento, al menos una vez, a Socket.io y a los manejadores de los demás módulos; cada evento lleva su `id` para que el cliente descarte duplicados.
 2. Adaptador `SocketIoEventPublisher` que implementa `EventPublisher`: emite cada evento a la sala `cell:<geohash>` de la celda del reporte.
-3. Protocolo del cliente: al mover el mapa, el cliente envía `viewport:update` con su bbox; el servidor calcula `cellsCovering(bbox)` y actualiza las salas del socket (con un máximo de celdas por cliente).
+3. Protocolo del cliente: al mover el mapa, el cliente envía `viewport:update` con su bbox; el servidor calcula `celdasQueCubren(caja)` y actualiza las salas del socket (con un máximo de celdas por cliente).
 4. Autenticación del handshake de Socket.io con el mismo JWT de la API.
 5. Activar `connectionStateRecovery` de Socket.io para recuperar eventos perdidos en desconexiones breves; tras una desconexión larga, el cliente vuelve a pedir `GET /v1/reports` del viewport.
 6. Programador de tareas en el proceso de la API (node-cron): ejecutar `ExpireReports` periódicamente.

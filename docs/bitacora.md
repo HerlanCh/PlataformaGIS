@@ -263,3 +263,36 @@ Los eventos se renombraron dentro de `v1` y no se creó una `v2`: todavía no ha
 
 ### Verificación
 `pnpm lint`, `pnpm typecheck` y `pnpm test` en verde: 562 pruebas.
+
+## [2026-10-12] — Fase 4: core geoespacial
+
+### Qué se hizo
+- **Consultas espaciales de `reports`** en `RepositorioDeReportes` y su adaptador PostGIS: `buscarEnVentana`, `buscarCercanos`, `buscarDuplicado` y `buscarCaducados`.
+- **Mapa de calor** en `heatmap`: puerto `ConsultaDeMapaDeCalor` y adaptador `ConsultaMapaCalorPg` con `ST_SnapToGrid`; solo publica celdas con al menos 3 reportes.
+- **Suscriptores** en `subscriptions`: `RepositorioDeSuscripciones.buscarSuscriptores(punto, categoria)`.
+- **Celdas geohash** en `shared-kernel`: `celdaDe` y `celdasQueCubren`, sin librería. Coinciden con los vectores publicados y con `ST_GeoHash` de PostGIS.
+- **Medición:** `pnpm seed:load` carga 100.000 reportes y 5.000 zonas sintéticos y reproducibles; `pnpm perf:espacial` mide cada consulta, también en su peor caso, y archiva su plan en `docs/rendimiento/consultas-espaciales.md`.
+
+### Decisiones
+1. **`heatmap` lee la tabla `reportes` directamente (ADR-003).** Es una excepción acotada al ADR-001: solo `SELECT`, solo columnas públicas y solo agregados. La decidió el autor frente a mover la consulta a `reports` o esperar a una tabla propia alimentada por eventos.
+2. **Índices (migración `0002_indices_de_consulta` de `reports`).** Se añade `reportes_ubicacion_geography_idx`, porque `ST_DWithin` en metros trabaja sobre `geography`, y `reportes_creado_en_idx`, para servir primero los reportes recientes y los rangos de fechas. Se elimina `reportes_ubicacion_idx`, que ninguna consulta usaba.
+3. **`buscarSuscriptores` acota primero con el radio máximo (2000 m).** El radio de cada zona es una columna y el índice GiST solo acelera una distancia constante; después se aplica el radio propio de la zona.
+4. **La ventana pública devuelve `ReportePublico`,** una proyección sin ubicación real ni autor. Su campo se llama `publicLocation`, como en el agregado y en el SRS.
+5. **`buscarEnVentana` exige los estados y un límite de filas.** Sin estados lanza un error: una lista vacía no puede significar "todos", porque incluiría los rechazados. Devuelve los más recientes primero. `buscarCercanos` solo devuelve reportes vigentes y también lleva límite.
+6. **La cuadrícula del mapa de calor es fija para toda la ciudad** y la ventana se amplía a celdas enteras. Si la cuadrícula dependiera de la ventana, moverla unos metros cambiaría los conteos y permitiría aislar un reporte pese al umbral de 3.
+7. **El mapa de calor cuenta todos los reportes salvo los `RECHAZADO`,** también los caducados y resueltos: es un mapa histórico por rango de fechas. La celda mide entre 100 m y 5000 m.
+8. **Las celdas geohash van en `shared-kernel`,** no en `reports`: las usará la capa de tiempo real de la Fase 7 sin importar ningún módulo. `celdasQueCubren` rechaza un área que necesite más de 2.500 celdas.
+9. **Los módulos exportan sus adaptadores desde `index.ts`** (`RepositorioReportesPostgis`, `RepositorioSuscripcionesPg`, `ConsultaMapaCalorPg`) para que la raíz de composición los construya.
+10. **Tiempos de espera de la suite:** `pnpm test` da 20 s por prueba y 30 s por preparación. Con más archivos de integración creando su base de datos a la vez, los 5 s y 10 s por defecto no alcanzaban.
+
+### Revisión antes del cierre
+Una revisión de la primera versión encontró y corrigió: la ventana devolvía rechazados con la lista de estados vacía; la ventana y la cercanía no tenían tope de filas; la cuadrícula del mapa de calor se movía con la ventana; `ReportePublico` usaba `ubicacionPublica` en lugar de `publicLocation`; el mapa de calor no se probaba contra el esquema real en la CI (ahora `apps/api/src/mapa-calor.integration.test.ts`); y quedaba un índice sin uso. Al medir los peores casos apareció además un recorrido completo de la tabla en la ventana y en el mapa de calor de toda la ciudad, que resolvió `reportes_creado_en_idx`.
+
+### Resultado de la medición
+Con 100.000 reportes y 5.000 zonas en el PostGIS local (PostgreSQL 18.6, PostGIS 3.6.4), las nueve mediciones usan índice. El p95 más alto es el del mapa de calor de toda el área de servicio en los últimos 30 días: 40,5 ms, frente al máximo de 100 ms. El detalle y los planes están en `docs/rendimiento/consultas-espaciales.md`.
+
+### Pendiente para fases siguientes
+- `buscarCercanos` la pide el roadmap, pero ninguna historia la consume todavía.
+- Un mapa de calor de toda la ciudad con un rango de fechas que abarque casi toda la historia recorrerá la tabla completa: ningún índice lo evita y es el plan correcto. El caso de uso de la Fase 5 debe acotar el rango.
+- La medición es de un solo cliente; la prueba de carga con k6 es de una fase posterior.
+- Los casos de uso que llaman a estas consultas (`CreateReport`, `ExpireReports`, `GetHeatmap`, `NotifySubscribers`) son de la Fase 5.

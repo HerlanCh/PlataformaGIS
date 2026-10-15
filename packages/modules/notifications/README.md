@@ -16,7 +16,7 @@ _Ninguno todavía._
 
 ## Interfaz pública
 
-`notificationsModule` en `index.ts`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
+`notificationsModulo` en `index.ts`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
 
 ## Tablas propias
 

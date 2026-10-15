@@ -12,8 +12,8 @@
   "scripts": {
     "dev": "pnpm -r --parallel --if-present run dev",
     "build": "pnpm -r --if-present run build",
-    "test": "vitest run --coverage",
-    "test:watch": "vitest",
+    "test": "vitest run --coverage --testTimeout=20000 --hookTimeout=30000",
+    "test:watch": "vitest --testTimeout=20000 --hookTimeout=30000",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "tsc -b",
@@ -24,7 +24,9 @@
     "sync:modules": "node tools/modules/sync-modules.mjs",
     "duplication": "jscpd apps packages tools",
     "db:migrate": "pnpm --filter @gis/api run db:migrate",
-    "db:generate": "pnpm -r --if-present run db:generate"
+    "db:generate": "pnpm -r --if-present run db:generate",
+    "seed:load": "pnpm --filter @gis/api run seed:load",
+    "perf:espacial": "pnpm --filter @gis/api run perf:espacial"
   },
   "lint-staged": {
     "*.{ts,tsx,js,cjs,mjs}": [

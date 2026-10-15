@@ -14,7 +14,7 @@ Nunca modifica un reporte: emite su decisión y el módulo `reports` la aplica.
 | :----------------------- | :------------ | :---------------------------------------------------------------------------------------------------------------------------------------- |
 | `Voto`                   | Entidad       | Confirmación o negación con el peso del votante. Reglas: el autor no vota, un voto por usuario, votante a 1000 m o menos, reporte vigente |
 | `Reputacion`             | Entidad       | Puntuación entre 0 y 5. En 0 el usuario está silenciado; se recupera a 0.5 tras 30 días sin penalización                                  |
-| `PoliticaDeVerificacion` | Política pura | Decide `CONFIRM` (3.0 y 2 votantes), `EXTEND` (6.0), `RESOLVE` (3.0 de negaciones y 2 votantes) o `NONE`                                  |
+| `PoliticaDeVerificacion` | Política pura | Decide `CONFIRMAR` (3.0 y 2 votantes), `EXTENDER` (6.0), `RESOLVER` (3.0 de negaciones y 2 votantes) o `NINGUNA`                          |
 | `PoliticaDeReputacion`   | Política pura | +0.20 al autor confirmado, −0.50 al rechazado por moderación, +0.05 al voto acertado                                                      |
 
 Los votos de usuarios silenciados se registran con peso 0 y no cuentan como votante.
@@ -44,7 +44,7 @@ Los votos de usuarios silenciados se registran con peso 0 y no cuentan como vota
 
 ## Interfaz pública
 
-`verificationModule` en `index.ts`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
+`verificationModulo` en `index.ts`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
 
 ## Tablas propias
 

@@ -24,13 +24,13 @@ _Ninguno todavía._
 
 ## Puertos
 
-| Puerto                       | Para qué                                                    |
-| :--------------------------- | :---------------------------------------------------------- |
-| `RepositorioDeSuscripciones` | Guardar, eliminar y leer las zonas, por ID o por su usuario |
+| Puerto                       | Para qué                                                                                                                    |
+| :--------------------------- | :-------------------------------------------------------------------------------------------------------------------------- |
+| `RepositorioDeSuscripciones` | Guardar, eliminar y leer las zonas, por ID o por su usuario; buscar las zonas que contienen un punto (`buscarSuscriptores`) |
 
 ## Interfaz pública
 
-`subscriptionsModule` en `index.ts`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
+`subscriptionsModulo` en `index.ts`, junto con el adaptador `RepositorioSuscripcionesPg`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
 
 ## Tablas propias
 
