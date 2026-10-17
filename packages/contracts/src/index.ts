@@ -1,9 +1,15 @@
+export { crearEvento, leerContenido, validarEntrada } from './casos-de-uso.js';
+export type { SobreDeEvento } from './casos-de-uso.js';
 export {
   eventosDeIntegracion,
+  esquemaCodigoCategoria,
+  esquemaPuntoGeo,
   esquemaMotivoRechazo,
+  rechazoDeModeracionV1,
   reporteConfirmadoV1,
   reporteCreadoV1,
   reporteDuplicadoDetectadoV1,
+  reporteExtendidoV1,
   reporteCaducadoV1,
   reporteRechazadoV1,
   reporteResueltoV1,

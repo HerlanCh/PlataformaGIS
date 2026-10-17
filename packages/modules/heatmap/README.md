@@ -6,6 +6,10 @@ Contrato del módulo. Mantenerlo al día es parte de la Definición de Hecho.
 
 Mapa de calor (HU-06): agrega los reportes por celda y solo publica las celdas con al menos 3 reportes (`UMBRAL_ANONIMATO`), para no señalar un incidente aislado ni a quien lo reportó.
 
+## Casos de uso (Fase 5)
+
+`ObtenerMapaDeCalor`: celdas de 250 m por defecto, rango de fechas obligatorio de hasta 90 días (un rango mayor obligaría a recorrer la tabla entera) y validación con `validarConsultaDeCalor`.
+
 ## Puertos
 
 | Puerto                  | Para qué                                                                                                                    |
@@ -24,7 +28,7 @@ _Ninguno todavía._
 
 ## Interfaz pública
 
-`heatmapModulo` en `index.ts`, junto con el adaptador `ConsultaMapaCalorPg` y los tipos de la consulta. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
+`heatmapModulo` en `index.ts`, junto con el caso de uso `ObtenerMapaDeCalor`, el adaptador `ConsultaMapaCalorPg` y los tipos de la consulta. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
 
 ## Tablas propias
 

@@ -17,6 +17,9 @@ export type MotivoRechazo = 'MODERACION' | 'AUTOR_SILENCIADO';
 // La genera el cliente (un UUID, normalmente); aquí solo se exige que sea opaca y acotada.
 const CLAVE_DE_IDEMPOTENCIA = /^[A-Za-z0-9_-]{8,128}$/;
 
+export const esClaveDeIdempotenciaValida = (clave: string): boolean =>
+  CLAVE_DE_IDEMPOTENCIA.test(clave);
+
 /** Máquina de estados explícita: desde cada estado, a cuáles se puede pasar. */
 export const TRANSICIONES: Readonly<Record<EstadoReporte, readonly EstadoReporte[]>> = {
   ACTIVO: ['CONFIRMADO', 'RESUELTO', 'CADUCADO', 'RECHAZADO'],
@@ -76,7 +79,7 @@ export class Reporte {
   /** Crea un reporte `ACTIVO` con su caducidad y su ubicación pública ya calculadas. */
   static crear(input: EntradaCrearReporte): Reporte {
     const { id, categoria: category, authorId, location, idempotencyKey, ahora: ahora } = input;
-    if (!CLAVE_DE_IDEMPOTENCIA.test(idempotencyKey)) throw new ErrorClaveDeIdempotenciaInvalida();
+    if (!esClaveDeIdempotenciaValida(idempotencyKey)) throw new ErrorClaveDeIdempotenciaInvalida();
     const reporte = new Reporte({
       id,
       codigoCategoria: category.codigo,

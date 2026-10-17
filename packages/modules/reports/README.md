@@ -17,12 +17,25 @@ No decide si un reporte se confirma o se resuelve: eso lo decide `verification` 
 | `PoliticaDeCaducidad`  | Política pura | Caducidad inicial, extensiones (50 % del TTL, máximo 2) y comprobación de vencimiento                     |
 | `PoliticaDePrivacidad` | Política pura | Ubicación pública: exacta, o el centro de la celda de 200 m en categorías sensibles                       |
 
+## Casos de uso (Fase 5)
+
+| Clase                           | Qué hace                                                                                                                                                                                                                                                                                                                                  |
+| :------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CrearReporte`                  | Crea un reporte (HU-01). Idempotente por `idempotencyKey` (HU-05); 5 por usuario cada 10 minutos; si hay uno vigente de otro usuario cerca devuelve `DUPLICADO` y emite `ReporteDuplicadoDetectado`; si es del mismo autor, `PROPIO_EXISTENTE`. El de un autor silenciado se guarda `RECHAZADO` sin eventos y él lo sigue viendo `ACTIVO` |
+| `ListarReportesEnVentana`       | Reportes `ACTIVO` y `CONFIRMADO` no vencidos de la ventana, hasta 500, en su proyección pública (HU-02)                                                                                                                                                                                                                                   |
+| `CaducarReportes`               | Caduca los vencidos en lotes de 200 y emite `ReporteCaducado` (HU-04). La programa una tarea periódica (Fase 7)                                                                                                                                                                                                                           |
+| `AplicarDecisionDeVerificacion` | Manejador de `VotoEmitido.v1`: confirma, extiende o resuelve                                                                                                                                                                                                                                                                              |
+| `AplicarRechazoDeModeracion`    | Manejador de `RechazoDeModeracion.v1`: rechaza con motivo `MODERACION`                                                                                                                                                                                                                                                                    |
+
+Los manejadores son idempotentes: si el reporte ya no admite el cambio, no hacen nada.
+
 ## Eventos que emite
 
 | Evento                         | Audiencia | Cuándo                                                            |
 | :----------------------------- | :-------- | :---------------------------------------------------------------- |
 | `ReporteCreado.v1`             | Pública   | Se crea un reporte                                                |
 | `ReporteConfirmado.v1`         | Pública   | Pasa a `CONFIRMADO`                                               |
+| `ReporteExtendido.v1`          | Pública   | Recibe la segunda extensión de vigencia                           |
 | `ReporteResuelto.v1`           | Pública   | Pasa a `RESUELTO`                                                 |
 | `ReporteCaducado.v1`           | Pública   | Pasa a `CADUCADO`                                                 |
 | `ReporteRechazado.v1`          | Pública   | Pasa a `RECHAZADO`, con motivo `MODERACION` o `AUTOR_SILENCIADO`  |
@@ -32,23 +45,25 @@ Los eventos públicos solo llevan `publicLocation`: nunca la ubicación real ni 
 
 ## Eventos que escucha
 
-| Evento           | Qué hace                                                                   |
-| :--------------- | :------------------------------------------------------------------------- |
-| `VotoEmitido.v1` | Aplica la decisión que trae: `CONFIRMAR`, `EXTENDER` o `RESOLVER` (Fase 5) |
+| Evento                   | Qué hace                                                          |
+| :----------------------- | :---------------------------------------------------------------- |
+| `VotoEmitido.v1`         | Aplica la decisión que trae: `CONFIRMAR`, `EXTENDER` o `RESOLVER` |
+| `RechazoDeModeracion.v1` | Rechaza el reporte por moderación                                 |
 
 ## Puertos
 
-| Puerto                     | Para qué                                                                                                                                   |
-| :------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------- |
-| `RepositorioDeReportes`    | Guardar y recuperar reportes, y las consultas espaciales: ventana (estados obligatorios y tope de filas), cercanía, duplicados y caducados |
-| `RepositorioDeCategorias`  | Leer las categorías                                                                                                                        |
-| `GeneradorDeId`            | Generar identificadores                                                                                                                    |
-| `ReputacionDelAutor`       | Saber si el autor está silenciado. Lo conecta la raíz de composición con `verification`                                                    |
-| `UnidadDeTrabajoDeReporte` | Guardar un reporte y sus eventos de integración en una sola transacción (outbox)                                                           |
+| Puerto                     | Para qué                                                                                                                                    |
+| :------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------ |
+| `RepositorioDeReportes`    | Guardar y recuperar reportes, y las consultas espaciales: ventana (estados obligatorios y tope de filas), cercanía, duplicados y caducados  |
+| `RepositorioDeCategorias`  | Leer las categorías                                                                                                                         |
+| `GeneradorDeId`            | Generar identificadores (en `shared-kernel`)                                                                                                |
+| `LimitadorDeFrecuencia`    | Límite de creación por usuario (en `shared-kernel`)                                                                                         |
+| `ReputacionDelAutor`       | Saber si el autor está silenciado. Lo conecta la raíz de composición con `verification`                                                     |
+| `UnidadDeTrabajoDeReporte` | Guardar un reporte y sus eventos en una sola transacción (outbox), o solo eventos. Traduce la clave de idempotencia repetida a un conflicto |
 
 ## Interfaz pública
 
-`reportsModulo` en `index.ts`, junto con los adaptadores `RepositorioReportesPostgis` y `RepositorioCategoriasPg`, el catálogo `CATEGORIAS_MVP` y la proyección `ReportePublico`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
+`reportsModulo` en `index.ts`, junto con los casos de uso y manejadores, los adaptadores `RepositorioReportesPostgis`, `RepositorioCategoriasPg` y `UnidadDeTrabajoReportePg`, el catálogo `CATEGORIAS_MVP` y la proyección `ReportePublico`. Ningún otro módulo la importa: solo la raíz de composición (`apps/*`).
 
 ## Tablas propias
 

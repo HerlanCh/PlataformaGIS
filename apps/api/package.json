@@ -12,6 +12,7 @@
     "perf:espacial": "tsx --env-file-if-exists=../../.env src/rendimiento/medir-consultas.ts"
   },
   "dependencies": {
+    "@gis/contracts": "workspace:*",
     "@gis/event-bus": "workspace:*",
     "@gis/module-classifier": "workspace:*",
     "@gis/module-heatmap": "workspace:*",

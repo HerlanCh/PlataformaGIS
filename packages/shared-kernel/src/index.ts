@@ -17,3 +17,14 @@ export {
   PRECISION_CELDA,
 } from './geohash.js';
 export type { CajaGeografica } from './geohash.js';
+export {
+  aErrorDeAplicacion,
+  ErrorConflicto,
+  ErrorDeAplicacion,
+  ErrorLimiteExcedido,
+  ErrorNoEncontrado,
+  ErrorProhibido,
+  ErrorValidacionFallida,
+} from './error-de-aplicacion.js';
+export type { TipoDeErrorDeAplicacion } from './error-de-aplicacion.js';
+export type { ConsumoDeLimite, GeneradorDeId, LimitadorDeFrecuencia } from './puertos.js';

@@ -2,6 +2,12 @@ import type { DefinicionDeModulo } from '@gis/platform';
 
 export { ConsultaMapaCalorPg } from './adapters/consulta-mapa-calor.js';
 export {
+  MAX_DIAS_POR_CONSULTA,
+  ObtenerMapaDeCalor,
+  TAMANO_CELDA_POR_DEFECTO_M,
+} from './application/obtener-mapa-de-calor.js';
+export type { EntradaObtenerMapaDeCalor } from './application/obtener-mapa-de-calor.js';
+export {
   ErrorConsultaDeCalorInvalida,
   TAMANO_CELDA_M,
   UMBRAL_ANONIMATO,

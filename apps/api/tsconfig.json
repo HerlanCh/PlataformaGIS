@@ -11,6 +11,9 @@
       "path": "../../packages/shared-kernel"
     },
     {
+      "path": "../../packages/contracts"
+    },
+    {
       "path": "../../packages/testing"
     },
     {

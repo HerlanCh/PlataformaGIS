@@ -7,7 +7,29 @@ import {
   variableDeInterruptor,
   cargarConfig,
   cargarInterruptores,
+  esClaveDuplicada,
 } from './index.js';
+
+describe('esClaveDuplicada', () => {
+  const dePg = (code: string, constraint?: string) =>
+    Object.assign(new Error('pg'), { code, constraint });
+
+  it('reconoce la violación de clave única en el error o en su causa', () => {
+    expect(esClaveDuplicada(dePg('23505'))).toBe(true);
+    expect(esClaveDuplicada(new Error('drizzle', { cause: dePg('23505') }))).toBe(true);
+  });
+
+  it('con restricción, solo reconoce esa', () => {
+    expect(esClaveDuplicada(dePg('23505', 'votos_pkey'), 'votos_pkey')).toBe(true);
+    expect(esClaveDuplicada(dePg('23505', 'otra'), 'votos_pkey')).toBe(false);
+  });
+
+  it('no confunde otros errores', () => {
+    expect(esClaveDuplicada(dePg('23503'))).toBe(false);
+    expect(esClaveDuplicada('texto')).toBe(false);
+    expect(esClaveDuplicada(undefined)).toBe(false);
+  });
+});
 
 const entornoValido = {
   DATABASE_URL: 'postgres://gis:gis@localhost:5432/gis',

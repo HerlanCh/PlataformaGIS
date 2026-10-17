@@ -12,3 +12,12 @@ export const identityModulo: DefinicionDeModulo = {
     // Aquí se registran las rutas, los manejadores de eventos y las tareas del módulo.
   },
 };
+
+// Interfaz pública para la raíz de composición: caso de uso y adaptador.
+export { RegistrarDispositivo } from './application/registrar-dispositivo.js';
+export type {
+  DependenciasRegistrarDispositivo,
+  EntradaRegistrarDispositivo,
+  SalidaRegistrarDispositivo,
+} from './application/registrar-dispositivo.js';
+export { RepositorioUsuariosPg } from './adapters/user-repository.js';

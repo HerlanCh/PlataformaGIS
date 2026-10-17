@@ -44,6 +44,8 @@ Patrón *outbox*: el agregado y sus eventos se guardan en la misma transacción,
 
 **Índices:** `eventos_salida_pendientes_idx`, B-tree parcial sobre `creado_en` donde `publicado_en IS NULL`: recorre los pendientes en orden de llegada.
 
+**Quién escribe en el outbox (Fase 5):** `UnidadDeTrabajoReportePg` (`reports`), `UnidadDeTrabajoVotoPg` (`verification`) y `UnidadDeTrabajoModeracionPg` (`moderation`), cada una en la misma transacción que sus tablas. Los valores de `tipo` posibles son los del catálogo `eventosDeIntegracion` de `packages/contracts`; en la Fase 5 se sumaron `ReporteExtendido.v1` (público: `idReporte`, `caducaEn`) y `RechazoDeModeracion.v1` (interno: `idReporte`, `idModerador`).
+
 ## `identity`
 
 ### `usuarios`

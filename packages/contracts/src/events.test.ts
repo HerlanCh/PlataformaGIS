@@ -4,6 +4,7 @@ import {
   eventosDeIntegracion,
   reporteCreadoV1,
   reporteDuplicadoDetectadoV1,
+  rechazoDeModeracionV1,
   reporteRechazadoV1,
   votoEmitidoV1,
 } from './index.js';
@@ -21,17 +22,19 @@ function campos(esquema: z.ZodType): string[] {
 }
 
 describe('catálogo de eventos de integración', () => {
-  it('contiene los siete eventos de la Fase 2 con clave única', () => {
+  it('contiene los eventos de las Fases 2 y 5 con clave única', () => {
     const claves = eventosDeIntegracion.map((evento) => evento.clave);
 
     expect(claves).toEqual([
       'ReporteCreado.v1',
       'ReporteConfirmado.v1',
+      'ReporteExtendido.v1',
       'ReporteResuelto.v1',
       'ReporteCaducado.v1',
       'ReporteRechazado.v1',
       'ReporteDuplicadoDetectado.v1',
       'VotoEmitido.v1',
+      'RechazoDeModeracion.v1',
     ]);
     expect(new Set(claves).size).toBe(claves.length);
   });
@@ -50,6 +53,7 @@ describe('catálogo de eventos de integración', () => {
   it('los eventos que identifican a un usuario son internos', () => {
     expect(reporteDuplicadoDetectadoV1.audiencia).toBe('interno');
     expect(votoEmitidoV1.audiencia).toBe('interno');
+    expect(rechazoDeModeracionV1.audiencia).toBe('interno');
   });
 });
 
