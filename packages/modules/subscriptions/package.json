@@ -11,7 +11,8 @@
     "@gis/event-bus": "workspace:*",
     "@gis/platform": "workspace:*",
     "@gis/shared-kernel": "workspace:*",
-    "drizzle-orm": "^0.45.4"
+    "drizzle-orm": "^0.45.4",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@gis/testing": "workspace:*"

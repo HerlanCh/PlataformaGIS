@@ -10,18 +10,18 @@ Los nombres de casos de uso provienen del roadmap; los marcados "por definir" se
 
 | Requisito | ID Historia | Nombre de la Historia | Módulo | Caso de Uso (`application/`) | Caso de Prueba | Estado |
 | :--- | :--- | :--- | :--- | :--- | :--- | :---: |
-| RF-01<br>RF-02<br>RF-03 | **HU-01** | Crear reporte en dos toques con ubicación automática | `identity`<br>`reports`<br>`verification` | `RegisterDevice`<br>`CreateReport` | `HU-01: crea reporte activo con coordenadas válidas`<br>`HU-01: un duplicado se registra como confirmación`<br>`HU-01: rechaza coordenadas fuera del rectángulo`<br>`HU-01: un duplicado del propio autor no crea reporte ni voto`<br>`HU-01: rechaza al superar el límite de creación` | Especificado (Fase 0) |
-| RF-04<br>RF-05<br>RF-06 | **HU-02** | Ver reportes activos en mapa en tiempo real | `reports` | `ListReportsInViewport` | `HU-02: filtra por viewport y estados vigentes`<br>`HU-02: difunde el reporte a los clientes de su celda`<br>`HU-02: usa el centro de la celda en categoría sensible`<br>`HU-02: la respuesta no contiene location ni author_id` | Especificado (Fase 0) |
-| RF-07<br>RF-08 | **HU-03** | Confirmar o negar un reporte ("¿Sigue ahí?") | `verification`<br>`reports` | `ConfirmReport`<br>`DenyReport` | `HU-03: confirma al alcanzar el umbral ponderado y extiende la vigencia`<br>`HU-03: resuelve al acumular negaciones`<br>`HU-03: el autor no puede votar su propio reporte`<br>`HU-03: un solo votante no confirma`<br>`HU-03: rechaza un voto repetido`<br>`HU-03: rechaza el voto de un usuario lejano`<br>`HU-03: aplica la segunda extensión y ninguna más` | Especificado (Fase 0) |
-| RF-09 | **HU-04** | Caducidad automática por categoría | `reports` | `ExpireReports` | `HU-04: pasa a CADUCADO al vencer el TTL`<br>`HU-04: no caduca antes de expires_at`<br>`HU-04: un reporte CONFIRMADO vencido también caduca` | Especificado (Fase 0) |
-| RF-10 | **HU-05** | Reportar sin conexión y enviar al reconectar | `reports` | `CreateReport` (idempotente) | `HU-05: guarda el reporte en la cola local sin conexión`<br>`HU-05: envía la cola al reconectar`<br>`HU-05: procesa una solicitud repetida exactamente una vez` | Especificado (Fase 0) |
-| RF-11 | **HU-06** | Mapa de calor espacial agregado | `heatmap` | `GetHeatmap` | `HU-06: descarta celdas con menos de 3 reportes`<br>`HU-06: incluye celdas con 3 o más reportes` | Especificado (Fase 0) |
-| RF-12 | **HU-07** | Suscripción a zonas de interés | `subscriptions` | `SubscribeZone`<br>`UnsubscribeZone` | `HU-07: guarda una zona válida`<br>`HU-07: rechaza un radio fuera de rango`<br>`HU-07: rechaza al superar el límite de zonas`<br>`HU-07: elimina una zona` | Especificado (Fase 0) |
-| RF-13 | **HU-08** | Notificaciones de incidentes cercanos | `notifications`<br>`subscriptions` | `NotifySubscribers` | `HU-08: notifica a los suscriptores de la zona y categoría`<br>`HU-08: no notifica fuera de la zona o de la categoría`<br>`HU-08: notifica una sola vez por reporte`<br>`HU-08: no notifica al autor` | Especificado (Fase 0) |
-| RF-01<br>RF-14 | **HU-09** | Bot de Telegram para consulta y reporte | `identity`<br>`reports`<br>`verification`<br>`subscriptions` | `RegisterDevice`<br>`CreateReport`<br>`ConfirmReport` / `DenyReport`<br>`SubscribeZone` | `HU-09: /start vincula la cuenta de Telegram`<br>`HU-09: /reportar crea un reporte con la ubicación compartida`<br>`HU-09: /cerca lista los reportes a 1 km`<br>`HU-09: /zona crea una zona suscrita` | Especificado (Fase 0) |
+| RF-01<br>RF-02<br>RF-03 | **HU-01** | Crear reporte en dos toques con ubicación automática | `identity`<br>`reports`<br>`verification` | `RegistrarDispositivo`<br>`CrearReporte`<br>`RegistrarConfirmacionPorDuplicado` | `HU-01: crea reporte activo con coordenadas válidas`<br>`HU-01: un duplicado se registra como confirmación`<br>`HU-01: rechaza coordenadas fuera del rectángulo`<br>`HU-01: un duplicado del propio autor no crea reporte ni voto`<br>`HU-01: rechaza al superar el límite de creación` | Casos de uso probados (Fase 5) |
+| RF-04<br>RF-05<br>RF-06 | **HU-02** | Ver reportes activos en mapa en tiempo real | `reports` | `ListarReportesEnVentana` | `HU-02: filtra por viewport y estados vigentes`<br>`HU-02: difunde el reporte a los clientes de su celda`<br>`HU-02: usa el centro de la celda en categoría sensible`<br>`HU-02: la respuesta no contiene location ni author_id` | Casos de uso probados (Fase 5); difusión en la Fase 7 |
+| RF-07<br>RF-08 | **HU-03** | Confirmar o negar un reporte ("¿Sigue ahí?") | `verification`<br>`reports` | `ConfirmarReporte`<br>`NegarReporte`<br>`AplicarDecisionDeVerificacion`<br>`AjustarReputacionPorDesenlace` | `HU-03: confirma al alcanzar el umbral ponderado y extiende la vigencia`<br>`HU-03: resuelve al acumular negaciones`<br>`HU-03: el autor no puede votar su propio reporte`<br>`HU-03: un solo votante no confirma`<br>`HU-03: rechaza un voto repetido`<br>`HU-03: rechaza el voto de un usuario lejano`<br>`HU-03: aplica la segunda extensión y ninguna más` | Casos de uso probados (Fase 5) |
+| RF-09 | **HU-04** | Caducidad automática por categoría | `reports` | `CaducarReportes` | `HU-04: pasa a CADUCADO al vencer el TTL`<br>`HU-04: no caduca antes de expires_at`<br>`HU-04: un reporte CONFIRMADO vencido también caduca` | Casos de uso probados (Fase 5) |
+| RF-10 | **HU-05** | Reportar sin conexión y enviar al reconectar | `reports` | `CrearReporte` (idempotente) | `HU-05: guarda el reporte en la cola local sin conexión`<br>`HU-05: envía la cola al reconectar`<br>`HU-05: procesa una solicitud repetida exactamente una vez` | Reenvío idempotente probado (Fase 5); cola local en la Fase 8 |
+| RF-11 | **HU-06** | Mapa de calor espacial agregado | `heatmap` | `ObtenerMapaDeCalor` | `HU-06: descarta celdas con menos de 3 reportes`<br>`HU-06: incluye celdas con 3 o más reportes` | Casos de uso probados (Fase 5) |
+| RF-12 | **HU-07** | Suscripción a zonas de interés | `subscriptions` | `SuscribirZona`<br>`EliminarZona` | `HU-07: guarda una zona válida`<br>`HU-07: rechaza un radio fuera de rango`<br>`HU-07: rechaza al superar el límite de zonas`<br>`HU-07: elimina una zona` | Casos de uso probados (Fase 5) |
+| RF-13 | **HU-08** | Notificaciones de incidentes cercanos | `subscriptions`<br>`notifications` | `NotificarSuscriptores` | `HU-08: notifica a los suscriptores de la zona y categoría`<br>`HU-08: no notifica fuera de la zona o de la categoría`<br>`HU-08: notifica una sola vez por reporte`<br>`HU-08: no notifica al autor` | Casos de uso probados (Fase 5); envío real en las Fases 8 y 9 |
+| RF-01<br>RF-14 | **HU-09** | Bot de Telegram para consulta y reporte | `identity`<br>`reports`<br>`verification`<br>`subscriptions` | `RegistrarDispositivo`<br>`CrearReporte`<br>`ConfirmarReporte` / `NegarReporte`<br>`SuscribirZona` | `HU-09: /start vincula la cuenta de Telegram`<br>`HU-09: /reportar crea un reporte con la ubicación compartida`<br>`HU-09: /cerca lista los reportes a 1 km`<br>`HU-09: /zona crea una zona suscrita` | Especificado (Fase 0) |
 | RF-15 | **HU-10** | Clasificación automática de reportes sospechosos | `classifier` | Por definir (Fase 10) | `HU-10: marca un reporte con indicios de spam`<br>`HU-10: crear un reporte no depende del clasificador` | Especificado (Fase 0) |
 | RF-16 | **HU-11** | Datos abiertos anonimizados | `open-data` | Por definir (Fase 10) | `HU-11: exporta sin usuarios ni puntos exactos`<br>`HU-11: declara la licencia de los datos` | Especificado (Fase 0) |
-| RF-08<br>RF-17 | **HU-12** | Moderación y auditoría de incidentes | `moderation`<br>`verification` | `RejectReport` | `HU-12: rechaza con motivo, audita y penaliza al autor`<br>`HU-12: deniega la acción sin rol MODERADOR` | Especificado (Fase 0) |
+| RF-08<br>RF-17 | **HU-12** | Moderación y auditoría de incidentes | `moderation`<br>`verification` | `RechazarReporte`<br>`AplicarRechazoDeModeracion`<br>`AjustarReputacionPorDesenlace` | `HU-12: rechaza con motivo, audita y penaliza al autor`<br>`HU-12: deniega la acción sin rol MODERADOR` | Casos de uso probados (Fase 5) |
 
 ---
 
@@ -88,13 +88,17 @@ Definidos en `packages/contracts/src/events.ts`. Un evento público puede difund
 
 | Evento | Audiencia | Emite | Escucha |
 | :--- | :--- | :--- | :--- |
-| `ReporteCreado.v1` | Pública | `reports` | `notifications`, clientes |
-| `ReporteConfirmado.v1` | Pública | `reports` | `verification`, `notifications`, clientes |
+| `ReporteCreado.v1` | Pública | `reports` | `subscriptions`, clientes |
+| `ReporteConfirmado.v1` | Pública | `reports` | `verification`, clientes |
+| `ReporteExtendido.v1` (Fase 5) | Pública | `reports` | clientes |
 | `ReporteResuelto.v1` | Pública | `reports` | `verification`, clientes |
 | `ReporteCaducado.v1` | Pública | `reports` | clientes |
 | `ReporteRechazado.v1` | Pública | `reports` | `verification`, clientes |
 | `ReporteDuplicadoDetectado.v1` | Interna | `reports` | `verification` |
 | `VotoEmitido.v1` | Interna | `verification` | `reports` |
+| `RechazoDeModeracion.v1` (Fase 5) | Interna | `moderation` | `reports` |
+
+En la Fase 5, `NotificarSuscriptores` quedó en `subscriptions` (dueño de las zonas) y solo escucha `ReporteCreado.v1`: la confirmación no vuelve a avisar (HU-08, escenario 3).
 
 ## 4. Fase 3: persistencia
 
@@ -158,3 +162,62 @@ Consultas espaciales sobre PostGIS, con sus índices y su medición con 100.000 
 | HU-06 | Mover la ventana no cambia las celdas ni sus conteos, así que no sirve para aislar un reporte | Cuadrícula fija para toda la ciudad (`cuadriculaPara`) y ventana ampliada a celdas enteras | `heatmap/tests/consulta-mapa-calor.integration.test.ts`, `consulta-de-calor.test.ts` |
 | Eficiencia | Cada consulta, también en su peor caso, usa un índice y su p95 es menor a 100 ms con 100.000 reportes | `pnpm seed:load` y `pnpm perf:espacial`, que falla si no se cumple | `docs/rendimiento/consultas-espaciales.md` |
 | ADR-003 | `heatmap` lee `reportes` sin importar código de `reports`, y un cambio de esquema en `reports` se detecta | Solo `SELECT` de columnas públicas; `dependency-cruiser` sin violaciones; prueba con las migraciones reales | `pnpm depcruise`, `apps/api/src/mapa-calor.integration.test.ts` |
+
+---
+
+## 6. Fase 5: casos de uso
+
+Cada caso de uso es una clase de `application/` con `ejecutar(entrada)`; cada manejador de eventos, una clase con `manejar(evento)`. Las pruebas usan dobles en memoria (`tests/dobles.ts` de cada módulo y `@gis/testing`: `RelojFijo`, `GeneradorDeIdSecuencial`, `LimitadorEnMemoria`). Los nombres de las pruebas llevan el ID de la historia.
+
+### 6.1 Escenarios de aceptación
+
+| Historia | Escenario | Caso de uso o manejador | Archivo de pruebas |
+| :--- | :--- | :--- | :--- |
+| HU-01 | 1. Creación dentro del área: `ACTIVO`, caducidad de la categoría y `ReporteCreado.v1` | `CrearReporte` | `reports/tests/crear-reporte.test.ts` |
+| HU-01 | 2. Deduplicación: el envío cuenta como confirmación del existente | `CrearReporte` → `ReporteDuplicadoDetectado.v1` → `RegistrarConfirmacionPorDuplicado` | `reports/tests/crear-reporte.test.ts`, `verification/tests/casos-de-uso.test.ts`, `apps/api/src/casos-de-uso.integration.test.ts` |
+| HU-01 | 3. Fuera de La Paz y El Alto se rechaza | `CrearReporte` | `reports/tests/crear-reporte.test.ts` |
+| HU-01 | 4. Duplicado del propio reporte: ni reporte nuevo ni voto | `CrearReporte` | `reports/tests/crear-reporte.test.ts` |
+| HU-01 | 5. Sexto reporte en 10 minutos: se indica cuánto esperar | `CrearReporte` con `LimitadorDeFrecuencia` | `reports/tests/crear-reporte.test.ts` |
+| HU-02 | 1. Solo `ACTIVO` y `CONFIRMADO` dentro de la ventana (y no vencidos) | `ListarReportesEnVentana` | `reports/tests/casos-de-uso.test.ts` |
+| HU-02 | 3. Robo en el centro de su celda de 200 m | `ListarReportesEnVentana`, `CrearReporte` | `reports/tests/casos-de-uso.test.ts`, `crear-reporte.test.ts` |
+| HU-02 | 4. Sin `location` ni `author_id` en la respuesta ni en el evento | `ListarReportesEnVentana`, `CrearReporte` | `reports/tests/casos-de-uso.test.ts`, `crear-reporte.test.ts` |
+| HU-03 | 1. La confirmación que llega a 3,0 con 2 votantes confirma y extiende 90 min | `ConfirmarReporte` → `VotoEmitido.v1` → `AplicarDecisionDeVerificacion` | `verification/tests/casos-de-uso.test.ts`, `reports/tests/casos-de-uso.test.ts`, `apps/api/src/casos-de-uso.integration.test.ts` |
+| HU-03 | 2. Las negaciones que llegan a 3,0 resuelven el reporte | `NegarReporte` → `AplicarDecisionDeVerificacion` | `verification/tests/casos-de-uso.test.ts`, `reports/tests/casos-de-uso.test.ts` |
+| HU-03 | 3. El autor no puede votar | `ConfirmarReporte` | `verification/tests/casos-de-uso.test.ts` |
+| HU-03 | 4. Un solo votante no basta | `ConfirmarReporte` | `verification/tests/casos-de-uso.test.ts` |
+| HU-03 | 5. Voto repetido | `ConfirmarReporte`, `NegarReporte` | `verification/tests/casos-de-uso.test.ts` |
+| HU-03 | 6. Votante a más de 1000 m | `ConfirmarReporte` | `verification/tests/casos-de-uso.test.ts` |
+| HU-03 | 7. Segunda extensión a 6,0 y ninguna más | `ConfirmarReporte` → `AplicarDecisionDeVerificacion` | `verification/tests/casos-de-uso.test.ts`, `reports/tests/casos-de-uso.test.ts` |
+| HU-04 | 1 a 3. Caduca a los 181 min, no a los 179; también un `CONFIRMADO` vencido | `CaducarReportes` | `reports/tests/casos-de-uso.test.ts` |
+| HU-05 | 3. El reenvío con la misma clave devuelve el resultado original, también si dos envíos llegan a la vez | `CrearReporte`, `UnidadDeTrabajoReportePg` | `reports/tests/crear-reporte.test.ts`, `reports/tests/persistence.integration.test.ts` |
+| HU-06 | 1 y 2. Celda con 2 reportes oculta; con 3, visible con su conteo | `ObtenerMapaDeCalor` | `heatmap/tests/obtener-mapa-de-calor.test.ts` |
+| HU-07 | 1 a 4. Alta con radio de 800 m, radio de 2500 m rechazado, límite de 5 zonas y baja | `SuscribirZona`, `EliminarZona` | `subscriptions/tests/casos-de-uso.test.ts` |
+| HU-08 | 1 a 4. Aviso dentro de zona y categoría, nada fuera, un solo aviso por reporte, nunca al autor | `NotificarSuscriptores` | `subscriptions/tests/casos-de-uso.test.ts`, `apps/api/src/casos-de-uso.integration.test.ts` |
+| HU-12 | 1. Rechazo con motivo: auditoría, `RECHAZADO`, `ReporteRechazado.v1` y −0,50 al autor | `RechazarReporte` → `RechazoDeModeracion.v1` → `AplicarRechazoDeModeracion` → `AjustarReputacionPorDesenlace` | `moderation/tests/rechazar-reporte.test.ts`, `reports/tests/casos-de-uso.test.ts`, `verification/tests/casos-de-uso.test.ts`, `apps/api/src/casos-de-uso.integration.test.ts` |
+| HU-12 | 2. Sin rol `MODERADOR` se deniega | `RechazarReporte` | `moderation/tests/rechazar-reporte.test.ts` |
+
+Quedan para otras fases: HU-02 escenario 2 (difusión por WebSocket, Fase 7), HU-05 escenarios 1 y 2 (cola local de la PWA, Fase 8), HU-09 (bot, Fase 9), HU-10 y HU-11 (Fase 10) y HU-12 escenario 3 (criterio del moderador, no automatizable).
+
+### 6.2 Otras reglas cubiertas por los casos de uso
+
+| Regla | Implementación | Archivo de pruebas |
+| :--- | :--- | :--- |
+| RF-01: un dispositivo obtiene un usuario anónimo y el mismo dispositivo lo recupera | `RegistrarDispositivo` | `identity/tests/registrar-dispositivo.test.ts` |
+| SRS 3.2.6: reputación por el desenlace real (+0,20 al autor, +0,05 a votos acertados, −0,50 por rechazo) | `AjustarReputacionPorDesenlace` | `verification/tests/casos-de-uso.test.ts`, `apps/api/src/casos-de-uso.integration.test.ts` |
+| SRS 3.2.7: el reporte de un silenciado se guarda `RECHAZADO` sin eventos ni aviso; su voto pesa 0; se recupera a los 30 días | `CrearReporte`, `ConfirmarReporte` | `reports/tests/crear-reporte.test.ts`, `verification/tests/casos-de-uso.test.ts` |
+| SRS 3.3: 30 votos cada 10 minutos por usuario | `VotarReporte` con `LimitadorDeFrecuencia` | `verification/tests/casos-de-uso.test.ts` |
+| Atomicidad: voto, reputación y evento se guardan juntos; auditoría y evento, también | `UnidadDeTrabajoVotoPg`, `UnidadDeTrabajoModeracionPg` | `verification/tests/persistence.integration.test.ts`, `moderation/tests/unidad-de-trabajo.integration.test.ts` |
+| Errores tipados que traducirán los adaptadores (404, 403, 409, 422, 429) | `ErrorDeAplicacion` y `aErrorDeAplicacion` en `shared-kernel` | `packages/shared-kernel/src/error-de-aplicacion.test.ts` |
+| ADR-001: los módulos solo se conocen por eventos y por puertos que conecta la raíz de composición | `apps/api/src/composicion/puentes.ts` | `apps/api/src/casos-de-uso.integration.test.ts`, `pnpm depcruise` |
+
+### 6.3 Puertos nuevos
+
+| Módulo | Puerto | Propósito | Adaptador |
+| :--- | :--- | :--- | :--- |
+| `shared-kernel` | `LimitadorDeFrecuencia` | Límite de operaciones por usuario y ventana | En memoria para pruebas; `@fastify/rate-limit` en la Fase 6 |
+| `shared-kernel` | `GeneradorDeId` | Identificadores (antes en `reports`) | Raíz de composición (Fase 6) |
+| `verification` | `UnidadDeTrabajoDeVoto` | Voto, reputación y evento en una transacción | `UnidadDeTrabajoVotoPg` |
+| `subscriptions` | `ConsultaDeAutor` | Autor de un reporte, para no avisarle | `consultaDeAutor` en `apps/api/src/composicion/puentes.ts` |
+| `subscriptions` | `EnviadorDeNotificaciones` | Canal de los avisos | Registro en log en la Fase 7; Web Push y Telegram en las Fases 8 y 9 |
+| `moderation` | `ConsultaDeReporte` | Estado de un reporte | `consultaParaModeracion` en `puentes.ts` |
+| `moderation` | `UnidadDeTrabajoDeModeracion` | Auditoría y evento en una transacción | `UnidadDeTrabajoModeracionPg` |

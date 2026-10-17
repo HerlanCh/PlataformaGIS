@@ -55,11 +55,6 @@ export interface RepositorioDeCategorias {
   buscarTodas(): Promise<readonly Categoria[]>;
 }
 
-/** Genera identificadores únicos (UUID). El dominio no los crea por sí mismo. */
-export interface GeneradorDeId {
-  siguiente(): string;
-}
-
 /**
  * Consulta de `reports` sobre el autor. La reputación es de `verification`; la raíz de
  * composición conecta este puerto con su interfaz pública (ADR-001).

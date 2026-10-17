@@ -1,3 +1,4 @@
+import type { EventoDeIntegracion } from '@gis/contracts';
 import { crearDb, migrarTodo, migracionesDePlataforma, revertirUltima } from '@gis/platform';
 import type { Db } from '@gis/platform';
 import { idReporte } from '@gis/shared-kernel';
@@ -6,6 +7,7 @@ import type { TestDatabase } from '@gis/testing';
 import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { RepositorioReputacionesPg } from '../adapters/reputation-repository.js';
+import { UnidadDeTrabajoVotoPg } from '../adapters/unidad-de-trabajo-voto.js';
 import { RepositorioVotosPg } from '../adapters/vote-repository.js';
 import { ErrorYaVoto } from '../domain/errors.js';
 import { Reputacion } from '../domain/reputation.js';
@@ -33,6 +35,11 @@ describeIntegration('persistencia de verification', () => {
   afterAll(async () => {
     await base?.close();
   });
+
+  const contarSalida = async (): Promise<number> => {
+    const { rows } = await db.execute(sql`select count(*)::int as total from eventos_salida`);
+    return Number(rows[0]?.total);
+  };
 
   it('HU-03: guarda los votos de un reporte y los recupera sin pérdida', async () => {
     await votos.guardar(voto(1, 'CONFIRMACION', 1.25));
@@ -129,6 +136,55 @@ describeIntegration('persistencia de verification', () => {
     expect((await reputaciones.buscarPorUsuario(usuario(5)))?.estaSilenciado).toBe(true);
     expect((await reputaciones.buscarPorUsuario(usuario(6)))?.puntaje).toBe(5);
   });
+
+  it('HU-03: la unidad de trabajo guarda el voto, la reputación del votante y el evento juntos', async () => {
+    const votante = Reputacion.inicial(usuario(20));
+    const salidaAntes = await contarSalida();
+
+    await new UnidadDeTrabajoVotoPg(db).registrarVoto(voto(20, 'CONFIRMACION'), votante, [
+      eventoDePrueba('cccccccc-cccc-4ccc-8ccc-000000000001'),
+    ]);
+
+    expect(await votos.existe(ID_REPORTE, usuario(20))).toBe(true);
+    expect((await reputaciones.buscarPorUsuario(usuario(20)))?.puntaje).toBe(1);
+    expect(await contarSalida()).toBe(salidaAntes + 1);
+  });
+
+  it('atomicidad: si el voto ya existe, ni la reputación ni el evento se guardan', async () => {
+    const votante = Reputacion.restaurar({
+      idUsuario: usuario(20),
+      puntaje: 3,
+      ultimaPenalizacionEn: null,
+    });
+    const salidaAntes = await contarSalida();
+
+    await expect(
+      new UnidadDeTrabajoVotoPg(db).registrarVoto(voto(20, 'NEGACION'), votante, [
+        eventoDePrueba('cccccccc-cccc-4ccc-8ccc-000000000002'),
+      ]),
+    ).rejects.toThrow(ErrorYaVoto);
+
+    expect((await reputaciones.buscarPorUsuario(usuario(20)))?.puntaje).toBe(1);
+    expect(await contarSalida()).toBe(salidaAntes);
+  });
+
+  it('la unidad de trabajo guarda varias reputaciones en una transacción', async () => {
+    await new UnidadDeTrabajoVotoPg(db).guardarReputaciones([
+      Reputacion.restaurar({ idUsuario: usuario(21), puntaje: 1.2, ultimaPenalizacionEn: null }),
+      Reputacion.restaurar({ idUsuario: usuario(22), puntaje: 1.05, ultimaPenalizacionEn: null }),
+    ]);
+
+    expect((await reputaciones.buscarPorUsuario(usuario(21)))?.puntaje).toBe(1.2);
+    expect((await reputaciones.buscarPorUsuario(usuario(22)))?.puntaje).toBe(1.05);
+  });
+});
+
+const eventoDePrueba = (id: string): EventoDeIntegracion => ({
+  id,
+  tipo: 'VotoEmitido',
+  version: 1,
+  ocurridoEn: ahora.toISOString(),
+  contenido: {},
 });
 
 describeIntegration('migraciones de verification', () => {

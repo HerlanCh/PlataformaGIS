@@ -16,3 +16,20 @@ export const subscriptionsModulo: DefinicionDeModulo = {
 // Interfaz pública para la raíz de composición: adaptador y puerto.
 export { RepositorioSuscripcionesPg } from './adapters/subscription-repository.js';
 export type { RepositorioDeSuscripciones } from './domain/ports.js';
+
+// Casos de uso y manejador de eventos (Fase 5).
+export { EliminarZona } from './application/eliminar-zona.js';
+export type { EntradaEliminarZona } from './application/eliminar-zona.js';
+export { NotificarSuscriptores } from './application/notificar-suscriptores.js';
+export type { DependenciasNotificarSuscriptores } from './application/notificar-suscriptores.js';
+export type {
+  AvisoDeReporte,
+  ConsultaDeAutor,
+  EnviadorDeNotificaciones,
+} from './application/ports.js';
+export { MAX_ZONAS_POR_USUARIO, SuscribirZona } from './application/suscribir-zona.js';
+export type {
+  DependenciasSuscribirZona,
+  EntradaSuscribirZona,
+} from './application/suscribir-zona.js';
+export type { ZonaSuscrita } from './domain/zone-subscription.js';

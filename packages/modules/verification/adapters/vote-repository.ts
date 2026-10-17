@@ -1,3 +1,4 @@
+import { esClaveDuplicada } from '@gis/platform';
 import type { Ejecutor } from '@gis/platform';
 import { idReporte, idUsuario } from '@gis/shared-kernel';
 import type { IdReporte, IdUsuario } from '@gis/shared-kernel';
@@ -9,16 +10,6 @@ import type { ValorVoto } from '../domain/vote.js';
 import { votos } from './schema.js';
 
 type Fila = typeof votos.$inferSelect;
-
-/** Código de PostgreSQL para una violación de clave única o primaria. */
-const CLAVE_DUPLICADA = '23505';
-
-const esClaveDuplicada = (error: unknown): boolean => {
-  const causa = error instanceof Error ? error.cause : undefined;
-  return [error, causa].some(
-    (e) => (e as { code?: unknown } | undefined)?.code === CLAVE_DUPLICADA,
-  );
-};
 
 /** Mapeo explícito fila → entidad: el dominio nunca ve tipos de Drizzle. */
 const aEntidad = (fila: Fila): Voto =>

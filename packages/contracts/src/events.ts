@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { definirEvento } from './integration-event.js';
 import type { DefinicionDeEvento } from './integration-event.js';
 
-const esquemaPuntoGeo = z.object({ latitud: z.number(), longitud: z.number() });
-const esquemaCodigoCategoria = z.string().regex(/^[a-z][a-z0-9_]*$/);
+export const esquemaPuntoGeo = z.object({ latitud: z.number(), longitud: z.number() });
+export const esquemaCodigoCategoria = z.string().regex(/^[a-z][a-z0-9_]*$/);
 
 /** Estados de un reporte (máquina de estados del módulo `reports`). */
 export const esquemaEstadoReporte = z.enum([
@@ -40,6 +40,14 @@ export const reporteCreadoV1 = definirEvento(
 
 export const reporteConfirmadoV1 = definirEvento(
   'ReporteConfirmado',
+  1,
+  'publico',
+  z.object({ idReporte: z.uuid(), caducaEn: z.iso.datetime() }),
+);
+
+/** Segunda extensión de vigencia de un reporte `CONFIRMADO` (SRS 3.2.4). */
+export const reporteExtendidoV1 = definirEvento(
+  'ReporteExtendido',
   1,
   'publico',
   z.object({ idReporte: z.uuid(), caducaEn: z.iso.datetime() }),
@@ -93,13 +101,23 @@ export const votoEmitidoV1 = definirEvento(
   }),
 );
 
+/** Un moderador rechazó un reporte; `reports` aplica el cambio de estado (HU-12). */
+export const rechazoDeModeracionV1 = definirEvento(
+  'RechazoDeModeracion',
+  1,
+  'interno',
+  z.object({ idReporte: z.uuid(), idModerador: z.uuid() }),
+);
+
 /** Catálogo de eventos de integración publicados. */
 export const eventosDeIntegracion: readonly DefinicionDeEvento[] = [
   reporteCreadoV1,
   reporteConfirmadoV1,
+  reporteExtendidoV1,
   reporteResueltoV1,
   reporteCaducadoV1,
   reporteRechazadoV1,
   reporteDuplicadoDetectadoV1,
   votoEmitidoV1,
+  rechazoDeModeracionV1,
 ];

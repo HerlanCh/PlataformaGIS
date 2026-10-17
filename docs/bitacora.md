@@ -296,3 +296,48 @@ Con 100.000 reportes y 5.000 zonas en el PostGIS local (PostgreSQL 18.6, PostGIS
 - Un mapa de calor de toda la ciudad con un rango de fechas que abarque casi toda la historia recorrerá la tabla completa: ningún índice lo evita y es el plan correcto. El caso de uso de la Fase 5 debe acotar el rango.
 - La medición es de un solo cliente; la prueba de carga con k6 es de una fase posterior.
 - Los casos de uso que llaman a estas consultas (`CreateReport`, `ExpireReports`, `GetHeatmap`, `NotifySubscribers`) son de la Fase 5.
+
+## [2026-10-14] — Fase 5: casos de uso
+
+### Qué se hizo
+- **Casos de uso** en `application/` de cada módulo, cada uno una clase con `ejecutar(entrada)`, entrada validada con Zod y puertos por constructor:
+  - `identity`: `RegistrarDispositivo`.
+  - `reports`: `CrearReporte`, `ListarReportesEnVentana` y `CaducarReportes`.
+  - `verification`: `ConfirmarReporte` y `NegarReporte`.
+  - `subscriptions`: `SuscribirZona` y `EliminarZona`.
+  - `heatmap`: `ObtenerMapaDeCalor`.
+  - `moderation`: `RechazarReporte`.
+- **Manejadores de eventos** (`manejar(evento)`), que es como se encadenan los módulos:
+  - `RegistrarConfirmacionPorDuplicado`, `AplicarDecisionDeVerificacion`, `AplicarRechazoDeModeracion` y `AjustarReputacionPorDesenlace`;
+  - `NotificarSuscriptores`, que solo escucha `ReporteCreado`.
+- **Piezas comunes:**
+  - `shared-kernel`: errores de aplicación tipados (`ErrorDeAplicacion` y sus cinco subclases, con `aErrorDeAplicacion` para traducir errores de dominio) y los puertos `LimitadorDeFrecuencia` y `GeneradorDeId`, que antes estaba en `reports`.
+  - `contracts`: `crearEvento`, `leerContenido` y `validarEntrada`.
+  - `platform`: `esClaveDuplicada`.
+  - `testing`: los dobles `RelojFijo`, `GeneradorDeIdSecuencial` y `LimitadorEnMemoria`.
+- **Eventos nuevos:** `ReporteExtendido.v1`, que es público (el agregado ya lo producía y faltaba en el contrato), y `RechazoDeModeracion.v1`, que es interno.
+- **Adaptadores nuevos:**
+  - `UnidadDeTrabajoVotoPg` y `UnidadDeTrabajoModeracionPg`.
+  - `UnidadDeTrabajoReportePg` ahora también registra eventos sin reporte y traduce la clave de idempotencia repetida a un conflicto.
+  - `moderation` estrena su dominio: `AccionDeModeracion`.
+- **Raíz de composición:** `apps/api/src/composicion/puentes.ts` conecta los puertos entre módulos (`ConsultaDeReporte`, `ConsultaDeAutor`, `ReputacionDelAutor`). `apps/api/src/casos-de-uso.integration.test.ts` encadena los módulos reales sobre PostGIS con un despachador mínimo del outbox.
+
+### Decisiones y cambios respecto al roadmap
+1. **Nombres en español:** `ejecutar(entrada)` en lugar de `execute(input)`, y los casos de uso con nombres en español (`CrearReporte`, `CaducarReportes`, etc.). El roadmap de la Fase 5 quedó actualizado; las fases siguientes se renombrarán al planificarlas.
+2. **`NotificarSuscriptores` solo reacciona a `ReporteCreado`**, por decisión del autor: el roadmap decía "o `ReporteConfirmado`", pero HU-08 exige un solo aviso por reporte y `ReporteConfirmado.v1` no trae categoría ni ubicación. Vive en `subscriptions`, dueño de las zonas, y busca con la ubicación pública, la única que viaja en el evento.
+3. **La reputación se ajusta con el desenlace, no con la decisión.** `AjustarReputacionPorDesenlace` escucha `ReporteConfirmado`, `ReporteResuelto` y `ReporteRechazado`: si `reports` no llega a aplicar una decisión, porque el reporte caducó entre medio, nadie gana ni pierde reputación.
+4. **El rechazo de un moderador viaja por evento.** `RechazarReporte` vive en `moderation`, que es un módulo opcional con su interruptor, guarda la auditoría y emite `RechazoDeModeracion.v1`; `reports` aplica el cambio de estado. El rol del actor llega en la entrada, desde la credencial de la Fase 6.
+5. **Idempotencia antes que el límite:** un reenvío con la misma clave devuelve el resultado original sin consumir cupo. Si dos envíos llegan a la vez, la restricción única decide y el perdedor devuelve el reporte ganador. Una clave usada por otro usuario es un conflicto.
+6. **Autor silenciado (SRS 3.2.7):** su reporte se guarda `RECHAZADO` sin ningún evento, y la respuesta, incluso al reenviarlo, se lo muestra `ACTIVO`: no recibe aviso.
+7. **Mapa de calor acotado a 90 días** por consulta, tal como pedía la nota de la Fase 4, con celda de 250 m por defecto.
+8. **Errores de aplicación en `shared-kernel`:** son tipos sin dependencias que usan todos los módulos. Zod queda fuera, en `contracts`, que ya dependía de él.
+9. **Los manejadores son idempotentes ante una transición imposible o un voto repetido**, porque el despachador de la Fase 7 entregará cada evento al menos una vez.
+
+### Verificación
+`pnpm lint`, `pnpm typecheck`, `pnpm depcruise` (sin violaciones), `pnpm duplication` (0,54 %) y `pnpm test` en verde: 95 archivos y 953 pruebas, con Docker. La cobertura global es de 99,5 % y la de cada carpeta `application/`, de 98 % o más.
+
+### Pendiente para fases siguientes
+- **`AjustarReputacionPorDesenlace` no es idempotente.** Si el despachador de la Fase 7 entrega dos veces el mismo `ReporteConfirmado`, el premio se aplica dos veces. Hace falta registrar los eventos ya procesados (una bandeja de entrada por manejador) al implementar la entrega "al menos una vez".
+- **Límite de zonas por usuario:** se comprueba leyendo y luego guardando, así que dos altas simultáneas podrían dejar 6 zonas. Es aceptable para el piloto; si importa, se resuelve con un bloqueo o un conteo en la base.
+- **Adaptadores pendientes:** el `LimitadorDeFrecuencia` real (`@fastify/rate-limit`, Fase 6) y el `EnviadorDeNotificaciones` de log (Fase 7). Los manejadores se registran en el bus con el despachador de la Fase 7.
+- `buscarCercanos` sigue sin consumidor: lo usará `/cerca` del bot (Fase 9).

@@ -229,6 +229,59 @@ describeIntegration('persistencia de reports', () => {
     expect(await reportes.buscarPorId(reporte.id)).toBeNull();
     expect(await contar('eventos_salida')).toBe(antes);
   });
+
+  it('HU-05: la unidad de trabajo traduce una clave de idempotencia repetida a un conflicto', async () => {
+    const original = nuevoReporte();
+    const unidad = new UnidadDeTrabajoReportePg(db);
+    await unidad.confirmar(original, []);
+    const repetido = Reporte.crear({
+      id: idReporte('bbbbbbbb-bbbb-4bbb-8bbb-000000000002'),
+      categoria: categoria('accidente'),
+      authorId: autor,
+      location: plazaMurillo,
+      idempotencyKey: original.idempotencyKey,
+      ahora: creado,
+    });
+
+    await expect(unidad.confirmar(repetido, [])).rejects.toMatchObject({
+      tipo: 'CONFLICTO',
+      codigo: 'CLAVE_DE_IDEMPOTENCIA_REPETIDA',
+    });
+  });
+
+  it('HU-05: dos envíos simultáneos del mismo reporte dejan uno solo', async () => {
+    const clave = 'simultaneo-0001';
+    const envio = (sufijo: string) =>
+      Reporte.crear({
+        id: idReporte(`dddddddd-dddd-4ddd-8ddd-${sufijo}`),
+        categoria: categoria('accidente'),
+        authorId: autor,
+        location: plazaMurillo,
+        idempotencyKey: clave,
+        ahora: creado,
+      });
+    const unidad = new UnidadDeTrabajoReportePg(db);
+
+    const resultados = await Promise.allSettled([
+      unidad.confirmar(envio('000000000001'), []),
+      unidad.confirmar(envio('000000000002'), []),
+    ]);
+
+    expect(resultados.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    expect(resultados.find((r) => r.status === 'rejected')).toMatchObject({
+      reason: { codigo: 'CLAVE_DE_IDEMPOTENCIA_REPETIDA' },
+    });
+  });
+
+  it('la unidad de trabajo guarda eventos sin reporte (un duplicado)', async () => {
+    const antes = await contar('eventos_salida');
+
+    await new UnidadDeTrabajoReportePg(db).registrarEventos([
+      evento('cccccccc-cccc-4ccc-8ccc-000000000003'),
+    ]);
+
+    expect(await contar('eventos_salida')).toBe(antes + 1);
+  });
 });
 
 describeIntegration('migraciones de reports', () => {

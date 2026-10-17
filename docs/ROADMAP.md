@@ -317,32 +317,32 @@ Resultado: todas las consultas espaciales implementadas, indexadas y medidas con
 
 Resultado: la lógica completa de la aplicación en la carpeta `application/` de cada módulo, ejecutable sin HTTP ni WebSocket. Desde aquí, API, bot y web solo llaman a estos casos de uso a través del `index.ts` público de cada módulo. Las reacciones entre módulos (votar → confirmar reporte → notificar) se implementan como manejadores de eventos, nunca como llamadas directas.
 
-**Codificación** (cada caso de uso: una clase con un método `execute(input)`, entrada validada con Zod, dependencias inyectadas por constructor como puertos)
+**Codificación** (cada caso de uso: una clase con un método `ejecutar(entrada)`, entrada validada con Zod, dependencias inyectadas por constructor como puertos; cada manejador de eventos, una clase con `manejar(evento)`)
 
-1. `RegisterDevice`: crea o recupera un usuario anónimo a partir del hash del dispositivo.
-2. `CreateReport`: valida la categoría y el `PuntoGeo` → consulta `buscarDuplicado` → si hay duplicado, no crea el reporte y emite `ReporteDuplicadoDetectado`, que `verification` registra como confirmación; si no, crea el agregado, aplica `PoliticaDePrivacidad` y `PoliticaDeCaducidad`, y guarda reporte y evento en una transacción. Idempotente por `idempotency_key`.
-3. `ConfirmReport` y `DenyReport` ("¿Sigue ahí?"): registran el voto ponderado, aplican `PoliticaDeVerificacion` y `PoliticaDeReputacion`, y emiten el evento correspondiente.
-4. `ListReportsInViewport`: devuelve reportes activos y confirmados del área visible.
-5. `GetHeatmap`: devuelve celdas agregadas para un rango de fechas.
-6. `SubscribeZone` y `UnsubscribeZone`: con límite de zonas por usuario.
-7. `ExpireReports`: procesa en lotes los reportes vencidos y emite `ReporteCaducado`.
-8. `NotifySubscribers`: ante `ReporteCreado` o `ReporteConfirmado`, busca suscriptores con `buscarSuscriptores` y envía por `NotificationSender`.
-9. `RejectReport` (moderador): cambia el estado, registra la acción y ajusta la reputación.
-10. Puerto `RateLimiter` y su uso en `CreateReport` y en los votos (límite por usuario y por ventana de tiempo).
-11. Errores de aplicación tipados (`NotFound`, `Forbidden`, `Conflict`, `ValidationFailed`, `RateLimited`) que los adaptadores traducen a su protocolo.
+1. `RegistrarDispositivo` (`identity`): crea o recupera un usuario anónimo a partir del hash del dispositivo.
+2. `CrearReporte` (`reports`): valida la categoría y el `PuntoGeo` → consulta `buscarDuplicado` → si hay duplicado de otro usuario, no crea el reporte y emite `ReporteDuplicadoDetectado`, que `verification` registra como confirmación (`RegistrarConfirmacionPorDuplicado`); si no, crea el agregado, aplica `PoliticaDePrivacidad` y `PoliticaDeCaducidad`, y guarda reporte y evento en una transacción. Idempotente por `idempotency_key`.
+3. `ConfirmarReporte` y `NegarReporte` (`verification`, "¿Sigue ahí?"): registran el voto ponderado, aplican `PoliticaDeVerificacion` y emiten `VotoEmitido`; `AplicarDecisionDeVerificacion` (`reports`) aplica la decisión y `AjustarReputacionPorDesenlace` (`verification`) aplica `PoliticaDeReputacion` según el desenlace.
+4. `ListarReportesEnVentana` (`reports`): devuelve reportes activos y confirmados del área visible.
+5. `ObtenerMapaDeCalor` (`heatmap`): devuelve celdas agregadas para un rango de fechas de hasta 90 días.
+6. `SuscribirZona` y `EliminarZona` (`subscriptions`): con límite de zonas por usuario.
+7. `CaducarReportes` (`reports`): procesa en lotes los reportes vencidos y emite `ReporteCaducado`.
+8. `NotificarSuscriptores` (`subscriptions`): ante `ReporteCreado`, busca suscriptores con `buscarSuscriptores` y envía por `EnviadorDeNotificaciones`. No reacciona a `ReporteConfirmado`: cada reporte se avisa una sola vez (HU-08, escenario 3).
+9. `RechazarReporte` (`moderation`, moderador): registra la acción y emite `RechazoDeModeracion`; `AplicarRechazoDeModeracion` (`reports`) cambia el estado y `AjustarReputacionPorDesenlace` ajusta la reputación.
+10. Puerto `LimitadorDeFrecuencia` y su uso en `CrearReporte` y en los votos (límite por usuario y por ventana de tiempo).
+11. Errores de aplicación tipados (`ErrorNoEncontrado`, `ErrorProhibido`, `ErrorConflicto`, `ErrorValidacionFallida`, `ErrorLimiteExcedido`) que los adaptadores traducen a su protocolo.
 
 **Pruebas**
 
-1. Pruebas de cada caso de uso con adaptadores falsos en memoria (repositorios, reloj controlable, publicador que registra eventos).
+1. Pruebas de cada caso de uso con adaptadores falsos en memoria (repositorios, reloj controlable, unidades de trabajo que registran eventos).
 2. Escenarios de aceptación de la Fase 0 escritos como pruebas de casos de uso, con el ID de la historia en el nombre.
-3. Prueba de idempotencia: enviar el mismo `CreateReport` dos veces produce un solo reporte.
+3. Prueba de idempotencia: enviar el mismo `CrearReporte` dos veces produce un solo reporte.
 4. Prueba de deduplicación: dos reportes del mismo tipo a 20 m generan un reporte con una confirmación.
 
 **Criterio de salida**
 
-- [ ] Cobertura de aplicación ≥ 85 %
-- [ ] Todas las historias Imprescindibles pasan como pruebas de casos de uso
-- [ ] Matriz de trazabilidad actualizada hasta el nivel de prueba
+- [x] Cobertura de aplicación ≥ 85 %
+- [x] Todas las historias Imprescindibles pasan como pruebas de casos de uso
+- [x] Matriz de trazabilidad actualizada hasta el nivel de prueba
 
 ## Fase 6: API REST y seguridad
 
