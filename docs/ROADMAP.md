@@ -377,8 +377,8 @@ Resultado: el adaptador HTTP en `apps/api` expone los casos de uso con contrato 
 **Criterio de salida**
 
 - [x] OpenAPI publicado y cliente generado
-- [ ] 0 hallazgos altos en ZAP
-- [ ] p95 < 300 ms en staging con carga básica de k6
+- [x] 0 hallazgos altos en ZAP
+- [x] p95 < 300 ms en staging con carga básica de k6
 
 ## Fase 7: Tiempo real y fiabilidad de eventos
 
