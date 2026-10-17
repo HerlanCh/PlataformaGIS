@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.2.0...v2.3.0) (2026-10-17)
+
+
+### Features
+
+* API REST /v1 con OpenAPI, JWT y protecciones (Fase 6) ([1387dc6](https://github.com/HerlanCh/PlataformaGIS/commit/1387dc6ceeffe8fe9d83b2e38ff1c38c233b00b4))
+
 # [2.2.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.1.0...v2.2.0) (2026-10-17)
 
 
