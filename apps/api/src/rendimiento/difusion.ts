@@ -2,6 +2,7 @@
 // Conecta CLIENTES sockets repartidos en ZONAS de la ciudad, crea reportes por HTTP y mide el
 // tiempo entre el envío del POST y la llegada del evento a los clientes de su zona. Comprueba que
 // ningún cliente de otra zona lo reciba. Variables: BASE_URL, CLIENTES, REPORTES.
+import { randomInt } from 'node:crypto';
 import type { EventoDeIntegracion } from '@gis/contracts';
 import { io as conectar } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
@@ -17,6 +18,8 @@ const PAUSA_ENTRE_REPORTES_MS = 3000;
 const ESPERA_FINAL_MS = 5000;
 
 const dormir = (ms: number) => new Promise((listo) => setTimeout(listo, ms));
+/** Desplazamiento al azar de hasta ±0,003° (unos ±330 m). */
+const desvio = () => (randomInt(-3000, 3001) / 1000) * 0.001;
 
 /** Zonas separadas unos 3 km, en celdas distintas: cada una tiene su propio público. */
 const zonas = Array.from({ length: ZONAS }, (_, i) => ({
@@ -94,8 +97,8 @@ async function crearReporte(zona: number, token: string, r: number) {
   for (let intento = 0; intento < 5; intento += 1) {
     const centro = zonas[zona]!;
     const punto = {
-      latitud: centro.latitud + (Math.random() - 0.5) * 0.006,
-      longitud: centro.longitud + (Math.random() - 0.5) * 0.006,
+      latitud: centro.latitud + desvio(),
+      longitud: centro.longitud + desvio(),
     };
     const en = performance.now();
     const { resultado, reporte } = await pedir<{ resultado: string; reporte: { id: string } }>(
