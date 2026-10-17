@@ -10,8 +10,25 @@ import type {
 } from '@gis/platform';
 import Fastify from 'fastify';
 import type { FastifyBaseLogger, FastifyInstance } from 'fastify';
+import type { CasosDeUso } from './composicion/casos-de-uso.js';
+import { registrarErrores } from './http/errores.js';
+import { registrarOpenApi } from './http/openapi.js';
+import { rutasV1 } from './http/rutas/v1.js';
+import { registrarSeguridad } from './http/seguridad.js';
+import type { ServicioDeTokens } from './http/tokens.js';
 
 const CABECERA_CORRELACION = 'x-request-id';
+
+/** Tamaño máximo del cuerpo de una solicitud: los reportes y votos son pequeños. */
+const LIMITE_DE_CUERPO = 16 * 1024;
+
+/** Lo que necesita la API REST `/v1`. */
+export interface DependenciasApi {
+  readonly casos: CasosDeUso;
+  readonly tokens: ServicioDeTokens;
+  /** Solicitudes por minuto y por IP. */
+  readonly limitePorMinuto: number;
+}
 
 export interface DependenciasApp {
   readonly config: ConfigApp;
@@ -20,6 +37,7 @@ export interface DependenciasApp {
   readonly db: Consultable;
   readonly bus: BusDeEventos;
   readonly modulos: readonly DefinicionDeModulo[];
+  readonly api: DependenciasApi;
 }
 
 /**
@@ -34,6 +52,7 @@ export async function construirApp(dependencias: DependenciasApp): Promise<Fasti
     db,
     bus,
     modulos: modules,
+    api,
   } = dependencias;
 
   // Se tipa con la interfaz de Fastify para que los módulos reciban un FastifyInstance estándar.
@@ -43,13 +62,21 @@ export async function construirApp(dependencias: DependenciasApp): Promise<Fasti
     // ID de correlación: se respeta el que envía el cliente o se genera uno.
     requestIdHeader: CABECERA_CORRELACION,
     genReqId: () => randomUUID(),
+    bodyLimit: LIMITE_DE_CUERPO,
   });
+
+  await registrarOpenApi(app);
+  await registrarSeguridad(app, {
+    origenCors: config.origenCors,
+    limitePorMinuto: api.limitePorMinuto,
+  });
+  registrarErrores(app);
 
   app.addHook('onSend', async (request, reply) => {
     reply.header(CABECERA_CORRELACION, request.id);
   });
 
-  app.get('/health', async (request, reply) => {
+  app.get('/health', { schema: { hide: true } }, async (request, reply) => {
     const database = await verificarBaseDeDatos(db);
     if (!database.ok) request.log.error({ err: database.error }, 'base de datos no disponible');
 
@@ -69,5 +96,6 @@ export async function construirApp(dependencias: DependenciasApp): Promise<Fasti
     logger.info({ modulo: modulo.nombre }, 'módulo registrado');
   }
 
+  await app.register(rutasV1({ casos: api.casos, tokens: api.tokens }), { prefix: '/v1' });
   return app;
 }

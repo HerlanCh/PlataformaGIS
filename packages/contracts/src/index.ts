@@ -24,3 +24,4 @@ export type {
   DefinicionDeEvento,
   EventoDeIntegracion,
 } from './integration-event.js';
+export * as http from './http.js';

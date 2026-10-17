@@ -1,0 +1,54 @@
+name: ZAP
+
+# Escaneo OWASP ZAP en modo baseline (pasivo) contra la API de staging (roadmap 6, RNF-13).
+# Corre después de cada versión publicada, cuando Render ya desplegó `main`, y a pedido.
+on:
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  STAGING: https://plataforma-gis-api.onrender.com
+
+jobs:
+  zap:
+    name: OWASP ZAP baseline
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - name: Esperar a que staging sirva el último commit de main
+        run: |
+          esperado=$(git rev-parse HEAD)
+          for intento in $(seq 1 60); do
+            version=$(curl -fsS "$STAGING/health" | jq -r '.version' || true)
+            if [ "$version" = "$esperado" ]; then echo "staging en $version"; exit 0; fi
+            echo "staging en '${version}', se espera ${esperado} (intento ${intento})"
+            sleep 20
+          done
+          echo "::error::staging no desplegó ${esperado} a tiempo"
+          exit 1
+
+      - name: Escaneo baseline
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: ${{ env.STAGING }}/docs
+          # El resultado se evalúa en el paso siguiente: solo un hallazgo alto hace fallar la compuerta.
+          fail_action: false
+          allow_issue_writing: false
+          cmd_options: '-a -j'
+
+      - name: Compuerta — 0 hallazgos altos
+        run: |
+          altos=$(jq '[.site[].alerts[] | select(.riskcode == "3")] | length' report_json.json)
+          jq -r '.site[].alerts[] | "\(.riskdesc)\t\(.alert)"' report_json.json | sort | uniq
+          echo "Hallazgos altos: ${altos}"
+          test "$altos" -eq 0

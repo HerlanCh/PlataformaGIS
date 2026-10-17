@@ -350,21 +350,21 @@ Resultado: el adaptador HTTP en `apps/api` expone los casos de uso con contrato 
 
 **Codificación**
 
-1. Raíz de composición (`apps/api/src/main.ts`): único lugar donde se instancian adaptadores y se inyectan en los casos de uso.
+1. Raíz de composición (`apps/api/src/composicion/casos-de-uso.ts`, llamada desde `main.ts`): único lugar donde se instancian adaptadores y se inyectan en los casos de uso.
 2. Rutas versionadas `/v1`, cada una delgada (valida, llama al caso de uso, traduce el resultado):
-   1. `POST /v1/devices` → `RegisterDevice` (devuelve un JWT firmado del dispositivo).
-   2. `POST /v1/reports` (cabecera `Idempotency-Key` obligatoria) → `CreateReport`.
-   3. `GET /v1/reports?bbox=&categories=` → `ListReportsInViewport`.
-   4. `POST /v1/reports/:id/confirm` y `/deny` → votos.
-   5. `GET /v1/heatmap?bbox=&from=&to=` → `GetHeatmap`.
-   6. `POST` y `DELETE /v1/subscriptions` → zonas suscritas.
-   7. `POST /v1/moderation/reports/:id/reject` (rol `MODERADOR`).
+   1. `POST /v1/dispositivos` → `RegistrarDispositivo` (devuelve un JWT firmado del dispositivo).
+   2. `POST /v1/reportes` (cabecera `Idempotency-Key` obligatoria) → `CrearReporte`.
+   3. `GET /v1/reportes?bbox=&categorias=` → `ListarReportesEnVentana`.
+   4. `POST /v1/reportes/:id/confirmar` y `/negar` → votos.
+   5. `GET /v1/mapa-calor?bbox=&desde=&hasta=` → `ObtenerMapaDeCalor`.
+   6. `POST /v1/suscripciones` y `DELETE /v1/suscripciones/:id` → zonas suscritas.
+   7. `POST /v1/moderacion/reportes/:id/rechazar` (rol `MODERADOR`).
 3. Generar el documento OpenAPI desde los esquemas Zod de `packages/contracts` y publicarlo con Swagger UI en `/docs`.
 4. Errores en formato RFC 7807 (`application/problem+json`) mapeados desde los errores de aplicación.
-5. Seguridad: `@fastify/helmet`, CORS restringido al dominio de la PWA, `@fastify/rate-limit` como adaptador de `RateLimiter`, límite de tamaño de cuerpo, JWT con expiración y rotación.
-6. Nunca devolver `location` real ni `author_id` en respuestas públicas: solo `public_location`. Prueba específica para esto.
+5. Seguridad: `@fastify/helmet`, CORS restringido al dominio de la PWA, `@fastify/rate-limit` por IP, `LimitadorDeFrecuencia` por usuario, límite de tamaño de cuerpo, JWT con expiración y rotación de clave.
+6. Nunca devolver `location` real ni `author_id` en respuestas públicas: solo `publicLocation`. Prueba específica para esto.
 7. Apagado ordenado: al recibir `SIGTERM`, dejar de aceptar conexiones y cerrar el pool de la base de datos.
-8. Generar el cliente TypeScript tipado desde OpenAPI para que lo usen la web y el bot.
+8. Generar el cliente TypeScript tipado desde OpenAPI (`@gis/api-client`) para que lo usen la web y el bot.
 
 **Pruebas**
 
@@ -376,7 +376,7 @@ Resultado: el adaptador HTTP en `apps/api` expone los casos de uso con contrato 
 
 **Criterio de salida**
 
-- [ ] OpenAPI publicado y cliente generado
+- [x] OpenAPI publicado y cliente generado
 - [ ] 0 hallazgos altos en ZAP
 - [ ] p95 < 300 ms en staging con carga básica de k6
 

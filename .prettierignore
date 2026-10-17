@@ -8,3 +8,4 @@ CLAUDE.md
 *.hbs
 .mcp.json
 **/migrations/meta
+packages/api-client/openapi.json

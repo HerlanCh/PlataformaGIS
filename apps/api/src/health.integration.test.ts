@@ -7,6 +7,7 @@ import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { construirApp } from './app.js';
+import { apiDePrueba } from './tests/apoyo.js';
 
 // En la CI Docker es obligatorio. En local, sin Docker, la prueba se omite con aviso.
 const hayDocker = spawnSync('docker', ['info'], { stdio: 'ignore' }).status === 0;
@@ -38,6 +39,7 @@ describe.skipIf(!ejecutar)('GET /health contra PostGIS real', () => {
       db,
       bus: new BusDeEventosEnMemoria(),
       modulos: [],
+      api: apiDePrueba(),
     });
 
   it('informa la base de datos arriba', async () => {

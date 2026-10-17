@@ -221,3 +221,38 @@ Quedan para otras fases: HU-02 escenario 2 (difusión por WebSocket, Fase 7), HU
 | `subscriptions` | `EnviadorDeNotificaciones` | Canal de los avisos | Registro en log en la Fase 7; Web Push y Telegram en las Fases 8 y 9 |
 | `moderation` | `ConsultaDeReporte` | Estado de un reporte | `consultaParaModeracion` en `puentes.ts` |
 | `moderation` | `UnidadDeTrabajoDeModeracion` | Auditoría y evento en una transacción | `UnidadDeTrabajoModeracionPg` |
+
+---
+
+## 7. Fase 6: API REST y seguridad
+
+Adaptador HTTP en `apps/api/src/http/`. Los esquemas de cada ruta están en `packages/contracts/src/http.ts` y generan el documento OpenAPI (`/docs`, `/docs/json`) y el cliente `@gis/api-client`. Las pruebas de extremo a extremo están en `apps/api/src/http/api.integration.test.ts` (PostGIS con Testcontainers).
+
+### 7.1 Rutas
+
+| Ruta | Caso de uso | Historia | Pruebas |
+| :--- | :--- | :--- | :--- |
+| `POST /v1/dispositivos` | `RegistrarDispositivo` y emisión del JWT | RF-01 | registro, repetición, hash inválido |
+| `POST /v1/reportes` | `CrearReporte` | HU-01, HU-05 | 201, duplicado (200), `Idempotency-Key` ausente (400), reenvío, fuera del área (422), sexto reporte (429) |
+| `GET /v1/reportes` | `ListarReportesEnVentana` | HU-02 | ventana válida, `bbox` mal escrito (400) |
+| `POST /v1/reportes/:id/confirmar` y `/negar` | `ConfirmarReporte`, `NegarReporte` | HU-03 | voto válido, autor (403), repetido (409), reporte inexistente (404) |
+| `GET /v1/mapa-calor` | `ObtenerMapaDeCalor` | HU-06 | celdas, rango de más de 90 días (422) |
+| `POST /v1/suscripciones`, `DELETE /v1/suscripciones/:id` | `SuscribirZona`, `EliminarZona` | HU-07 | alta (201), baja (204), zona ajena (403) |
+| `POST /v1/moderacion/reportes/:id/rechazar` | `RechazarReporte` | HU-12 | ciudadano (403), moderador (202) |
+
+### 7.2 Requisitos no funcionales
+
+| Requisito | Garantía | Mecanismo | Pruebas |
+| :--- | :--- | :--- | :--- |
+| RNF-14 | Ninguna respuesta lleva la ubicación real ni el autor | Las respuestas se serializan con el esquema de salida; una prueba recorre todas las respuestas | `api.integration.test.ts` ("RNF-14") |
+| Contrato | Cada respuesta exitosa cumple su esquema OpenAPI | Ajv 2020 contra `app.swagger()` | `api.integration.test.ts` ("contrato") |
+| Contrato | El cliente nunca queda desfasado de la API | `pnpm gen:api`; una prueba compara el documento guardado con el generado | `apps/api/src/http/http.test.ts` |
+| RNF-13 | Autenticación: sin token, token alterado, vencido o de otra clave → 401; rol insuficiente → 403 | `ServicioDeTokens` (HS256 con `jose`), `exigirToken` | `http.test.ts`, `api.integration.test.ts` |
+| RNF-13 | Rotación de la clave sin cortar sesiones | `JWT_SECRET_ANTERIOR` también verifica | `api.integration.test.ts` ("rotación") |
+| RNF-13 | Cabeceras seguras y CORS solo para la PWA | `@fastify/helmet`, `@fastify/cors` | `api.integration.test.ts` ("protecciones") |
+| RNF-13 | Límite por IP y por usuario; cuerpo de hasta 16 KB | `@fastify/rate-limit`, `LimitadorDeFrecuenciaEnProceso`, `bodyLimit` | `api.integration.test.ts`, `composicion.test.ts` |
+| RNF-13 | 0 hallazgos altos en OWASP ZAP | Flujo `.github/workflows/zap.yml` contra staging | Ejecución en la CI tras el despliegue |
+| RNF-09 | p95 < 300 ms en staging | Escenario `tools/carga/api-basica.js` (k6) | `docs/rendimiento/api-staging.md` |
+| Errores | Todo error sale en RFC 7807, sin detalles internos en los 500 | `registrarErrores`, `aProblema` | `http.test.ts`, `api.integration.test.ts` |
+| Fiabilidad | Apagado ordenado con tiempo máximo | `crearApagado` | `composicion.test.ts` |
+| ADR-001 | Un módulo opcional apagado no expone sus rutas | `componerCasosDeUso` devuelve `null` y la ruta no se registra | `api.integration.test.ts`, `composicion.test.ts` |

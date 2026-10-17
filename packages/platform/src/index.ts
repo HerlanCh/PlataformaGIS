@@ -1,4 +1,4 @@
-export { ErrorDeConfig, cargarConfig } from './config.js';
+export { ErrorDeConfig, cargarConfig, formatearProblemas } from './config.js';
 export type { ConfigApp, Entorno } from './config.js';
 export { verificarBaseDeDatos, crearDb, crearPool } from './database.js';
 export type {

@@ -17,6 +17,9 @@
       "path": "packages/platform"
     },
     {
+      "path": "packages/api-client"
+    },
+    {
       "path": "packages/modules/classifier"
     },
     {

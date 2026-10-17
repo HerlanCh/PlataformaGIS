@@ -7,7 +7,9 @@ services:
     region: virginia
     # --prod=false: el build necesita las dependencias de desarrollo aunque NODE_ENV sea production.
     buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm --filter @gis/api build
-    startCommand: APP_VERSION=${RENDER_GIT_COMMIT:-desconocida} node apps/api/dist/main.js
+    # Primero se aplican las migraciones pendientes en Neon (con tsx: cada módulo lee su carpeta
+    # `migrations` junto a su código fuente); si fallan, la API no arranca.
+    startCommand: pnpm --filter @gis/api db:migrate && APP_VERSION=${RENDER_GIT_COMMIT:-desconocida} node apps/api/dist/main.js
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
@@ -20,3 +22,12 @@ services:
         sync: false
       - key: CORS_ORIGIN
         sync: false
+      # Clave de firma de los JWT (al menos 32 caracteres). Se crea a mano en el panel de Render.
+      - key: JWT_SECRET
+        sync: false
+      - key: FEATURE_HEATMAP
+        value: 'true'
+      - key: FEATURE_SUBSCRIPTIONS
+        value: 'true'
+      - key: FEATURE_MODERATION
+        value: 'true'

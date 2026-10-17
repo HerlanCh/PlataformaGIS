@@ -9,7 +9,14 @@ import { fileURLToPath } from 'node:url';
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const en = (...partes) => path.join(raiz, ...partes);
 
-const COMPARTIDOS = ['shared-kernel', 'contracts', 'testing', 'event-bus', 'platform'];
+const COMPARTIDOS = [
+  'shared-kernel',
+  'contracts',
+  'testing',
+  'event-bus',
+  'platform',
+  'api-client',
+];
 const APPS = ['api', 'bot', 'web'];
 
 const leerJson = (archivo) => JSON.parse(readFileSync(archivo, 'utf8'));
