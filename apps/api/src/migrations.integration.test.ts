@@ -13,6 +13,7 @@ const TODOS_ENCENDIDOS = Object.fromEntries(
 
 const TABLAS_IMPRESCINDIBLES = [
   'categorias',
+  'eventos_procesados',
   'eventos_salida',
   'reportes',
   'reputaciones',

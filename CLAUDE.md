@@ -76,6 +76,8 @@ Requiere Node 24 y pnpm 12. En bash de Windows, pnpm está en `%APPDATA%\npm`.
 - `pnpm gen:api` regenera el contrato OpenAPI (`packages/api-client/openapi.json`) y los tipos del cliente
   (`esquema.generated.ts`). Hay que ejecutarlo al cambiar una ruta o un esquema de `packages/contracts/src/http.ts`:
   una prueba falla si el contrato guardado no coincide. La API publica Swagger UI en `/docs`.
+- `pnpm carga:difusion` mide la difusión en tiempo real: conecta `CLIENTES` sockets (500 por defecto) a `BASE_URL`,
+  crea reportes y exige p95 < 2 s, todas las entregas y ninguna a otra zona.
 - Carga básica con k6 (Docker): `docker run --rm -v "$PWD/tools/carga:/carga" -e BASE_URL=<url> grafana/k6:2.3.0 run /carga/api-basica.js`.
 - Las pruebas de integración (`*.integration.test.ts`) usan PostGIS real con Testcontainers: necesitan Docker.
   Sin Docker se omiten en local; en la CI son obligatorias.

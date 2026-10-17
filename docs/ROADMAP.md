@@ -386,13 +386,13 @@ Resultado: cada cambio de un reporte llega a los clientes que miran esa zona en 
 
 **Codificación**
 
-1. Despachador de outbox (`OutboxDispatcher`): lee `eventos_salida` sin publicar con `SELECT ... FOR UPDATE SKIP LOCKED`, los publica y marca `publicado_en`. Es la implementación definitiva del puerto BusDeEventos: entrega cada evento, al menos una vez, a Socket.io y a los manejadores de los demás módulos; cada evento lleva su `id` para que el cliente descarte duplicados.
-2. Adaptador `SocketIoEventPublisher` que implementa `EventPublisher`: emite cada evento a la sala `cell:<geohash>` de la celda del reporte.
-3. Protocolo del cliente: al mover el mapa, el cliente envía `viewport:update` con su bbox; el servidor calcula `celdasQueCubren(caja)` y actualiza las salas del socket (con un máximo de celdas por cliente).
+1. Despachador de outbox (`DespachadorDeSalida`, en `platform`): lee `eventos_salida` sin publicar con `SELECT ... FOR UPDATE SKIP LOCKED`, los entrega y marca `publicado_en`. Junto con `BusDeEventosConSalida` es la implementación definitiva del puerto `BusDeEventos`: entrega cada evento, al menos una vez, a Socket.io y a los manejadores de los demás módulos. La bandeja `eventos_procesados` evita que un manejador procese dos veces el mismo evento, y cada evento lleva su `id` para que el cliente descarte duplicados.
+2. Publicador en Socket.io (`tiempo-real/publicador.ts`): emite cada evento público a las salas `celda:<geohash>` de la ubicación pública del reporte.
+3. Protocolo del cliente: al mover el mapa, el cliente envía `viewport:actualizar` con su bbox; el servidor calcula `celdasQueCubren(caja)` y actualiza las salas del socket (con un máximo de 300 salas por cliente).
 4. Autenticación del handshake de Socket.io con el mismo JWT de la API.
-5. Activar `connectionStateRecovery` de Socket.io para recuperar eventos perdidos en desconexiones breves; tras una desconexión larga, el cliente vuelve a pedir `GET /v1/reports` del viewport.
-6. Programador de tareas en el proceso de la API (node-cron): ejecutar `ExpireReports` periódicamente.
-7. Suscribir `NotifySubscribers` a los eventos del despachador (el envío real de push y Telegram se conecta en las Fases 8 y 9; aquí usar un `NotificationSender` que registra en log).
+5. Activar `connectionStateRecovery` de Socket.io para recuperar eventos perdidos en desconexiones breves; tras una desconexión larga, el cliente vuelve a pedir `GET /v1/reportes` del viewport.
+6. Programador de tareas en el proceso de la API (`ProgramadorDeTareas`): ejecutar `CaducarReportes` periódicamente.
+7. Suscribir `NotificarSuscriptores` a los eventos del despachador (el envío real de push y Telegram se conecta en las Fases 8 y 9; aquí, un `EnviadorDeNotificaciones` que registra en log).
 8. Mantener despierto el servidor gratuito: un monitor de UptimeRobot o cron-job.org que llama a `/health` cada 5 minutos.
 
 **Pruebas**
@@ -400,9 +400,9 @@ Resultado: cada cambio de un reporte llega a los clientes que miran esa zona en 
 1. Prueba de integración: dos clientes en celdas distintas; un reporte en la celda A llega solo al cliente A.
 2. Prueba de fiabilidad: matar el proceso entre guardar y publicar; al reiniciar, el evento se publica (outbox).
 3. Prueba de reconexión: cortar la conexión del cliente y verificar que recibe los eventos ocurridos durante el corte.
-4. Prueba de carga con Artillery (motor Socket.io): 500 clientes conectados, medir p95 de latencia entre `POST /v1/reports` y la recepción del evento.
+4. Prueba de carga con 500 clientes Socket.io (`pnpm carga:difusion`): medir p95 de latencia entre `POST /v1/reportes` y la recepción del evento.
 5. Prueba de caducidad: con reloj controlado, un reporte vencido cambia a `CADUCADO` y se emite el evento.
-6. Prueba de desacoplamiento: con el módulo `notifications` apagado, crear y confirmar reportes funciona igual y sus eventos se siguen difundiendo por Socket.io.
+6. Prueba de desacoplamiento: con los módulos `notifications` y `subscriptions` apagados, crear y confirmar reportes funciona igual y sus eventos se siguen difundiendo por Socket.io.
 
 **Criterio de salida**
 

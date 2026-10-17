@@ -15,8 +15,8 @@ describe('BusDeEventosEnMemoria', () => {
     const bus = new BusDeEventosEnMemoria();
     const uno = vi.fn();
     const dos = vi.fn();
-    bus.suscribir('Prueba.v1', uno);
-    bus.suscribir('Prueba.v1', dos);
+    bus.suscribir('Prueba.v1', 'uno', uno);
+    bus.suscribir('Prueba.v1', 'dos', dos);
 
     await bus.publicar(evento('Prueba'));
 
@@ -27,7 +27,7 @@ describe('BusDeEventosEnMemoria', () => {
   it('no entrega eventos de otro tipo ni de otra versión', async () => {
     const bus = new BusDeEventosEnMemoria();
     const manejador = vi.fn();
-    bus.suscribir('Prueba.v1', manejador);
+    bus.suscribir('Prueba.v1', 'manejador', manejador);
 
     await bus.publicar(evento('Otro'));
     await bus.publicar(evento('Prueba', 2));
@@ -38,7 +38,7 @@ describe('BusDeEventosEnMemoria', () => {
   it('deja de entregar tras cancelar la suscripción', async () => {
     const bus = new BusDeEventosEnMemoria();
     const manejador = vi.fn();
-    const cancelar = bus.suscribir('Prueba.v1', manejador);
+    const cancelar = bus.suscribir('Prueba.v1', 'manejador', manejador);
 
     cancelar();
     await bus.publicar(evento('Prueba'));
@@ -51,10 +51,10 @@ describe('BusDeEventosEnMemoria', () => {
     const bus = new BusDeEventosEnMemoria(alFallar);
     const fallo = new Error('falló');
     const sano = vi.fn();
-    bus.suscribir('Prueba.v1', () => {
+    bus.suscribir('Prueba.v1', 'fallido', () => {
       throw fallo;
     });
-    bus.suscribir('Prueba.v1', sano);
+    bus.suscribir('Prueba.v1', 'sano', sano);
 
     await expect(bus.publicar(evento('Prueba'))).resolves.toBeUndefined();
 

@@ -23,6 +23,8 @@ const esquema = z
       .min(60)
       .default(24 * 60 * 60),
     LIMITE_POR_MINUTO: z.coerce.number().int().min(1).default(300),
+    DESPACHO_INTERVALO_MS: z.coerce.number().int().min(10).default(250),
+    CADUCIDAD_INTERVALO_S: z.coerce.number().int().min(1).default(60),
   })
   .refine((env) => env.NODE_ENV !== 'production' || env.JWT_SECRET !== undefined, {
     message: 'es obligatorio en producción',
@@ -39,9 +41,13 @@ export interface ConfigHttp {
   readonly jwt: ConfigJwt;
   /** Solicitudes por minuto y por IP en toda la API. */
   readonly limitePorMinuto: number;
+  /** Pausa del despachador del outbox cuando no hay pendientes. */
+  readonly despachoIntervaloMs: number;
+  /** Cada cuánto se caducan los reportes vencidos. */
+  readonly caducidadIntervaloS: number;
 }
 
-/** Configuración propia del adaptador HTTP. La API no arranca si es inválida. */
+/** Configuración propia del proceso de la API (HTTP, tiempo real y tareas). Si es inválida, no arranca. */
 export function cargarConfigHttp(env: Entorno = process.env): ConfigHttp {
   const resultado = esquema.safeParse(env);
   if (!resultado.success) throw new ErrorDeConfig(formatearProblemas(resultado.error));
@@ -53,5 +59,7 @@ export function cargarConfigHttp(env: Entorno = process.env): ConfigHttp {
       duracionS: datos.JWT_DURACION_S,
     },
     limitePorMinuto: datos.LIMITE_POR_MINUTO,
+    despachoIntervaloMs: datos.DESPACHO_INTERVALO_MS,
+    caducidadIntervaloS: datos.CADUCIDAD_INTERVALO_S,
   };
 }

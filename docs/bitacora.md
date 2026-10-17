@@ -386,3 +386,38 @@ Con `v2.3.0` desplegada en Render y Neon migrado al arrancar. El detalle está e
 - **Avisos medios de ZAP en `/docs` (Swagger UI):** CSP con comodín y sin directiva de respaldo, y la versión de su bundle de JavaScript. Revisarlos o restringir `/docs` en producción (Fase 12).
 - **Cabeceras `Permissions-Policy` y `Cross-Origin-Embedder-Policy`:** las marca ZAP como hallazgo bajo.
 - **Hasta el despachador de la Fase 7,** un voto queda registrado, pero el estado del reporte no cambia: los eventos esperan en el outbox.
+
+## [2026-10-17] — Fase 7: tiempo real y fiabilidad de eventos
+
+### Qué se hizo
+- **Entrega fiable de eventos** en `platform`:
+  - `BusDeEventosConSalida` implementa el puerto `BusDeEventos`, que ahora pide un nombre estable por manejador.
+  - `DespachadorDeSalida` entrega el outbox al menos una vez, con `FOR UPDATE SKIP LOCKED`.
+  - La migración `0002_entrega_de_eventos` añade `intentos`, `ultimo_error` y `proximo_intento` al outbox, y la bandeja de entrada `eventos_procesados`.
+- **Reacciones entre módulos conectadas** en `apps/api/src/composicion/manejadores.ts`: decisión de voto, rechazo de moderación, confirmación por duplicado, reputación y aviso a suscriptores (que por ahora va al log).
+- **Tiempo real** en `apps/api/src/tiempo-real/`:
+  - el handshake exige el JWT de la API;
+  - `viewport:actualizar` pone al cliente en las salas `celda:<geohash>` de su ventana, con precisión 6 y, si la ventana es grande, 5;
+  - los eventos públicos se emiten a la celda de la ubicación pública del reporte;
+  - `connectionStateRecovery` cubre desconexiones de hasta 2 minutos.
+
+  Se retiró el `ping` de la Fase 1.
+- **Caducidad automática:** `ProgramadorDeTareas` ejecuta `CaducarReportes` cada 60 s.
+- **`pnpm carga:difusion`** mide la latencia de difusión con 500 clientes.
+
+### Decisiones y cambios respecto al roadmap
+1. **Bandeja de entrada por manejador** (`eventos_procesados`). Resuelve el pendiente de la Fase 5: si un manejador falla, el evento se reintenta solo para él, sin repetir a los demás. Solo puede haber un duplicado si el proceso muere entre el éxito de un manejador y su registro.
+2. **Reintentos con espera exponencial** (2^n s, hasta 5 min). A los 10 intentos el evento se descarta con su error, para que un evento envenenado no bloquee la cola.
+3. **Entrega en paralelo por reporte.** Con la carga sintética local, una ráfaga de 20.000 caducidades retrasó 20 s los `ReporteCreado` nuevos (bloqueo en cabeza de cola). Ahora un lote se agrupa por reporte: los eventos de un mismo reporte van en orden y los de reportes distintos, en paralelo, hasta 8 a la vez. Los entregados se marcan con una sola escritura.
+4. **El publicador busca la ubicación pública del reporte** para los eventos que no la traen (`ReporteConfirmado`, `ReporteCaducado`, etc.), en lugar de crear versiones nuevas de esos eventos.
+5. **`setInterval` en vez de `node-cron`**, porque para un intervalo fijo no hace falta otra dependencia. **Script propio en vez de Artillery**, porque medir desde el POST de un cliente hasta la recepción en otros exige lógica que su motor no tiene.
+6. **El socket exige token**, por decisión del autor.
+7. **La recuperación de Socket.io necesita que el cliente ya haya recibido algún paquete.** La PWA debe pedir `GET /v1/reportes` al reconectar si `socket.recovered` es `false`.
+
+### Verificación local
+- `pnpm carga:difusion` contra la API local: 500 clientes, 20 reportes, 1000 de 1000 entregas, 0 a otras zonas, p95 de 263 ms.
+
+### Pendiente
+- **Cerrar la fase en staging:** monitor de UptimeRobot (acción del autor), prueba de difusión con 500 clientes y caducidad verificada.
+- **`apps/web` sigue esperando el `ping`,** que ya no existe. La PWA se rehace sobre el protocolo nuevo en la Fase 8.
+- **Escalar a varias instancias** exigiría el adaptador de Redis para Socket.io y un limitador compartido.

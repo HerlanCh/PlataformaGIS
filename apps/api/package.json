@@ -10,7 +10,8 @@
     "db:migrate": "tsx --env-file-if-exists=../../.env src/migrate.ts",
     "seed:load": "tsx --env-file-if-exists=../../.env src/rendimiento/cargar-reportes.ts",
     "perf:espacial": "tsx --env-file-if-exists=../../.env src/rendimiento/medir-consultas.ts",
-    "gen:api": "tsx src/openapi/generar.ts"
+    "gen:api": "tsx src/openapi/generar.ts",
+    "carga:difusion": "tsx --env-file-if-exists=../../.env src/rendimiento/difusion.ts"
   },
   "dependencies": {
     "@fastify/cors": "11.3.0",

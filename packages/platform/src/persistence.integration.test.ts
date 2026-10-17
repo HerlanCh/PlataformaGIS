@@ -48,36 +48,39 @@ describeIntegration('migraciones de la plataforma', () => {
     await base?.close();
   });
 
-  it('sobre una base vacía crea PostGIS y la tabla del outbox', async () => {
+  it('sobre una base vacía crea PostGIS, el outbox y la bandeja de entrada', async () => {
     await migrarAvance(db, migracionesDePlataforma);
 
     const { rows } = await db.execute(sql`select postgis_lib_version() as version`);
     expect(String(rows[0]?.version)).toMatch(/^3\./);
     expect(await existe('eventos_salida')).toBe(true);
-    expect(await aplicadas()).toBe(2);
+    expect(await existe('eventos_procesados')).toBe(true);
+    expect(await aplicadas()).toBe(3);
   });
 
   it('volver a aplicarlas no tiene efecto', async () => {
     await migrarTodo(db, [migracionesDePlataforma]);
 
-    expect(await aplicadas()).toBe(2);
+    expect(await aplicadas()).toBe(3);
   });
 
   it('revierte la última migración y la quita del historial', async () => {
-    expect(await revertirUltima(db, migracionesDePlataforma)).toBe('0001_eventos_salida');
+    expect(await revertirUltima(db, migracionesDePlataforma)).toBe('0002_entrega_de_eventos');
 
-    expect(await existe('eventos_salida')).toBe(false);
-    expect(await aplicadas()).toBe(1);
+    expect(await existe('eventos_procesados')).toBe(false);
+    expect(await existe('eventos_salida')).toBe(true);
+    expect(await aplicadas()).toBe(2);
   });
 
   it('tras revertir, aplicar de nuevo deja el mismo esquema', async () => {
     await migrarAvance(db, migracionesDePlataforma);
 
-    expect(await existe('eventos_salida')).toBe(true);
-    expect(await aplicadas()).toBe(2);
+    expect(await existe('eventos_procesados')).toBe(true);
+    expect(await aplicadas()).toBe(3);
   });
 
   it('revertir todo deja la base sin migraciones y avisa cuando no queda ninguna', async () => {
+    expect(await revertirUltima(db, migracionesDePlataforma)).toBe('0002_entrega_de_eventos');
     expect(await revertirUltima(db, migracionesDePlataforma)).toBe('0001_eventos_salida');
     expect(await revertirUltima(db, migracionesDePlataforma)).toBe('0000_postgis');
     expect(await revertirUltima(db, migracionesDePlataforma)).toBeNull();

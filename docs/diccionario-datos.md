@@ -18,6 +18,7 @@ Esquema físico de la Plataforma GIS sobre PostgreSQL 18 + PostGIS 3.6. Se deriv
 | Tabla | Módulo dueño | Propósito |
 | :--- | :--- | :--- |
 | `eventos_salida` | `platform` (compartido) | Eventos de integración pendientes de publicar |
+| `eventos_procesados` | `platform` (compartido) | Qué manejador ya procesó qué evento (bandeja de entrada) |
 | `usuarios` | `identity` | Usuarios anónimos y su rol |
 | `categorias` | `reports` | Catálogo de categorías de incidentes |
 | `reportes` | `reports` | Reportes de incidentes y su ciclo de vida |
@@ -32,7 +33,7 @@ La migración `0000_postgis` crea la extensión `postgis`, de la que dependen to
 
 ### `eventos_salida`
 
-Patrón *outbox*: el agregado y sus eventos se guardan en la misma transacción, y un proceso posterior (Fase 7) los publica.
+Patrón *outbox*: el agregado y sus eventos se guardan en la misma transacción, y el `DespachadorDeSalida` (Fase 7) los entrega al menos una vez a sus manejadores y a Socket.io.
 
 | Columna | Tipo | Restricción | Descripción |
 | :--- | :--- | :--- | :--- |
@@ -41,10 +42,23 @@ Patrón *outbox*: el agregado y sus eventos se guardan en la misma transacción,
 | `contenido` | `jsonb` | NOT NULL | Evento de integración completo |
 | `creado_en` | `timestamptz` | NOT NULL, por defecto `now()` | Momento en que ocurrió el evento |
 | `publicado_en` | `timestamptz` | Nulo | Momento en que se publicó; nulo mientras está pendiente |
+| `intentos` | `integer` | NOT NULL, por defecto 0 | Entregas fallidas (migración `0002`). Con 10, el evento se descarta y queda su error |
+| `ultimo_error` | `text` | Nulo | Manejador y mensaje del último fallo |
+| `proximo_intento` | `timestamptz` | Nulo | No se reintenta antes de este momento: espera de 2^intentos segundos, hasta 5 minutos |
 
 **Índices:** `eventos_salida_pendientes_idx`, B-tree parcial sobre `creado_en` donde `publicado_en IS NULL`: recorre los pendientes en orden de llegada.
 
 **Quién escribe en el outbox (Fase 5):** `UnidadDeTrabajoReportePg` (`reports`), `UnidadDeTrabajoVotoPg` (`verification`) y `UnidadDeTrabajoModeracionPg` (`moderation`), cada una en la misma transacción que sus tablas. Los valores de `tipo` posibles son los del catálogo `eventosDeIntegracion` de `packages/contracts`; en la Fase 5 se sumaron `ReporteExtendido.v1` (público: `idReporte`, `caducaEn`) y `RechazoDeModeracion.v1` (interno: `idReporte`, `idModerador`).
+
+### `eventos_procesados`
+
+Bandeja de entrada (migración `0002_entrega_de_eventos`): el despachador registra aquí cada entrega exitosa y no vuelve a pasar un evento a un manejador que ya lo procesó, aunque el evento se reintente por el fallo de otro.
+
+| Columna | Tipo | Restricción | Descripción |
+| :--- | :--- | :--- | :--- |
+| `id_evento` | `uuid` | PK (con `manejador`) | Evento de `eventos_salida` (sin clave foránea: la tabla puede purgarse aparte) |
+| `manejador` | `text` | PK (con `id_evento`) | Nombre estable del manejador, como `verification.ajustar-reputacion` |
+| `procesado_en` | `timestamptz` | NOT NULL, por defecto `now()` | Momento de la entrega |
 
 ## `identity`
 

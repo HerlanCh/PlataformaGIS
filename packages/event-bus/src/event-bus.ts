@@ -11,5 +11,9 @@ export type Desuscribir = () => void;
  */
 export interface BusDeEventos {
   publicar(event: EventoDeIntegracion): Promise<void>;
-  suscribir(key: string, handler: ManejadorDeEvento): Desuscribir;
+  /**
+   * @param nombre Identifica al manejador de forma estable (`reports.aplicar-decision`): con él,
+   * la entrega fiable recuerda qué eventos ya procesó y no se los vuelve a entregar.
+   */
+  suscribir(key: string, nombre: string, handler: ManejadorDeEvento): Desuscribir;
 }
