@@ -27,7 +27,8 @@
     "db:generate": "pnpm -r --if-present run db:generate",
     "seed:load": "pnpm --filter @gis/api run seed:load",
     "perf:espacial": "pnpm --filter @gis/api run perf:espacial",
-    "gen:api": "pnpm --filter @gis/api run gen:api && pnpm --filter @gis/api-client run gen"
+    "gen:api": "pnpm --filter @gis/api run gen:api && pnpm --filter @gis/api-client run gen",
+    "carga:difusion": "pnpm --filter @gis/api run carga:difusion"
   },
   "lint-staged": {
     "*.{ts,tsx,js,cjs,mjs}": [

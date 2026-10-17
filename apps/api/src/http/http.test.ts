@@ -93,6 +93,8 @@ describe('cargarConfigHttp', () => {
     expect(cargarConfigHttp({ JWT_SECRET: '', JWT_SECRET_ANTERIOR: '' })).toMatchObject({
       jwt: { secretoAnterior: null, duracionS: 86_400 },
       limitePorMinuto: 300,
+      despachoIntervaloMs: 250,
+      caducidadIntervaloS: 60,
     });
   });
 
@@ -111,6 +113,8 @@ describe('cargarConfigHttp', () => {
         duracionS: 600,
       },
       limitePorMinuto: 60,
+      despachoIntervaloMs: 250,
+      caducidadIntervaloS: 60,
     });
   });
 

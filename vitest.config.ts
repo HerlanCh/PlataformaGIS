@@ -33,6 +33,7 @@ export default defineConfig({
         // Scripts de carga y medición: se ejecutan contra una base real (`pnpm perf:espacial`).
         '**/rendimiento/cargar-reportes.ts',
         '**/rendimiento/medir-consultas.ts',
+        '**/rendimiento/difusion.ts',
         // Genera el contrato del cliente (`pnpm gen:api`); lo prueba http.test.ts vía documentoOpenApi.
         '**/openapi/generar.ts',
         '**/*.generated.ts',

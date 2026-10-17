@@ -25,4 +25,6 @@ export type { ConjuntoDeMigraciones } from './migrations.js';
 export type { DefinicionDeModulo } from './module.js';
 export { esClaveDuplicada } from './errores-pg.js';
 export { agregarASalida } from './outbox.js';
-export { eventosSalida } from './schema.js';
+export { BusDeEventosConSalida, DespachadorDeSalida, esperaDeReintentoS } from './despachador.js';
+export type { OpcionesDelDespachador } from './despachador.js';
+export { eventosProcesados, eventosSalida } from './schema.js';

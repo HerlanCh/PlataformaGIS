@@ -13,7 +13,7 @@ export class BusDeEventosEnMemoria implements BusDeEventos {
 
   constructor(private readonly alErrorDeManejador: EscuchaDeErrorDeManejador = () => {}) {}
 
-  suscribir(key: string, handler: ManejadorDeEvento): Desuscribir {
+  suscribir(key: string, _nombre: string, handler: ManejadorDeEvento): Desuscribir {
     const registrados = this.manejadores.get(key) ?? new Set<ManejadorDeEvento>();
     registrados.add(handler);
     this.manejadores.set(key, registrados);

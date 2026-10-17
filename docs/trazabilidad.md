@@ -256,3 +256,23 @@ Adaptador HTTP en `apps/api/src/http/`. Los esquemas de cada ruta están en `pac
 | Errores | Todo error sale en RFC 7807, sin detalles internos en los 500 | `registrarErrores`, `aProblema` | `http.test.ts`, `api.integration.test.ts` |
 | Fiabilidad | Apagado ordenado con tiempo máximo | `crearApagado` | `composicion.test.ts` |
 | ADR-001 | Un módulo opcional apagado no expone sus rutas | `componerCasosDeUso` devuelve `null` y la ruta no se registra | `api.integration.test.ts`, `composicion.test.ts` |
+
+---
+
+## 8. Fase 7: tiempo real y fiabilidad de eventos
+
+Entrega de eventos en `packages/platform/src/despachador.ts` (`BusDeEventosConSalida`, `DespachadorDeSalida`). Reacciones entre módulos en `apps/api/src/composicion/manejadores.ts`. Tiempo real en `apps/api/src/tiempo-real/`.
+
+| Requisito | Garantía | Mecanismo | Pruebas |
+| :--- | :--- | :--- | :--- |
+| HU-02 (escenario 2), RF-05 | Un cambio de reporte llega a los clientes que miran su celda, y solo a ellos | Salas `celda:<geohash>` de precisión 6 y 5; el publicador emite a la celda de la ubicación pública | `tiempo-real.integration.test.ts` ("solo al cliente que mira la celda A"), `tiempo-real.test.ts` |
+| RNF-10 | Difusión p95 < 2 s con 500 clientes | Despachador cada 250 ms; entrega en paralelo por reporte | `pnpm carga:difusion` (local: p95 de 263 ms; staging: `docs/rendimiento/difusion-staging.md`) |
+| Fiabilidad | 0 eventos perdidos al reiniciar | Outbox: lo guardado y no publicado lo entrega el próximo despachador | `despachador.integration.test.ts` ("fiabilidad") |
+| Fiabilidad | Un manejador que falla se reintenta, con espera; los que ya terminaron no se repiten | `intentos`, `proximo_intento` y la bandeja `eventos_procesados` | `despachador.integration.test.ts` |
+| Fiabilidad | Dos despachadores no entregan el mismo evento | `FOR UPDATE SKIP LOCKED` | `despachador.integration.test.ts` |
+| Fiabilidad | Un cliente que se desconecta poco tiempo recibe lo perdido | `connectionStateRecovery` (2 min) | `tiempo-real.integration.test.ts` ("reconexión") |
+| HU-04, RF-09 | La caducidad corre sola y su evento llega al mapa | `ProgramadorDeTareas` con `CaducarReportes` cada 60 s | `tiempo-real.integration.test.ts` ("HU-04"), `tiempo-real.test.ts` |
+| HU-03 | Voto → confirmación → reputación con el despachador real | Manejadores suscritos con nombre estable | `tiempo-real.integration.test.ts` ("HU-03") |
+| HU-08 | Los suscriptores reciben el aviso de un reporte nuevo | `NotificarSuscriptores` ← `ReporteCreado.v1`, con `EnviadorDeNotificacionesEnRegistro` | `tiempo-real.test.ts` |
+| ADR-001 | Con `subscriptions` y `notifications` apagados, la difusión y los votos siguen funcionando | Suscripción condicionada por interruptor | `tiempo-real.integration.test.ts` (corre con los opcionales apagados), `tiempo-real.test.ts` |
+| RNF-13 | Solo clientes con token reciben eventos; solo los eventos públicos salen | Handshake con `ServicioDeTokens`; `CLAVES_PUBLICAS` | `tiempo-real.integration.test.ts` ("conexión"), `tiempo-real.test.ts` |
