@@ -341,3 +341,42 @@ Con 100.000 reportes y 5.000 zonas en el PostGIS local (PostgreSQL 18.6, PostGIS
 - **Límite de zonas por usuario:** se comprueba leyendo y luego guardando, así que dos altas simultáneas podrían dejar 6 zonas. Es aceptable para el piloto; si importa, se resuelve con un bloqueo o un conteo en la base.
 - **Adaptadores pendientes:** el `LimitadorDeFrecuencia` real (`@fastify/rate-limit`, Fase 6) y el `EnviadorDeNotificaciones` de log (Fase 7). Los manejadores se registran en el bus con el despachador de la Fase 7.
 - `buscarCercanos` sigue sin consumidor: lo usará `/cerca` del bot (Fase 9).
+
+## [2026-10-17] — Fase 6: API REST y seguridad
+
+### Qué se hizo
+- **Rutas `/v1`** en `apps/api/src/http/rutas/v1.ts`, delgadas: validan con el contrato, llaman al caso de uso y traducen el resultado.
+  - `dispositivos`, `reportes`, `reportes/:id/confirmar` y `/negar`;
+  - `mapa-calor`, `suscripciones` y `moderacion/reportes/:id/rechazar`, que solo se registran si su módulo está activo.
+- **Contrato HTTP** en `packages/contracts/src/http.ts` (Zod). Valida las solicitudes, serializa las respuestas y genera el OpenAPI 3.1, publicado en `/docs` y `/docs/json` con `fastify-type-provider-zod` y `@fastify/swagger`.
+- **Cliente `@gis/api-client`:**
+  - `pnpm gen:api` escribe `openapi.json`, y `openapi-typescript` genera los tipos;
+  - `crearClienteApi` usa `openapi-fetch` y agrega el token.
+- **Raíz de composición** en `apps/api/src/composicion/casos-de-uso.ts`: el único lugar que instancia adaptadores. `main.ts` solo lee la configuración, compone y arranca.
+- **Seguridad:**
+  - JWT HS256 con `jose`, con expiración y rotación de clave (`JWT_SECRET_ANTERIOR`);
+  - `@fastify/helmet`, CORS restringido a la PWA y cuerpo de hasta 16 KB;
+  - `@fastify/rate-limit` por IP y `LimitadorDeFrecuenciaEnProceso` por usuario;
+  - errores RFC 7807 y apagado ordenado con tiempo máximo.
+- **Staging:**
+  - `render.yaml` aplica las migraciones al arrancar, activa `heatmap`, `subscriptions` y `moderation`, y declara `JWT_SECRET`;
+  - el flujo `ZAP` escanea staging tras cada versión;
+  - `tools/carga/api-basica.js` es el escenario de k6.
+
+### Decisiones y cambios respecto al roadmap
+1. **Rutas, parámetros y campos en español**, por decisión del autor: `/v1/reportes`, `bbox`, `categorias`, `desde` y `hasta`. Se conservan `publicLocation` (contrato del SRS) y la cabecera estándar `Idempotency-Key`. `bbox` se escribe `lonMin,latMin,lonMax,latMax`.
+2. **Dos niveles de límite.** `@fastify/rate-limit` no puede ser el adaptador de `LimitadorDeFrecuencia`, porque limita solicitudes y no claves arbitrarias. Por eso protege la API por IP (300 por minuto), y los límites de 5 reportes y 30 votos por usuario usan un adaptador en memoria del proceso. Basta con una instancia; con varias haría falta un almacén común.
+3. **El rol viaja en el token.** `RechazarReporte` lo valida. Un ascenso a moderador surte efecto al renovar el token (24 h como máximo).
+4. **Configuración HTTP aparte** (`cargarConfigHttp`). `JWT_SECRET` es obligatorio solo en producción, así las migraciones y el desarrollo local no lo necesitan.
+5. **Migraciones en Render con `tsx`** (`pnpm db:migrate` antes de arrancar). Empaquetadas con `tsup` no encontrarían las carpetas `migrations` de los módulos.
+6. **`POST /v1/reportes` responde 201 con `CREADO` y 200 con `DUPLICADO` o `PROPIO_EXISTENTE`.** El rechazo de un moderador responde 202, porque `reports` lo aplica al procesar el evento.
+7. **Versión del contrato fija (`1.0.0`)** en el OpenAPI, para que el documento no cambie en cada despliegue.
+
+### Verificación local
+- `pnpm lint`, `typecheck`, `depcruise` (sin violaciones), `duplication` (0,45 %) y `test` pasan: 99 archivos y 1007 pruebas, con Docker. La cobertura global es del 99 %.
+- La API compilada responde `/health`, el registro con JWT, `/docs` y las cabeceras de seguridad.
+- k6 contra la API local: 382 solicitudes, 0 fallidas, p95 global de 12,7 ms. La medición que cuenta para el criterio de salida es la de staging.
+
+### Pendiente
+- **Cerrar la fase en staging:** crear `JWT_SECRET` en Render, fusionar y medir ZAP (0 altos) y k6 (p95 < 300 ms). Las dos casillas se marcan con esa evidencia.
+- **Hasta el despachador de la Fase 7,** un voto queda registrado, pero el estado del reporte no cambia: los eventos esperan en el outbox.

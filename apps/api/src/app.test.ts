@@ -3,6 +3,7 @@ import { crearRegistro, cargarConfig, cargarInterruptores } from '@gis/platform'
 import type { DefinicionDeModulo, Consultable } from '@gis/platform';
 import { describe, expect, it, vi } from 'vitest';
 import { construirApp } from './app.js';
+import { apiDePrueba } from './tests/apoyo.js';
 
 const config = cargarConfig({
   DATABASE_URL: 'postgres://gis:gis@localhost:5432/gis',
@@ -32,6 +33,7 @@ function crear({ db = dbArriba, env = {}, modules = [], lineas = [] }: Opciones 
     db,
     bus: new BusDeEventosEnMemoria(),
     modulos: modules,
+    api: apiDePrueba(),
   });
 }
 

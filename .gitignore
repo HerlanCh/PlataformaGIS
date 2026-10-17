@@ -9,3 +9,4 @@ coverage/
 dev-dist/
 *.log
 .DS_Store
+tools/carga/resultado.json

@@ -24,5 +24,10 @@ export default defineConfig(
     files: ['**/*.{js,cjs,mjs}'],
     languageOptions: { globals: globals.node },
   },
+  {
+    // Escenarios de k6: corren en su propio motor, con sus variables globales.
+    files: ['tools/carga/**/*.js'],
+    languageOptions: { globals: { __ENV: 'readonly', __VU: 'readonly', __ITER: 'readonly' } },
+  },
   prettier,
 );
