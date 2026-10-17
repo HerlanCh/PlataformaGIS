@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.1.0...v2.2.0) (2026-10-17)
+
+
+### Features
+
+* casos de uso de todos los módulos (Fase 5) ([26c5f98](https://github.com/HerlanCh/PlataformaGIS/commit/26c5f98f2a1088ca22d829a586287c0011108a05))
+
 # [2.1.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.0.0...v2.1.0) (2026-10-15)
 
 
