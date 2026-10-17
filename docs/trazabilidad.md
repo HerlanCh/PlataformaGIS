@@ -37,12 +37,12 @@ Los nombres de casos de uso provienen del roadmap; los marcados "por definir" se
 | **RNF-06** | Tolerancia a fallos | 0 reportes perdidos sin conexión | `apps/web` | Pruebas Playwright con corte de red | Definido |
 | **RNF-07** | Recuperabilidad | 1 restauración probada por versión | PostgreSQL / PostGIS | Workflow de GitHub Actions con `pg_dump` y restauración | Definido |
 | **RNF-08** | Ausencia de fallos | Tasa errores 5xx < 1 % | `apps/api` | Logs estructurados pino | Definido |
-| **RNF-09** | Tiempo de respuesta | Latencia API p95 < 300 ms | Endpoints Fastify | Escenario de prueba en `k6` | Definido |
+| **RNF-09** | Tiempo de respuesta | Latencia API p95 < 300 ms | Endpoints Fastify | Escenario de prueba en `k6` | Verificado en staging (Fase 6) |
 | **RNF-10** | Difusión de eventos | Difusión WebSocket p95 < 2 s | Socket.io | Artillery (motor Socket.io) con 500 clientes | Definido |
 | **RNF-11** | Consulta espacial | Consulta espacial p95 < 100 ms | PostGIS (100k registros) | `EXPLAIN ANALYZE` con la carga sintética | Definido |
 | **RNF-12** | Tamaño de bundle | JS inicial PWA < 250 KB | `apps/web` | Lighthouse CI | Definido |
 | **RNF-13** | Seguridad | 0 vulnerabilidades altas/críticas | Dependencias y API | `npm audit`, Dependabot, OWASP ZAP | Verificado en CI (Fase 1) |
-| **RNF-14** | Privacidad | 0 respuestas públicas con `location` o `author_id` | `apps/api`, Socket.io, datos abiertos | Prueba de privacidad sobre todas las rutas | Definido |
+| **RNF-14** | Privacidad | 0 respuestas públicas con `location` o `author_id` | `apps/api`, Socket.io, datos abiertos | Prueba de privacidad sobre todas las rutas | Verificado en la API REST (Fase 6) |
 
 ---
 
@@ -251,8 +251,8 @@ Adaptador HTTP en `apps/api/src/http/`. Los esquemas de cada ruta están en `pac
 | RNF-13 | Rotación de la clave sin cortar sesiones | `JWT_SECRET_ANTERIOR` también verifica | `api.integration.test.ts` ("rotación") |
 | RNF-13 | Cabeceras seguras y CORS solo para la PWA | `@fastify/helmet`, `@fastify/cors` | `api.integration.test.ts` ("protecciones") |
 | RNF-13 | Límite por IP y por usuario; cuerpo de hasta 16 KB | `@fastify/rate-limit`, `LimitadorDeFrecuenciaEnProceso`, `bodyLimit` | `api.integration.test.ts`, `composicion.test.ts` |
-| RNF-13 | 0 hallazgos altos en OWASP ZAP | Flujo `.github/workflows/zap.yml` contra staging | Ejecución en la CI tras el despliegue |
-| RNF-09 | p95 < 300 ms en staging | Escenario `tools/carga/api-basica.js` (k6) | `docs/rendimiento/api-staging.md` |
+| RNF-13 | 0 hallazgos altos en OWASP ZAP | Flujo `.github/workflows/zap.yml` contra staging | Ejecución `39071261409` (0 altos), `docs/rendimiento/api-staging.md` |
+| RNF-09 | p95 < 300 ms en staging | Escenario `tools/carga/api-basica.js` (k6) | `docs/rendimiento/api-staging.md` (p95 de 245 ms) |
 | Errores | Todo error sale en RFC 7807, sin detalles internos en los 500 | `registrarErrores`, `aProblema` | `http.test.ts`, `api.integration.test.ts` |
 | Fiabilidad | Apagado ordenado con tiempo máximo | `crearApagado` | `composicion.test.ts` |
 | ADR-001 | Un módulo opcional apagado no expone sus rutas | `componerCasosDeUso` devuelve `null` y la ruta no se registra | `api.integration.test.ts`, `composicion.test.ts` |

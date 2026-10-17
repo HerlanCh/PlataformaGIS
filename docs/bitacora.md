@@ -377,6 +377,12 @@ Con 100.000 reportes y 5.000 zonas en el PostGIS local (PostgreSQL 18.6, PostGIS
 - La API compilada responde `/health`, el registro con JWT, `/docs` y las cabeceras de seguridad.
 - k6 contra la API local: 382 solicitudes, 0 fallidas, p95 global de 12,7 ms. La medición que cuenta para el criterio de salida es la de staging.
 
+### Cierre en staging (2026-10-17)
+Con `v2.3.0` desplegada en Render y Neon migrado al arrancar. El detalle está en `docs/rendimiento/api-staging.md`.
+- **ZAP baseline:** 0 hallazgos altos.
+- **k6:** 344 solicitudes, 0 fallidas y p95 global de 245 ms (máximo 300 ms). El registro de dispositivo da 481 ms de p95, pero con solo 4 muestras, y no se repite por usuario.
+
 ### Pendiente
-- **Cerrar la fase en staging:** crear `JWT_SECRET` en Render, fusionar y medir ZAP (0 altos) y k6 (p95 < 300 ms). Las dos casillas se marcan con esa evidencia.
+- **Avisos medios de ZAP en `/docs` (Swagger UI):** CSP con comodín y sin directiva de respaldo, y la versión de su bundle de JavaScript. Revisarlos o restringir `/docs` en producción (Fase 12).
+- **Cabeceras `Permissions-Policy` y `Cross-Origin-Embedder-Policy`:** las marca ZAP como hallazgo bajo.
 - **Hasta el despachador de la Fase 7,** un voto queda registrado, pero el estado del reporte no cambia: los eventos esperan en el outbox.
