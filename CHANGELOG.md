@@ -1,3 +1,15 @@
+# [2.4.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.3.0...v2.4.0) (2026-10-17)
+
+
+### Bug Fixes
+
+* generador aleatorio criptográfico en la prueba de difusión ([9fe4bcd](https://github.com/HerlanCh/PlataformaGIS/commit/9fe4bcdc289bf55e6674b626807b091b73bb5d39))
+
+
+### Features
+
+* tiempo real por celdas y entrega fiable de eventos (Fase 7) ([7f14fe3](https://github.com/HerlanCh/PlataformaGIS/commit/7f14fe3563b135bbcf88add500d6afc4d4b27611))
+
 # [2.3.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.2.0...v2.3.0) (2026-10-17)
 
 
