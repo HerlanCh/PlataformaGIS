@@ -9,18 +9,33 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource-variable/atkinson-hyperlegible-next": "5.3.0",
+    "@gis/api-client": "workspace:*",
+    "@tanstack/react-query": "5.104.1",
+    "idb": "8.0.3",
     "leaflet": "^1.9.4",
+    "leaflet.markercluster": "1.5.3",
+    "lucide-react": "1.51.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "socket.io-client": "^4.8.4"
+    "socket.io-client": "^4.8.4",
+    "workbox-expiration": "7.4.1",
+    "workbox-precaching": "7.4.1",
+    "workbox-routing": "7.4.1",
+    "workbox-strategies": "7.4.1",
+    "workbox-window": "7.4.1",
+    "zustand": "5.0.15"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
     "@types/leaflet": "^1.9.22",
+    "@types/leaflet.markercluster": "1.5.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "axe-core": "4.13.0",
+    "fake-indexeddb": "6.2.5",
     "jsdom": "^30.1.2",
     "vite": "^8.3.4",
     "vite-plugin-pwa": "^2.0.0"

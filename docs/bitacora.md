@@ -426,3 +426,48 @@ Con `v2.4.0` desplegada y el monitor de UptimeRobot activo. El detalle está en 
 ### Pendiente
 - **`apps/web` sigue esperando el `ping`,** que ya no existe. La PWA se rehace sobre el protocolo nuevo en la Fase 8.
 - **Escalar a varias instancias** exigiría el adaptador de Redis para Socket.io y un limitador compartido.
+
+## [2026-10-18] — Fase 8a: PWA, identidad visual, mapa en vivo y reporte sin conexión
+
+### Qué se hizo
+- **Proceso de diseño con impeccable:**
+  - `apps/web/PRODUCT.md` recoge la verdad del producto;
+  - la dirección visual se eligió en tres rondas de decisión;
+  - el autor fijó **«Señalética de Mi Teleférico»**: cada categoría es una línea de color y cada reporte, una estación;
+  - el contrato de dirección está en `apps/web/.impeccable/surfaces/mapa.md`, y el sistema construido, en `apps/web/DESIGN.md`.
+- **PWA nueva en `apps/web`** (reemplaza el esqueleto del `ping` de la Fase 1), organizada en `domain`, `services`, `features` y `ui`:
+  - sesión anónima con token en IndexedDB;
+  - mapa Leaflet con carga por ventana y agrupación de marcadores (`leaflet.markercluster`);
+  - tiempo real por celdas con recuperación;
+  - panel «Cerca de ti» como diagrama de línea;
+  - reporte en dos toques;
+  - cola sin conexión con Background Sync.
+- **Service worker** con Workbox (`injectManifest`): precaché de la app y caché de teselas de OSM limitada a 400 entradas y 7 días.
+- **Revisión final de impeccable:** veredicto «corregir», con seis correcciones, todas aplicadas:
+  - sin GPS el panel se titula «En esta zona» y mide desde el centro del mapa;
+  - teselas en gris;
+  - zoom solo en escritorio, con botones de 48 px;
+  - diagrama de 4 filas más «y N más»;
+  - una estación en lugar del «+» del botón;
+  - sin halo en el indicador en vivo.
+
+### Decisiones
+1. **Nombre y alcance:** «Alerta La Paz y El Alto» («Alerta LP»). La descripción y la foto del reporte pasan a la Fase 10, con la moderación. La Fase 8 se entrega en tres PR (8a, 8b y 8c).
+2. **Token en IndexedDB y no en `localStorage`,** porque el service worker lo necesita para enviar la cola en segundo plano.
+   - No hay riesgo de CSRF, porque va en la cabecera.
+   - El de XSS se acota sin `innerHTML` de datos externos (la estación es SVG propio) y con una CSP estricta, prevista para la 8c.
+3. **Un 4xx sale de la cola y se informa; un 5xx o la falta de red la dejan pendiente.** La `Idempotency-Key` hace seguro cualquier reenvío.
+4. **Orden estricto de la cola** con un número monótono. Las pruebas encontraron que dos reportes guardados en el mismo milisegundo podían enviarse fuera de orden.
+5. **Fuente Atkinson Hyperlegible Next,** alojada con la app: muy legible al sol y para personas mayores (`PRODUCT.md`).
+
+### Verificación
+- 55 pruebas de la web, con axe-core en el panel y en la hoja.
+- JS inicial: 157 KB comprimidos, más 2 KB de `workbox-window`; service worker de 9 KB.
+- Recorrido en Chrome (móvil 390×844 y escritorio) contra la API local, con una ronda de capturas y una de confirmación.
+
+### Pendiente
+- **8b:** detalle y votos, aviso «¿Sigue ahí?», filtros, mapa de calor y zonas.
+- **8c:**
+  - Web Push con su backend e instalación en iPhone;
+  - iconos PNG (en esta máquina no hay conversor de imágenes);
+  - Playwright contra staging y Lighthouse CI.
