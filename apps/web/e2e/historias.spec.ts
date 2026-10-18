@@ -73,7 +73,11 @@ test('HU-05: sin conexión, 3 reportes quedan pendientes y al volver la señal l
 
   await expect(pagina.getByText(/reportes? pendientes? de envío/)).toBeHidden();
   await expect
-    .poll(async () => (await reportesDesde(punto, inicio)).map((r) => r.codigoCategoria).sort())
+    .poll(async () =>
+      (await reportesDesde(punto, inicio))
+        .map((r) => r.codigoCategoria)
+        .sort((a, b) => a.localeCompare(b)),
+    )
     .toEqual(['accidente', 'bloqueo', 'jauria']);
   await contexto.close();
 });

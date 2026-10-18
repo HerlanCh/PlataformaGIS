@@ -243,7 +243,7 @@ function registrarRutasDeAvisos(
         response: { 200: http.esquemaClavePublicaPush, ...ERRORES },
       },
     },
-    async () => ({ clavePublica: avisos.clavePublica }),
+    () => Promise.resolve({ clavePublica: avisos.clavePublica }),
   );
 
   app.post(

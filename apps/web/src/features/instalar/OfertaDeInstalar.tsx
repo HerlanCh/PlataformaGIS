@@ -32,7 +32,7 @@ export function OfertaDeInstalar() {
 
   return (
     <p className="oferta">
-      Instala la app.
+      <span>Instala la app.</span>
       <span className="oferta__acciones">
         <button type="button" className="boton-texto boton-texto--chico" onClick={abrirInstalar}>
           Cómo instalar

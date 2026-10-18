@@ -29,17 +29,16 @@ export class EnviarAvisoPush {
       dispositivos.map((suscripcion) => this.deps.emisor.enviar(suscripcion, contenido)),
     );
 
-    let vencidas = 0;
-    let fallidos = 0;
-    for (const [i, envio] of envios.entries()) {
-      if (envio.status === 'fulfilled') continue;
-      if (envio.reason instanceof ErrorSuscripcionVencida) {
-        vencidas += 1;
-        await this.deps.suscripciones.eliminarPorEndpoint(dispositivos[i]!.endpoint);
-      } else {
-        fallidos += 1;
-      }
-    }
-    return { enviados: dispositivos.length - vencidas - fallidos, vencidas, fallidos };
+    const vencidas = dispositivos.filter((_, i) => {
+      const envio = envios[i]!;
+      return envio.status === 'rejected' && envio.reason instanceof ErrorSuscripcionVencida;
+    });
+    const fallidos = envios.filter((e) => e.status === 'rejected').length - vencidas.length;
+    await Promise.all(vencidas.map((s) => this.deps.suscripciones.eliminarPorEndpoint(s.endpoint)));
+    return {
+      enviados: dispositivos.length - vencidas.length - fallidos,
+      vencidas: vencidas.length,
+      fallidos,
+    };
   }
 }

@@ -30,6 +30,10 @@ export default defineConfig({
         // Arranque del proceso y registro generado: sin lógica que probar.
         '**/src/main.{ts,tsx}',
         '**/src/migrate.ts',
+        // Pruebas de extremo a extremo (Playwright) y el service worker, que jsdom no ejecuta:
+        // su lógica vive en `services/aviso.ts` y `services/cola.ts`, que sí se prueban.
+        '**/e2e/**',
+        '**/src/sw.ts',
         // Scripts de carga y medición: se ejecutan contra una base real (`pnpm perf:espacial`).
         '**/rendimiento/cargar-reportes.ts',
         '**/rendimiento/medir-consultas.ts',
