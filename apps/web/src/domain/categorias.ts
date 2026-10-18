@@ -8,6 +8,8 @@ export interface Categoria {
   readonly nombre: string;
   /** Nombre corto para marcadores y filas. */
   readonly corto: string;
+  /** Artículo del nombre corto, para frases como «¿Sigue ahí la jauría?». */
+  readonly articulo: 'el' | 'la';
   /** Línea de Mi Teleférico cuyo color toma. */
   readonly linea: string;
   /** Variable CSS del color de la línea. */
@@ -21,6 +23,7 @@ export const CATEGORIAS: readonly Categoria[] = [
     codigo: 'bloqueo',
     nombre: 'Bloqueo o protesta vial',
     corto: 'Bloqueo',
+    articulo: 'el',
     linea: 'Amarilla',
     color: 'var(--linea-amarilla)',
     horas: 6,
@@ -29,6 +32,7 @@ export const CATEGORIAS: readonly Categoria[] = [
     codigo: 'accidente',
     nombre: 'Accidente de tránsito',
     corto: 'Accidente',
+    articulo: 'el',
     linea: 'Roja',
     color: 'var(--linea-roja)',
     horas: 3,
@@ -37,6 +41,7 @@ export const CATEGORIAS: readonly Categoria[] = [
     codigo: 'robo',
     nombre: 'Hecho delictivo o robo',
     corto: 'Robo',
+    articulo: 'el',
     linea: 'Morada',
     color: 'var(--linea-morada)',
     horas: 2,
@@ -45,6 +50,7 @@ export const CATEGORIAS: readonly Categoria[] = [
     codigo: 'infraestructura',
     nombre: 'Derrumbe, vía dañada o fuga',
     corto: 'Vía dañada',
+    articulo: 'la',
     linea: 'Café',
     color: 'var(--linea-cafe)',
     horas: 24,
@@ -53,6 +59,7 @@ export const CATEGORIAS: readonly Categoria[] = [
     codigo: 'jauria',
     nombre: 'Jauría de perros agresivos',
     corto: 'Jauría',
+    articulo: 'la',
     linea: 'Naranja',
     color: 'var(--linea-naranja)',
     horas: 2,
@@ -68,6 +75,7 @@ export function categoriaDe(codigo: string): Categoria {
       codigo: codigo as CodigoCategoria,
       nombre: 'Incidente',
       corto: 'Incidente',
+      articulo: 'el',
       linea: 'Plateada',
       color: 'var(--linea-plateada)',
       horas: 0,

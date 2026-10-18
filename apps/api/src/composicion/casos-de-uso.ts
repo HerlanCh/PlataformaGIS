@@ -11,7 +11,12 @@ import {
   RepositorioReportesPostgis,
   UnidadDeTrabajoReportePg,
 } from '@gis/module-reports';
-import { EliminarZona, RepositorioSuscripcionesPg, SuscribirZona } from '@gis/module-subscriptions';
+import {
+  EliminarZona,
+  ListarZonas,
+  RepositorioSuscripcionesPg,
+  SuscribirZona,
+} from '@gis/module-subscriptions';
 import {
   ConfirmarReporte,
   NegarReporte,
@@ -35,6 +40,7 @@ export interface CasosDeUso {
   readonly obtenerMapaDeCalor: Caso<ObtenerMapaDeCalor> | null;
   readonly suscribirZona: Caso<SuscribirZona> | null;
   readonly eliminarZona: Caso<EliminarZona> | null;
+  readonly listarZonas: Caso<ListarZonas> | null;
   readonly rechazarReporte: Caso<RechazarReporte> | null;
 }
 
@@ -98,6 +104,10 @@ export function componerCasosDeUso(infraestructura: Infraestructura): CasosDeUso
     eliminarZona: siActivo(
       interruptores.estaActivo('subscriptions'),
       () => new EliminarZona(suscripciones),
+    ),
+    listarZonas: siActivo(
+      interruptores.estaActivo('subscriptions'),
+      () => new ListarZonas(suscripciones),
     ),
     rechazarReporte: siActivo(
       interruptores.estaActivo('moderation'),

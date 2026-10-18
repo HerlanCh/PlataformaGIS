@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-18T13:22:34.056Z",
+  "generatedAt": "2026-10-18T18:49:43.416Z",
   "title": "Design System: Alerta LP",
   "extensions": {
     "colorMeta": {
@@ -208,11 +208,11 @@
     "typographyMeta": {
       "display": {
         "displayName": "Display",
-        "purpose": "Nombre de la app y título de la hoja."
+        "purpose": "Nombre de la app y título de las hojas."
       },
       "title": {
         "displayName": "Título",
-        "purpose": "Título del panel y texto del botón Reportar."
+        "purpose": "Títulos del panel y del editor, botones primarios y la pregunta «¿Sigue ahí?»."
       },
       "body": {
         "displayName": "Cuerpo",
@@ -220,22 +220,22 @@
       },
       "body-strong": {
         "displayName": "Cuerpo fuerte",
-        "purpose": "Nombre de categoría y distancia."
+        "purpose": "Nombre de categoría, distancia, valores de la ficha y etiquetas de sección."
       },
       "secondary": {
         "displayName": "Secundario",
-        "purpose": "Estado, vigencia, detalle y botón chico."
+        "purpose": "Estado, vigencia, ayudas y botón chico; en 700, segmentos y chips."
       },
       "label": {
         "displayName": "Etiqueta",
-        "purpose": "Lugar bajo el nombre."
+        "purpose": "Solo el lugar bajo el nombre."
       }
     },
     "shadows": [
       {
         "name": "control-flotante",
         "value": "0 2px 8px rgb(20 24 29 / 18%)",
-        "purpose": "Botones redondos y zoom sobre el mapa."
+        "purpose": "Botones redondos y zoom sobre el mapa, riel «Ahora / Historial» y barra del historial."
       },
       {
         "name": "transbordo",
@@ -250,12 +250,12 @@
       {
         "name": "hoja",
         "value": "0 -8px 32px rgb(20 24 29 / 22%)",
-        "purpose": "Hoja de categorías."
+        "purpose": "Hojas modales."
       },
       {
         "name": "aviso",
         "value": "0 6px 20px rgb(20 24 29 / 30%)",
-        "purpose": "Avisos; con filo interno de 4 px para el tono."
+        "purpose": "Avisos (con filo interno de 4 px para el tono) y tarjeta «¿Sigue ahí?»."
       }
     ],
     "motion": [
@@ -280,6 +280,28 @@
         "name": "escritorio",
         "value": "960px"
       }
+    ],
+    "heatGradient": [
+      {
+        "stop": 0.25,
+        "value": "#d6dbe1",
+        "token": "borde"
+      },
+      {
+        "stop": 0.5,
+        "value": "#8a939c",
+        "token": "linea-plateada"
+      },
+      {
+        "stop": 0.75,
+        "value": "#4a525c",
+        "token": "tinta-2"
+      },
+      {
+        "stop": 1,
+        "value": "#14181d",
+        "token": "tinta"
+      }
     ]
   },
   "components": [
@@ -290,6 +312,14 @@
       "description": "Acción principal a ancho completo; lleva una estación amarilla abierta, no un «+».",
       "html": "<button class=\"ds-reportar\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"26\" height=\"26\" viewBox=\"0 0 26 26\" aria-hidden=\"true\"><circle cx=\"13\" cy=\"13\" r=\"11.75\" fill=\"#14181d\"/><circle cx=\"13\" cy=\"13\" r=\"9.5\" fill=\"#f2b705\"/><circle cx=\"13\" cy=\"13\" r=\"5\" fill=\"#ffffff\"/></svg>Reportar</button>",
       "css": ".ds-reportar{font-family:'Atkinson Hyperlegible Next Variable',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:60px;border:0;border-radius:14px;background:#14181d;color:#fff;font-size:1.25rem;font-weight:800;cursor:pointer;transition:transform 180ms cubic-bezier(0.16,1,0.3,1),background-color 180ms cubic-bezier(0.16,1,0.3,1)}.ds-reportar:hover{background:#262c33}.ds-reportar:active{transform:scale(0.98)}.ds-reportar:focus-visible{outline:3px solid #0063bf;outline-offset:2px}"
+    },
+    {
+      "name": "Botón primario",
+      "kind": "button",
+      "refersTo": "boton-primario",
+      "description": "Rectángulo de tinta de 60 px para «Listo», «Nueva zona» y «Guardar zona», con el secundario de 60 px al pie.",
+      "html": "<div class=\"ds-pie\"><button class=\"ds-pie__sec\">Quitar filtros</button><button class=\"ds-primario\">Listo</button></div>",
+      "css": ".ds-pie{font-family:'Atkinson Hyperlegible Next Variable',system-ui,sans-serif;display:flex;gap:8px}.ds-primario{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-height:60px;border:0;border-radius:14px;background:#14181d;color:#fff;font:inherit;font-size:1.25rem;font-weight:800;cursor:pointer;transition:transform 180ms cubic-bezier(0.16,1,0.3,1),background-color 180ms cubic-bezier(0.16,1,0.3,1)}.ds-primario:hover{background:#262c33}.ds-primario:active{transform:scale(0.98)}.ds-primario:focus-visible,.ds-pie__sec:focus-visible{outline:3px solid #0063bf;outline-offset:2px}.ds-pie__sec{min-height:60px;padding:0 16px;border:1.5px solid #14181d;border-radius:14px;background:#fff;color:#14181d;font:inherit;font-size:1.0625rem;font-weight:700;cursor:pointer}"
     },
     {
       "name": "Botón de texto",
@@ -303,9 +333,25 @@
       "name": "Botón redondo",
       "kind": "button",
       "refersTo": "boton-redondo",
-      "description": "Control de 48 px que flota sobre el mapa (ubicarme, cerrar la hoja, zoom en escritorio).",
-      "html": "<button class=\"ds-redondo\" aria-label=\"Centrar en mi ubicación\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><line x1=\"2\" x2=\"5\" y1=\"12\" y2=\"12\"/><line x1=\"19\" x2=\"22\" y1=\"12\" y2=\"12\"/><line x1=\"12\" x2=\"12\" y1=\"2\" y2=\"5\"/><line x1=\"12\" x2=\"12\" y1=\"19\" y2=\"22\"/><circle cx=\"12\" cy=\"12\" r=\"7\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg></button>",
-      "css": ".ds-redondo{display:inline-grid;place-items:center;width:48px;height:48px;border:1.5px solid #14181d;border-radius:50%;background:#fff;color:#14181d;box-shadow:0 2px 8px rgb(20 24 29 / 18%);cursor:pointer;transition:transform 180ms cubic-bezier(0.16,1,0.3,1)}.ds-redondo:active{transform:scale(0.94)}.ds-redondo:focus-visible{outline:3px solid #0063bf;outline-offset:2px}"
+      "description": "Control de 48 px que flota sobre el mapa (ubicarme, filtros, cerrar la hoja, zoom en escritorio); el punto azul marca filtros activos.",
+      "html": "<button class=\"ds-redondo\" data-activo aria-label=\"Centrar en mi ubicación\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><line x1=\"2\" x2=\"5\" y1=\"12\" y2=\"12\"/><line x1=\"19\" x2=\"22\" y1=\"12\" y2=\"12\"/><line x1=\"12\" x2=\"12\" y1=\"2\" y2=\"5\"/><line x1=\"12\" x2=\"12\" y1=\"19\" y2=\"22\"/><circle cx=\"12\" cy=\"12\" r=\"7\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg></button>",
+      "css": ".ds-redondo{position:relative;display:inline-grid;place-items:center;width:48px;height:48px;border:1.5px solid #14181d;border-radius:50%;background:#fff;color:#14181d;box-shadow:0 2px 8px rgb(20 24 29 / 18%);cursor:pointer;transition:transform 180ms cubic-bezier(0.16,1,0.3,1)}.ds-redondo:active{transform:scale(0.94)}.ds-redondo:focus-visible{outline:3px solid #0063bf;outline-offset:2px}.ds-redondo[data-activo]::after{content:'';position:absolute;top:-2px;right:-2px;width:12px;height:12px;border:2px solid #fff;border-radius:50%;background:#0063bf}"
+    },
+    {
+      "name": "Selector segmentado",
+      "kind": "chip",
+      "refersTo": "segmentado",
+      "description": "Riel de radios nativos: pastilla con borde de tinta; el segmento elegido es tinta con texto blanco.",
+      "html": "<div class=\"ds-seg\" role=\"radiogroup\" aria-label=\"Qué muestra el mapa\"><label><input type=\"radio\" name=\"ds-seg\" checked><span>Ahora</span></label><label><input type=\"radio\" name=\"ds-seg\"><span>Historial</span></label></div>",
+      "css": ".ds-seg{font-family:'Atkinson Hyperlegible Next Variable',system-ui,sans-serif;display:inline-grid;grid-auto-columns:minmax(0,1fr);grid-auto-flow:column;gap:2px;padding:3px;border:1.5px solid #14181d;border-radius:999px;background:#fff;color:#14181d}.ds-seg label{position:relative}.ds-seg input{position:absolute;inset:0;margin:0;opacity:0;cursor:pointer}.ds-seg span{display:grid;place-items:center;min-height:40px;padding:0 12px;border-radius:999px;font-size:0.9375rem;font-weight:700;white-space:nowrap;transition:background-color 180ms cubic-bezier(0.16,1,0.3,1),color 180ms cubic-bezier(0.16,1,0.3,1)}.ds-seg input:checked+span{background:#14181d;color:#fff}.ds-seg input:focus-visible+span{outline:3px solid #0063bf;outline-offset:2px}"
+    },
+    {
+      "name": "Chip de línea",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Interruptor de línea de una zona: encendido en tinta; apagado en tinta secundaria con estación al 30 %.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip\" aria-pressed=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 18 18\" aria-hidden=\"true\"><circle cx=\"9\" cy=\"9\" r=\"7.75\" fill=\"#14181d\"/><circle cx=\"9\" cy=\"9\" r=\"5.5\" fill=\"#f2b705\"/><circle cx=\"9\" cy=\"9\" r=\"4\" fill=\"#f2b705\"/></svg>Bloqueo</button><button class=\"ds-chip\" aria-pressed=\"false\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 18 18\" aria-hidden=\"true\"><circle cx=\"9\" cy=\"9\" r=\"7.75\" fill=\"#14181d\"/><circle cx=\"9\" cy=\"9\" r=\"5.5\" fill=\"#e46c00\"/><circle cx=\"9\" cy=\"9\" r=\"4\" fill=\"#e46c00\"/></svg>Jauría</button></div>",
+      "css": ".ds-chips{font-family:'Atkinson Hyperlegible Next Variable',system-ui,sans-serif;display:flex;flex-wrap:wrap;gap:8px}.ds-chip{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 10px 0 8px;border:1.5px solid #4a525c;border-radius:999px;background:#fff;color:#4a525c;font:inherit;font-size:0.9375rem;font-weight:700;cursor:pointer;transition:border-color 180ms cubic-bezier(0.16,1,0.3,1)}.ds-chip[aria-pressed=true]{border-color:#14181d;color:#14181d}.ds-chip[aria-pressed=false] svg{opacity:0.3}.ds-chip:focus-visible{outline:3px solid #0063bf;outline-offset:2px}"
     },
     {
       "name": "Estado de conexión",
@@ -338,6 +384,14 @@
       "css": ".ds-linea{font-family:'Atkinson Hyperlegible Next Variable',system-ui,sans-serif;display:grid;grid-template-columns:30px 1fr 26px;align-items:center;gap:12px;width:100%;min-height:64px;padding:8px 12px;border:1.5px solid #d6dbe1;border-radius:14px;background:#fff;color:#14181d;text-align:left;font-size:1.0625rem;cursor:pointer;transition:border-color 180ms cubic-bezier(0.16,1,0.3,1),transform 180ms cubic-bezier(0.16,1,0.3,1)}.ds-linea:hover{border-color:#14181d}.ds-linea:active{transform:scale(0.98)}.ds-linea:focus-visible{outline:3px solid #0063bf;outline-offset:2px}.ds-linea__txt{display:grid}.ds-linea__txt span{font-size:0.9375rem;color:#4a525c}"
     },
     {
+      "name": "Ficha y voto del detalle",
+      "kind": "card",
+      "refersTo": "fila-de-ficha",
+      "description": "Filas de 48 px (etiqueta en tinta secundaria, valor 700 tabular) y los dos botones de voto iguales.",
+      "html": "<div class=\"ds-detalle\"><dl class=\"ds-ficha\"><div><dt>Estado</dt><dd><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"22\" height=\"22\" viewBox=\"0 0 22 22\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"9.75\" fill=\"#14181d\"/><circle cx=\"11\" cy=\"11\" r=\"7.5\" fill=\"#f2b705\"/><circle cx=\"11\" cy=\"11\" r=\"4\" fill=\"#ffffff\"/></svg>Sin confirmar</dd></div><div><dt>Distancia</dt><dd>a 120 m de ti</dd></div><div><dt>Se muestra hasta</dt><dd>hasta 15:10</dd></div></dl><p class=\"ds-pregunta\">¿Sigue ahí?</p><div class=\"ds-votos\"><button class=\"ds-voto\">Sigue ahí</button><button class=\"ds-voto\">Ya no está</button></div></div>",
+      "css": ".ds-detalle{font-family:'Atkinson Hyperlegible Next Variable',system-ui,sans-serif;color:#14181d;font-size:1.0625rem;line-height:1.4}.ds-ficha{display:grid;margin:0 0 16px}.ds-ficha div{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;border-bottom:1px solid #d6dbe1}.ds-ficha dt{color:#4a525c}.ds-ficha dd{display:inline-flex;align-items:center;gap:8px;margin:0;font-weight:700;font-variant-numeric:tabular-nums}.ds-pregunta{margin:0 0 12px;font-size:1.25rem;font-weight:800}.ds-votos{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ds-voto{min-height:60px;border:1.5px solid #14181d;border-radius:14px;background:#fff;color:#14181d;font:inherit;font-weight:800;cursor:pointer;transition:background-color 180ms cubic-bezier(0.16,1,0.3,1),transform 180ms cubic-bezier(0.16,1,0.3,1)}.ds-voto:hover{background:#f4f5f7}.ds-voto:active{transform:scale(0.98)}.ds-voto:focus-visible{outline:3px solid #0063bf;outline-offset:2px}"
+    },
+    {
       "name": "Transbordo",
       "kind": "custom",
       "description": "Grupo de reportes en el mapa: estación de transbordo con el total.",
@@ -355,12 +409,12 @@
   ],
   "narrative": {
     "northStar": "Señalética de Mi Teleférico",
-    "overview": "Alerta LP se lee como un panel de estación del teleférico de La Paz: fondo blanco, tinta casi negra, y el color reservado a las líneas. Cada categoría de incidente es una línea de la red con su color, y cada reporte es una estación sobre esa línea. El mapa base va en gris para que lo primero que se lea sean las estaciones de color; la urgencia se comunica con orden y código, no con rojo por todas partes.\n\nLa densidad es la de un panel de señalización: pocas piezas, grandes, en una sola familia tipográfica muy legible, pensada para leerse a pleno sol y con una mano. Las formas se reducen a tres: el anillo (estación), la franja (línea) y la pastilla o el rectángulo de esquinas suaves (botones y hojas). La profundidad es mínima y blanda; nada flota sin motivo.",
+    "overview": "Alerta LP se lee como un panel de estación del teleférico de La Paz: fondo blanco, tinta casi negra, y el color reservado a las líneas. Cada categoría de incidente es una línea de la red con su color, y cada reporte es una estación sobre esa línea. El mapa base va en gris para que lo primero que se lea sean las estaciones de color; la urgencia se comunica con orden y código, no con rojo por todas partes.\n\nLa densidad es la de un panel de señalización: pocas piezas, grandes, en una sola familia tipográfica muy legible, pensada para leerse a pleno sol y con una mano. Las formas se reducen a tres: el anillo (estación), la franja (línea) y la pastilla o el rectángulo de esquinas suaves (botones y hojas). La profundidad es mínima y blanda; nada flota sin motivo. Los controles se comportan como un tablero de la red: las líneas se encienden y se apagan, los modos se eligen en un riel de tinta, y todo lo que no es un reporte (zonas, mira, historial) se dibuja solo en tinta.",
     "keyCharacteristics": [
       "Blanco y tinta como base; el color de las líneas solo como tinta de línea o de estación, nunca como relleno de página.",
-      "La estación en anillo como signo único del reporte, en el mapa, en el diagrama, en la hoja y en el botón de reportar.",
-      "Franja multicolor de 6 px bajo la cabecera como leyenda de la red.",
-      "Mapa de OpenStreetMap en escala de grises.",
+      "La estación en anillo como signo único del reporte, en el mapa, en el diagrama, en las hojas, en los avisos y en el botón de reportar.",
+      "Franja multicolor de 6 px bajo la cabecera como leyenda de la red; una línea apagada por los filtros se ve rayada.",
+      "Mapa de OpenStreetMap en escala de grises; zonas, mira e historial en tinta sobre él.",
       "Una sola familia (Atkinson Hyperlegible Next) en una escala fija de cinco pasos."
     ],
     "rules": [
@@ -380,14 +434,29 @@
         "section": "colors"
       },
       {
+        "name": "La regla del historial en tinta",
+        "body": "El mapa de calor usa solo la escala de tinta (borde → plateada → tinta secundaria → tinta, de 0,25 a 1, con la capa al 85 %); nunca un color de línea, que ya significa una categoría. Más oscuro es más reportes.",
+        "section": "colors"
+      },
+      {
         "name": "La regla de la escala fija",
         "body": "Solo los cinco tamaños de la escala; nada de tamaños fluidos ni intermedios.",
         "section": "typography"
       },
       {
+        "name": "La regla de la etiqueta única",
+        "body": "El estilo espaciado de Label es del lugar en la cabecera y de nada más; las etiquetas de sección son Body en 700, en tinta.",
+        "section": "typography"
+      },
+      {
         "name": "La regla del mapa abajo",
-        "body": "Solo lo que está sobre el mapa o sobre el velo lleva sombra; lo que está en la página se separa con bordes.",
+        "body": "Solo lo que está sobre el mapa o sobre el velo lleva sombra; lo que está en la página se separa con bordes. Un botón redondo dentro de una lista de la página va plano, sin sombra.",
         "section": "elevation"
+      },
+      {
+        "name": "La regla del anillo reservado",
+        "body": "El anillo es el signo del reporte y de nada más. La mira para dibujar una zona es una cruz con el centro libre, nunca un anillo; las zonas son círculos de tinta sin color de línea.",
+        "section": "shapes"
       }
     ],
     "dos": [
@@ -396,7 +465,9 @@
       "**Do** mantener el mapa base en escala de grises para que las líneas sean lo primero que se lee.",
       "**Do** separar lo que está en la página con bordes de 1 px y reservar la sombra a lo que flota.",
       "**Do** dar 48 px como mínimo a todo control táctil y usar cifras tabulares en distancias y horas.",
-      "**Do** marcar el tono de un aviso con un filo de 4 px del color de sistema, sobre fondo de tinta."
+      "**Do** marcar el tono de un aviso con un filo de 4 px del color de sistema, sobre fondo de tinta.",
+      "**Do** mostrar una línea apagada atenuando su estación al 30 % y rayando su tramo en la franja, sin quitarla de la vista.",
+      "**Do** trazar en tinta todo lo que no es un reporte sobre el mapa: zonas, mira y calor."
     ],
     "donts": [
       "**Don't** usar un color de línea como fondo de página, de tarjeta o de botón.",
@@ -404,7 +475,9 @@
       "**Don't** usar alfileres rojos ni un botón flotante azul con «+» para reportar: reportar es añadir una estación.",
       "**Don't** añadir halos, resplandores ni pulsos al punto de conexión o a las estaciones.",
       "**Don't** introducir una segunda familia tipográfica ni tamaños fuera de la escala de cinco pasos.",
-      "**Don't** cortar el tramo de color del diagrama con divisorias."
+      "**Don't** cortar el tramo de color del diagrama con divisorias.",
+      "**Don't** dibujar un anillo para algo que no sea un reporte: la mira es una cruz.",
+      "**Don't** pintar el mapa de calor con colores de línea ni con una rampa de color."
     ]
   }
 }

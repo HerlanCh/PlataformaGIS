@@ -471,3 +471,41 @@ Con `v2.4.0` desplegada y el monitor de UptimeRobot activo. El detalle está en 
   - Web Push con su backend e instalación en iPhone;
   - iconos PNG (en esta máquina no hay conversor de imágenes);
   - Playwright contra staging y Lighthouse CI.
+
+## [2026-10-18] — Fase 8b: votos, «¿Sigue ahí?», filtros, mapa de calor y zonas
+
+### Qué se hizo
+- **Backend mínimo:** `GET /v1/suscripciones` (caso de uso `ListarZonas` del módulo `subscriptions`) para listar las zonas propias, que la HU-07 pide y la API no ofrecía. Contrato regenerado con `pnpm gen:api`.
+- **Detalle del reporte (HU-03):** se abre al tocar una estación del mapa o una fila del panel. Muestra el estado, la distancia, desde cuándo y hasta cuándo se ve, y los botones «Sigue ahí» / «Ya no está» con la posición del momento. Se cierra con un aviso si el reporte deja el mapa.
+- **Memoria del dispositivo** en IndexedDB (almacén v2, con migración desde la v1): reportes propios, votados y por los que ya se preguntó. Evita ofrecer votos que la API rechazaría sin exponer nunca `author_id`.
+- **«¿Sigue ahí?» automático:**
+  - solo con el permiso de ubicación ya concedido y la app visible;
+  - una tarjeta sobre el mapa ante un reporte a menos de 150 m, una sola vez por reporte;
+  - el mapa se desplaza para dejar la estación a la vista.
+- **Filtros** por línea y por antigüedad (1 hora, 3 horas, hoy), en el cliente y recordados en `localStorage`. La franja de la red raya las líneas ocultas y el panel dice cuántos incidentes esconden.
+- **Historial (HU-06):** interruptor «Ahora / Historial» con el mapa de calor de `GET /v1/mapa-calor` (7, 30 o 90 días). `leaflet.heat` se carga bajo demanda, en un chunk aparte de 2 KB.
+- **Zonas (HU-07):** lista, eliminación con confirmación y editor con mira fija, radio deslizante (100–2000 m) y líneas a elegir. Las zonas guardadas se dibujan con trazo discontinuo.
+- **Revisión de acabado de impeccable:** veredicto «corregir», con ocho correcciones, todas aplicadas:
+  - la tarjeta pasa abajo del mapa, sin tapar sus herramientas;
+  - las fichas del editor ya no usan el estado de la estación para encendido o apagado;
+  - la mira es una cruz y no un anillo (el anillo es solo del reporte);
+  - rótulos de sección y botones primarios unificados;
+  - distancia también sin GPS;
+  - el aviso viejo de ubicación se borra al llegar una posición.
+
+### Decisiones
+1. **Los votos no se encolan sin conexión:** dependen de dónde está la persona en ese momento (la API exige 1 km o menos).
+2. **Filtros en el cliente**, sobre la lista de la caché: no vuelven a pedir datos y los eventos en vivo siguen llegando.
+3. **El calor usa solo la escala de tinta:** los colores de línea ya significan una categoría. La intensidad de cada celda es su puesto entre todas (percentil), porque con recuentos parecidos la escala lineal daba un velo uniforme.
+4. **El filtro está en el mapa y no en el panel:** afecta a las dos capas, y en el teléfono el panel no tenía ancho para un botón más.
+5. **El aviso automático nunca pide el permiso de ubicación** por su cuenta.
+
+### Verificación
+- La batería completa en verde, con axe-core en cada hoja nueva.
+- JS inicial: 166 KB comprimidos.
+- Recorrido en Chrome (móvil 390×844 y escritorio) contra la API local con semillas, y una ronda de revisión de acabado con recaptura y confirmación.
+
+### Pendiente (8c)
+- Web Push con su backend y los avisos reales de las zonas.
+- Ayuda para instalar e iconos PNG.
+- Playwright contra staging, Lighthouse CI y las casillas del roadmap.

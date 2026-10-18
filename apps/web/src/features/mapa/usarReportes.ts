@@ -1,4 +1,3 @@
-import { crearClienteApi } from '@gis/api-client';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
@@ -8,11 +7,9 @@ import type { Caja } from '../../domain/geo.js';
 import { aplicarEvento } from '../../domain/reportes.js';
 import type { EventoPublico, ReportePublico } from '../../domain/reportes.js';
 import { useEstado } from '../../estado.js';
+import { api } from '../../services/api.js';
 import { obtenerToken } from '../../services/sesion.js';
 import { ConexionTiempoReal } from '../../services/tiempo-real.js';
-
-// `fetch` se resuelve en cada llamada (no al cargar el módulo): así lo pueden sustituir las pruebas.
-const api = crearClienteApi({ urlBase: URL_API, fetch: (...args) => fetch(...args) });
 
 export const claveDeReportes = (ventana: Caja) => ['reportes', ventana] as const;
 

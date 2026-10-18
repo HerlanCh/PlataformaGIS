@@ -10,6 +10,8 @@ export type ClienteApi = Client<paths>;
 export type ReportePublico = components['schemas']['ReportePublico'];
 export type Credencial = components['schemas']['Credencial'];
 export type Problema = components['schemas']['Problema'];
+export type Zona = components['schemas']['Zona'];
+export type CeldaDeCalor = components['schemas']['MapaDeCalor']['celdas'][number];
 
 export interface OpcionesClienteApi {
   /** Origen de la API, sin `/v1`: `https://plataforma-gis-api.onrender.com`. */

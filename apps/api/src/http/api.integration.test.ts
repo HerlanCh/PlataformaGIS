@@ -397,7 +397,7 @@ describeIntegration('API REST /v1', () => {
       ]);
     });
 
-    it('HU-07: crea (201) y elimina (204) una zona; la de otro usuario es 403', async () => {
+    it('HU-07: crea (201), lista y elimina (204) una zona; la de otro usuario es 403', async () => {
       const ana = await registrar();
       const beto = await registrar();
       const creada = await pedir({
@@ -414,6 +414,12 @@ describeIntegration('API REST /v1', () => {
       const borrar = (token: string) =>
         pedir({ method: 'DELETE', url: `/v1/suscripciones/${creada.json().id}`, token });
 
+      const listar = async (token: string) =>
+        (await pedir({ method: 'GET', url: '/v1/suscripciones', token })).json().zonas as {
+          id: string;
+        }[];
+      const deAna = await listar(ana.token);
+      const deBeto = await listar(beto.token);
       const ajena = await borrar(beto.token);
       const propia = await borrar(ana.token);
 
@@ -421,6 +427,9 @@ describeIntegration('API REST /v1', () => {
       expect(creada.json()).toMatchObject({ radioM: 800, categorias: ['bloqueo'] });
       expect(ajena.statusCode).toBe(403);
       expect(propia.statusCode).toBe(204);
+      expect(deAna.map((z) => z.id)).toEqual([creada.json().id]);
+      expect(deBeto).toEqual([]);
+      expect(await listar(ana.token)).toEqual([]);
     });
 
     it('HU-12: un ciudadano no puede rechazar (403); un moderador sí (202)', async () => {

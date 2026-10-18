@@ -2,15 +2,20 @@ import L from 'leaflet';
 import 'leaflet.markercluster';
 import { LocateFixed } from 'lucide-react';
 import { useEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
 import { categoriaDe } from '../../domain/categorias.js';
 import { AREA_DE_SERVICIO, CENTRO_LA_PAZ } from '../../domain/geo.js';
 import type { Caja } from '../../domain/geo.js';
 import { vigenciaDe } from '../../domain/reportes.js';
 import type { ReportePublico } from '../../domain/reportes.js';
 import { useEstado } from '../../estado.js';
+import type { Zona } from '../../services/zonas.js';
 import { estacionSvg } from '../../ui/Estacion.js';
 import { TRAZO } from '../../ui/iconos.js';
+import { BarraDeCalor, HerramientasDelMapa } from '../calor/ControlesDeCalor.js';
+import type { CeldaDeCalor } from '../calor/usarMapaDeCalor.js';
 import { leerPosicion } from '../reporte/usarReportar.js';
+import { useCapaDeCalor, useCapaDeZonas, useEnfoque, useZonaEnEdicion } from './capas.js';
 
 const ZOOM_INICIAL = 15;
 /** Espera tras el último movimiento antes de pedir la ventana nueva. */
@@ -52,17 +57,30 @@ const etiquetaDe = (reporte: ReportePublico): string => {
   return `${categoria.corto}, ${estado}, vigente hasta ${vigenciaDe(reporte.caducaEn)}`;
 };
 
+/** Estado de la consulta del mapa de calor, para la barra del historial. */
+export interface Calor {
+  readonly celdas: readonly CeldaDeCalor[] | null;
+  readonly cargando: boolean;
+  readonly fallo: boolean;
+}
+
 interface PropsMapa {
   readonly reportes: readonly ReportePublico[];
+  readonly calor: Calor;
+  readonly zonas: readonly Zona[];
+  /** Lo que flota sobre el mapa además de sus controles. */
+  readonly children?: ReactNode;
 }
 
 /** Mapa de OpenStreetMap con los reportes de la ventana como estaciones de su línea. */
-export function Mapa({ reportes }: PropsMapa) {
+export function Mapa({ reportes, calor, zonas, children }: PropsMapa) {
   const contenedor = useRef<HTMLDivElement>(null);
   const mapaRef = useRef<L.Map | null>(null);
   const grupoRef = useRef<L.MarkerClusterGroup | null>(null);
   const yoRef = useRef<L.CircleMarker | null>(null);
   const posicion = useEstado((s) => s.posicion);
+  const conCalor = useEstado((s) => s.capa === 'calor');
+  const editandoZona = useEstado((s) => s.zonaEnEdicion !== null);
 
   useEffect(() => {
     if (!contenedor.current) return;
@@ -120,10 +138,15 @@ export function Mapa({ reportes }: PropsMapa) {
           title: etiquetaDe(r),
           alt: etiquetaDe(r),
           keyboard: true,
-        }),
+        }).on('click', () => useEstado.getState().abrirDetalle(r.id)),
       ),
     );
   }, [reportes]);
+
+  useCapaDeCalor(mapaRef, grupoRef, calor.celdas, conCalor);
+  useCapaDeZonas(mapaRef, zonas);
+  useZonaEnEdicion(mapaRef);
+  useEnfoque(mapaRef);
 
   useEffect(() => {
     const mapa = mapaRef.current;
@@ -151,6 +174,15 @@ export function Mapa({ reportes }: PropsMapa) {
         role="application"
         aria-label="Mapa de incidentes"
       />
+      {!editandoZona && <HerramientasDelMapa />}
+      {editandoZona && <span className="mira" aria-hidden="true" />}
+      {conCalor && (
+        <BarraDeCalor
+          cantidad={calor.celdas?.length ?? null}
+          cargando={calor.cargando}
+          fallo={calor.fallo}
+        />
+      )}
       <button
         type="button"
         className="boton-redondo mapa__ubicarme"
@@ -159,6 +191,7 @@ export function Mapa({ reportes }: PropsMapa) {
         <LocateFixed aria-hidden="true" size={22} strokeWidth={TRAZO} />
         <span className="solo-lector">Centrar en mi ubicación</span>
       </button>
+      {children}
     </section>
   );
 }

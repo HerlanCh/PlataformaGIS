@@ -20,6 +20,8 @@ export type { RepositorioDeSuscripciones } from './domain/ports.js';
 // Casos de uso y manejador de eventos (Fase 5).
 export { EliminarZona } from './application/eliminar-zona.js';
 export type { EntradaEliminarZona } from './application/eliminar-zona.js';
+export { ListarZonas } from './application/listar-zonas.js';
+export type { EntradaListarZonas } from './application/listar-zonas.js';
 export { NotificarSuscriptores } from './application/notificar-suscriptores.js';
 export type { DependenciasNotificarSuscriptores } from './application/notificar-suscriptores.js';
 export type {

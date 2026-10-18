@@ -641,7 +641,90 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    /** Zonas suscritas propias (HU-07) */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ListaDeZonas'];
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+      };
+    };
     put?: never;
     /** Suscribe una zona de interés (HU-07) */
     post: {
@@ -1041,6 +1124,10 @@ export interface components {
       /** Format: date-time */
       creadoEn: string;
     };
+    /** @description Zonas suscritas del usuario, de la más reciente a la más antigua */
+    ListaDeZonasInput: {
+      zonas: components['schemas']['ZonaInput'][];
+    };
     /** @description Motivo del rechazo */
     RechazoInput: {
       motivo: string;
@@ -1139,6 +1226,10 @@ export interface components {
       categorias: string[];
       /** Format: date-time */
       creadoEn: string;
+    };
+    /** @description Zonas suscritas del usuario, de la más reciente a la más antigua */
+    ListaDeZonas: {
+      zonas: components['schemas']['Zona'][];
     };
     /** @description Motivo del rechazo */
     Rechazo: {
