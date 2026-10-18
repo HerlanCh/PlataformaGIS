@@ -19,7 +19,29 @@
     <title>Alerta La Paz y El Alto</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Esqueleto estático: se pinta antes de que cargue el JS y React lo reemplaza al montar. -->
+      <div class="app" aria-hidden="true">
+        <header class="encabezado">
+          <div class="encabezado__fila">
+            <div>
+              <p class="encabezado__nombre">Alerta LP</p>
+              <p class="encabezado__lugar">La Paz · El Alto</p>
+            </div>
+          </div>
+          <div class="red">
+            <span class="red__linea" style="--linea: var(--linea-amarilla)"></span>
+            <span class="red__linea" style="--linea: var(--linea-roja)"></span>
+            <span class="red__linea" style="--linea: var(--linea-morada)"></span>
+            <span class="red__linea" style="--linea: var(--linea-cafe)"></span>
+            <span class="red__linea" style="--linea: var(--linea-naranja)"></span>
+          </div>
+        </header>
+        <main class="app__cuerpo">
+          <div class="mapa"><div class="mapa__lienzo"></div></div>
+        </main>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

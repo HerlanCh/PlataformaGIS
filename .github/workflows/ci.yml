@@ -60,6 +60,7 @@ jobs:
         with:
           name: informe-lighthouse
           path: .lighthouseci/
+          include-hidden-files: true
           retention-days: 14
       - name: Auditoría de dependencias de producción (RNF-13)
         if: ${{ !cancelled() }}

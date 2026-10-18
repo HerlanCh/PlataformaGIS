@@ -4,31 +4,33 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { CENTRO_LA_PAZ, teselaDe, ZOOM_INICIAL } from './src/domain/geo.js';
 
 /**
- * El mapa abre siempre en el centro de La Paz y su primera tesela suele ser el LCP: el HTML la
- * precarga junto con sus vecinas de la misma fila, en paralelo con el JavaScript.
+ * El mapa abre siempre en el centro de La Paz y su tesela central es el LCP: el HTML la precarga
+ * con prioridad alta, en paralelo con el JavaScript. Solo esa: las vecinas competirían por la red.
  */
-function precargarTeselasIniciales() {
+function precargarTeselaInicial() {
   const { x, y } = teselaDe(CENTRO_LA_PAZ, ZOOM_INICIAL);
   return {
-    name: 'precargar-teselas-iniciales',
-    transformIndexHtml: () =>
-      [x - 1, x, x + 1].map((columna) => ({
+    name: 'precargar-tesela-inicial',
+    transformIndexHtml: () => [
+      {
         tag: 'link',
         attrs: {
           rel: 'preload',
           as: 'image',
           // Sin `crossorigin`, igual que las `<img>` de Leaflet: así se reutiliza la precarga.
-          href: `https://tile.openstreetmap.org/${ZOOM_INICIAL}/${columna}/${y}.png`,
+          href: `https://tile.openstreetmap.org/${ZOOM_INICIAL}/${x}/${y}.png`,
+          fetchpriority: 'high',
         },
         injectTo: 'head' as const,
-      })),
+      },
+    ],
   };
 }
 
 export default defineConfig({
   plugins: [
     react(),
-    precargarTeselasIniciales(),
+    precargarTeselaInicial(),
     VitePWA({
       // Service worker propio (src/sw.ts): precaché, teselas con límite y Background Sync de la cola.
       strategies: 'injectManifest',

@@ -5,7 +5,7 @@ import type { ReportePublico } from '../../domain/reportes.js';
 import { useEstado } from '../../estado.js';
 import type { ValorDeVoto } from '../../services/votos.js';
 import { Estacion } from '../../ui/Estacion.js';
-import { BotonesDeVoto } from './HojaDeDetalle.js';
+import { BotonesDeVoto } from './BotonesDeVoto.js';
 import { useSigueAhi } from './usarSigueAhi.js';
 import { useVotar } from './usarVotar.js';
 

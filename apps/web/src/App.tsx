@@ -1,29 +1,58 @@
-import { useEffect, useMemo } from 'react';
+import { lazy, Suspense, useEffect, useMemo } from 'react';
 import { URL_API } from './configuracion.js';
 import { filtrarReportes } from './domain/filtros.js';
 import type { Punto } from './domain/geo.js';
 import type { ReportePublico } from './domain/reportes.js';
 import { useEstado } from './estado.js';
+import { HojaDeFiltros } from './features/filtros/HojaDeFiltros.js';
+import { HojaDeCategorias } from './features/reporte/HojaDeCategorias.js';
+import { HojaDeDetalle } from './features/votos/HojaDeDetalle.js';
 import { useMapaDeCalor } from './features/calor/usarMapaDeCalor.js';
 import { PanelCerca } from './features/cerca/PanelCerca.js';
 import { useOrigen } from './features/cerca/usarOrigen.js';
-import { HojaDeFiltros } from './features/filtros/HojaDeFiltros.js';
-import { HojaDeInstalar } from './features/instalar/HojaDeInstalar.js';
 import { Mapa } from './features/mapa/Mapa.js';
 import { useReportesEnVentana, useTiempoReal } from './features/mapa/usarReportes.js';
-import { HojaDeCategorias } from './features/reporte/HojaDeCategorias.js';
 import { useEnviarCola, useReportar } from './features/reporte/usarReportar.js';
 import { AvisoSigueAhi } from './features/votos/AvisoSigueAhi.js';
-import { HojaDeDetalle } from './features/votos/HojaDeDetalle.js';
 import { useSeguirPosicion } from './features/votos/usarSigueAhi.js';
-import { EditorDeZona } from './features/zonas/EditorDeZona.js';
-import { HojaDeZonas } from './features/zonas/HojaDeZonas.js';
 import { useZonas } from './features/zonas/usarZonas.js';
 import type { Zona } from './features/zonas/usarZonas.js';
 import { pendientes } from './services/cola.js';
 import { obtenerToken } from './services/sesion.js';
 import { Avisos } from './ui/Avisos.js';
 import { Encabezado } from './ui/Encabezado.js';
+
+// Lo que solo funciona con conexión (zonas, instalar) se descarga al usarlo. Reportar, el detalle
+// y los filtros quedan en el JS inicial: tienen que andar sin señal aunque el service worker aún
+// no haya guardado la app (HU-05).
+const HojaDeZonas = lazy(() =>
+  import('./features/zonas/HojaDeZonas.js').then((m) => ({ default: m.HojaDeZonas })),
+);
+const HojaDeInstalar = lazy(() =>
+  import('./features/instalar/HojaDeInstalar.js').then((m) => ({ default: m.HojaDeInstalar })),
+);
+const EditorDeZona = lazy(() =>
+  import('./features/zonas/EditorDeZona.js').then((m) => ({ default: m.EditorDeZona })),
+);
+
+/** Las hojas, montadas solo mientras están abiertas. */
+function Hojas({ reportes }: { readonly reportes: readonly ReportePublico[] }) {
+  const reportar = useReportar();
+  const categorias = useEstado((s) => s.hojaAbierta);
+  const detalle = useEstado((s) => s.detalle !== null);
+  const filtros = useEstado((s) => s.filtrosAbiertos);
+  const zonas = useEstado((s) => s.zonasAbiertas);
+  const instalar = useEstado((s) => s.instalarAbierta);
+  return (
+    <Suspense fallback={null}>
+      {categorias && <HojaDeCategorias alElegir={(codigo) => void reportar(codigo)} />}
+      {detalle && <HojaDeDetalle reportes={reportes} />}
+      {filtros && <HojaDeFiltros />}
+      {zonas && <HojaDeZonas />}
+      {instalar && <HojaDeInstalar />}
+    </Suspense>
+  );
+}
 
 /** Al abrir y al volver la señal, se registra el dispositivo y se envía lo que quedó pendiente. */
 function usePuestaEnMarcha() {
@@ -106,7 +135,6 @@ export function App() {
   usePuestaEnMarcha();
   useTiempoReal();
   useSeguirPosicion();
-  const reportar = useReportar();
   const { consulta, todos, visibles, ocultos } = useReportesVisibles();
   useDestinoDeAviso(todos);
   const calor = useMapaDeCalor();
@@ -128,7 +156,9 @@ export function App() {
           {!editandoZona && !conCalor && <AvisoSigueAhi reportes={todos} />}
         </Mapa>
         {editandoZona ? (
-          <EditorDeZona />
+          <Suspense fallback={null}>
+            <EditorDeZona />
+          </Suspense>
         ) : (
           <PanelCerca
             reportes={visibles}
@@ -142,11 +172,7 @@ export function App() {
         )}
       </main>
       <Avisos />
-      <HojaDeCategorias alElegir={(codigo) => void reportar(codigo)} />
-      <HojaDeDetalle reportes={todos} />
-      <HojaDeFiltros />
-      <HojaDeZonas />
-      <HojaDeInstalar />
+      <Hojas reportes={todos} />
     </div>
   );
 }
