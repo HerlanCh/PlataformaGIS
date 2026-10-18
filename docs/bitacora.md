@@ -421,7 +421,7 @@ Con `v2.3.0` desplegada en Render y Neon migrado al arrancar. El detalle está e
 Con `v2.4.0` desplegada y el monitor de UptimeRobot activo. El detalle está en `docs/rendimiento/difusion-staging.md`.
 - **Difusión con 500 clientes:** 1000 de 1000 entregas, 0 a otras zonas, p95 de 524 ms (máximo 2 s).
 - **0 eventos perdidos al reiniciar:** prueba automática del despachador.
-- **Caducidad automática:** reporte de prueba creado; se confirma al recibir su `ReporteCaducado`.
+- **Caducidad automática:** el reporte de prueba (TTL de 120 min) pasó solo a `CADUCADO` y su `ReporteCaducado` llegó por WebSocket menos de un minuto después del vencimiento.
 
 ### Pendiente
 - **`apps/web` sigue esperando el `ping`,** que ya no existe. La PWA se rehace sobre el protocolo nuevo en la Fase 8.

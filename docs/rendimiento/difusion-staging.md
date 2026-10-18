@@ -44,4 +44,6 @@ En staging el reinicio ocurre en cada despliegue de Render; los eventos pendient
 Se creó un reporte de `jauria` (TTL de 120 min) con un cliente WebSocket escuchando su celda:
 - **Reporte:** `c8a5e5f3-1aec-4309-bf59-1075b9470880`, creado el 2026-10-17T23:01:24Z, caduca el 2026-10-18T01:01:24Z.
 - **`ReporteCreado`:** llegó al cliente en unos 270 ms.
-- **`ReporteCaducado`:** _pendiente; se completa al confirmarse._
+- **`ReporteCaducado`:** llegó al mismo cliente por WebSocket a las 01:04:20 de su reloj local. Ese reloj iba unos 2 min 18 s adelantado respecto del servidor (según `creadoEn` y la respuesta), así que llegó hacia las 01:02:02 del servidor, menos de un minuto después del vencimiento. Cuadra con la tarea `CaducarReportes`, que corre cada 60 s. **Cumple.**
+
+Nadie intervino entre la creación y la caducidad: la tarea programada pasó el reporte a `CADUCADO`, el despachador entregó el evento y Socket.io lo difundió a la celda.

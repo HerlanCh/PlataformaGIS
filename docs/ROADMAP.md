@@ -408,7 +408,7 @@ Resultado: cada cambio de un reporte llega a los clientes que miran esa zona en 
 
 - [x] Latencia de difusión p95 < 2 s con 500 clientes en staging
 - [x] 0 eventos perdidos en la prueba de reinicio
-- [ ] Caducidad automática funcionando en staging
+- [x] Caducidad automática funcionando en staging
 
 ## Fase 8: Frontend PWA
 
