@@ -1,3 +1,15 @@
+# [2.5.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.4.0...v2.5.0) (2026-10-18)
+
+
+### Bug Fixes
+
+* **web:** observaciones de SonarCloud en la PWA ([374beac](https://github.com/HerlanCh/PlataformaGIS/commit/374beace6506f820f4948382e1e3f77ef97e38ae))
+
+
+### Features
+
+* **web:** PWA con mapa en vivo y reporte en dos toques (Fase 8a) ([ee27d95](https://github.com/HerlanCh/PlataformaGIS/commit/ee27d95a3f841b0ee1d2b6943c1a0fc2351d3985))
+
 # [2.4.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.3.0...v2.4.0) (2026-10-17)
 
 
