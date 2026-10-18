@@ -54,6 +54,13 @@ jobs:
       - name: Lighthouse — Performance y Accesibilidad ≥ 90
         if: ${{ !cancelled() }}
         run: pnpm exec lhci autorun
+      - name: Informe de Lighthouse
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: informe-lighthouse
+          path: .lighthouseci/
+          retention-days: 14
       - name: Auditoría de dependencias de producción (RNF-13)
         if: ${{ !cancelled() }}
         run: pnpm audit --prod --audit-level high
