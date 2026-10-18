@@ -417,7 +417,12 @@ Con `v2.3.0` desplegada en Render y Neon migrado al arrancar. El detalle está e
 ### Verificación local
 - `pnpm carga:difusion` contra la API local: 500 clientes, 20 reportes, 1000 de 1000 entregas, 0 a otras zonas, p95 de 263 ms.
 
+### Cierre en staging (2026-10-17)
+Con `v2.4.0` desplegada y el monitor de UptimeRobot activo. El detalle está en `docs/rendimiento/difusion-staging.md`.
+- **Difusión con 500 clientes:** 1000 de 1000 entregas, 0 a otras zonas, p95 de 524 ms (máximo 2 s).
+- **0 eventos perdidos al reiniciar:** prueba automática del despachador.
+- **Caducidad automática:** el reporte de prueba (TTL de 120 min) pasó solo a `CADUCADO` y su `ReporteCaducado` llegó por WebSocket menos de un minuto después del vencimiento.
+
 ### Pendiente
-- **Cerrar la fase en staging:** monitor de UptimeRobot (acción del autor), prueba de difusión con 500 clientes y caducidad verificada.
 - **`apps/web` sigue esperando el `ping`,** que ya no existe. La PWA se rehace sobre el protocolo nuevo en la Fase 8.
 - **Escalar a varias instancias** exigiría el adaptador de Redis para Socket.io y un limitador compartido.

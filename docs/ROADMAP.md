@@ -406,9 +406,9 @@ Resultado: cada cambio de un reporte llega a los clientes que miran esa zona en 
 
 **Criterio de salida**
 
-- [ ] Latencia de difusión p95 < 2 s con 500 clientes en staging
-- [ ] 0 eventos perdidos en la prueba de reinicio
-- [ ] Caducidad automática funcionando en staging
+- [x] Latencia de difusión p95 < 2 s con 500 clientes en staging
+- [x] 0 eventos perdidos en la prueba de reinicio
+- [x] Caducidad automática funcionando en staging
 
 ## Fase 8: Frontend PWA
 

@@ -38,7 +38,7 @@ Los nombres de casos de uso provienen del roadmap; los marcados "por definir" se
 | **RNF-07** | Recuperabilidad | 1 restauración probada por versión | PostgreSQL / PostGIS | Workflow de GitHub Actions con `pg_dump` y restauración | Definido |
 | **RNF-08** | Ausencia de fallos | Tasa errores 5xx < 1 % | `apps/api` | Logs estructurados pino | Definido |
 | **RNF-09** | Tiempo de respuesta | Latencia API p95 < 300 ms | Endpoints Fastify | Escenario de prueba en `k6` | Verificado en staging (Fase 6) |
-| **RNF-10** | Difusión de eventos | Difusión WebSocket p95 < 2 s | Socket.io | Artillery (motor Socket.io) con 500 clientes | Definido |
+| **RNF-10** | Difusión de eventos | Difusión WebSocket p95 < 2 s | Socket.io | `pnpm carga:difusion` con 500 clientes | Verificado en staging (Fase 7) |
 | **RNF-11** | Consulta espacial | Consulta espacial p95 < 100 ms | PostGIS (100k registros) | `EXPLAIN ANALYZE` con la carga sintética | Definido |
 | **RNF-12** | Tamaño de bundle | JS inicial PWA < 250 KB | `apps/web` | Lighthouse CI | Definido |
 | **RNF-13** | Seguridad | 0 vulnerabilidades altas/críticas | Dependencias y API | `npm audit`, Dependabot, OWASP ZAP | Verificado en CI (Fase 1) |
@@ -266,7 +266,7 @@ Entrega de eventos en `packages/platform/src/despachador.ts` (`BusDeEventosConSa
 | Requisito | Garantía | Mecanismo | Pruebas |
 | :--- | :--- | :--- | :--- |
 | HU-02 (escenario 2), RF-05 | Un cambio de reporte llega a los clientes que miran su celda, y solo a ellos | Salas `celda:<geohash>` de precisión 6 y 5; el publicador emite a la celda de la ubicación pública | `tiempo-real.integration.test.ts` ("solo al cliente que mira la celda A"), `tiempo-real.test.ts` |
-| RNF-10 | Difusión p95 < 2 s con 500 clientes | Despachador cada 250 ms; entrega en paralelo por reporte | `pnpm carga:difusion` (local: p95 de 263 ms; staging: `docs/rendimiento/difusion-staging.md`) |
+| RNF-10 | Difusión p95 < 2 s con 500 clientes | Despachador cada 250 ms; entrega en paralelo por reporte | `pnpm carga:difusion` (local: p95 de 263 ms; staging: p95 de 524 ms, `docs/rendimiento/difusion-staging.md`) |
 | Fiabilidad | 0 eventos perdidos al reiniciar | Outbox: lo guardado y no publicado lo entrega el próximo despachador | `despachador.integration.test.ts` ("fiabilidad") |
 | Fiabilidad | Un manejador que falla se reintenta, con espera; los que ya terminaron no se repiten | `intentos`, `proximo_intento` y la bandeja `eventos_procesados` | `despachador.integration.test.ts` |
 | Fiabilidad | Dos despachadores no entregan el mismo evento | `FOR UPDATE SKIP LOCKED` | `despachador.integration.test.ts` |
