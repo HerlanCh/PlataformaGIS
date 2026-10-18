@@ -38,6 +38,11 @@ export async function createTestDatabase(): Promise<TestDatabase> {
   const url = new URL(urlAdmin);
   url.pathname = `/${nombre}`;
   const pool = new pg.Pool({ connectionString: url.toString(), max: 5 });
+  // Al borrar la base con `WITH (FORCE)`, PostgreSQL corta las conexiones que sigan abiertas
+  // (57P01). Es esperado durante la limpieza; cualquier otro error del pool se propaga.
+  pool.on('error', (error: Error & { code?: string }) => {
+    if (error.code !== '57P01') throw error;
+  });
 
   return {
     url: url.toString(),
