@@ -1,3 +1,10 @@
+# [2.6.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.5.0...v2.6.0) (2026-10-18)
+
+
+### Features
+
+* **web:** votos, «¿Sigue ahí?», filtros, mapa de calor y zonas (Fase 8b) ([d1c9954](https://github.com/HerlanCh/PlataformaGIS/commit/d1c9954b266fb562b51b77f23151df9e791c92af))
+
 # [2.5.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.4.0...v2.5.0) (2026-10-18)
 
 
