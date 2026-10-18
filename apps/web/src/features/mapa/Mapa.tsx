@@ -4,7 +4,7 @@ import { LocateFixed } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { categoriaDe } from '../../domain/categorias.js';
-import { AREA_DE_SERVICIO, CENTRO_LA_PAZ } from '../../domain/geo.js';
+import { AREA_DE_SERVICIO, CENTRO_LA_PAZ, ZOOM_INICIAL } from '../../domain/geo.js';
 import type { Caja } from '../../domain/geo.js';
 import { vigenciaDe } from '../../domain/reportes.js';
 import type { ReportePublico } from '../../domain/reportes.js';
@@ -15,9 +15,14 @@ import { TRAZO } from '../../ui/iconos.js';
 import { BarraDeCalor, HerramientasDelMapa } from '../calor/ControlesDeCalor.js';
 import type { CeldaDeCalor } from '../calor/usarMapaDeCalor.js';
 import { leerPosicion } from '../reporte/usarReportar.js';
-import { useCapaDeCalor, useCapaDeZonas, useEnfoque, useZonaEnEdicion } from './capas.js';
+import {
+  useCapaDeCalor,
+  useCapaDeZonas,
+  useDestino,
+  useEnfoque,
+  useZonaEnEdicion,
+} from './capas.js';
 
-const ZOOM_INICIAL = 15;
 /** Espera tras el último movimiento antes de pedir la ventana nueva. */
 const ESPERA_MS = 300;
 
@@ -147,6 +152,7 @@ export function Mapa({ reportes, calor, zonas, children }: PropsMapa) {
   useCapaDeZonas(mapaRef, zonas);
   useZonaEnEdicion(mapaRef);
   useEnfoque(mapaRef);
+  useDestino(mapaRef);
 
   useEffect(() => {
     const mapa = mapaRef.current;

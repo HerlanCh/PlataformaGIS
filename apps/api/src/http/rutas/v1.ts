@@ -1,6 +1,6 @@
 import { http } from '@gis/contracts';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import type { CasosDeUso } from '../../composicion/casos-de-uso.js';
+import type { AvisosPush, CasosDeUso } from '../../composicion/casos-de-uso.js';
 import { exigirToken, identidadDe, SEGURIDAD_BEARER } from '../autenticacion.js';
 import type { ServicioDeTokens } from '../tokens.js';
 import { aReporteHttp, aZonaHttp, ERRORES } from './comun.js';
@@ -111,6 +111,7 @@ export const rutasV1 =
     }
 
     const { obtenerMapaDeCalor, suscribirZona, eliminarZona, listarZonas, rechazarReporte } = casos;
+    if (casos.avisosPush) registrarRutasDeAvisos(app, casos.avisosPush, conToken);
 
     if (obtenerMapaDeCalor) {
       app.get(
@@ -226,3 +227,66 @@ export const rutasV1 =
       );
     }
   };
+
+/** Avisos Web Push (HU-08): la clave pública y alta o baja de la suscripción del dispositivo. */
+function registrarRutasDeAvisos(
+  app: Parameters<FastifyPluginAsyncZod>[0],
+  avisos: AvisosPush,
+  conToken: { preHandler: ReturnType<typeof exigirToken> },
+): void {
+  app.get(
+    '/notificaciones/clave-publica',
+    {
+      schema: {
+        tags: ['avisos'],
+        summary: 'Clave VAPID pública para suscribirse a los avisos (HU-08)',
+        response: { 200: http.esquemaClavePublicaPush, ...ERRORES },
+      },
+    },
+    () => Promise.resolve({ clavePublica: avisos.clavePublica }),
+  );
+
+  app.post(
+    '/notificaciones/push',
+    {
+      ...conToken,
+      schema: {
+        tags: ['avisos'],
+        summary: 'Recibir avisos de las zonas en este dispositivo (HU-08)',
+        description: 'Idempotente por endpoint: repetirla actualiza la suscripción.',
+        security: SEGURIDAD_BEARER,
+        body: http.esquemaSuscripcionPush,
+        response: { 204: http.esquemaSinContenido, ...ERRORES },
+      },
+    },
+    async (request, reply) => {
+      await avisos.registrar.ejecutar({
+        idUsuario: identidadDe(request).idUsuario,
+        endpoint: request.body.endpoint,
+        ...request.body.keys,
+      });
+      return reply.code(204).send();
+    },
+  );
+
+  app.delete(
+    '/notificaciones/push',
+    {
+      ...conToken,
+      schema: {
+        tags: ['avisos'],
+        summary: 'Dejar de recibir avisos en este dispositivo (HU-08)',
+        security: SEGURIDAD_BEARER,
+        body: http.esquemaBajaPush,
+        response: { 204: http.esquemaSinContenido, ...ERRORES },
+      },
+    },
+    async (request, reply) => {
+      await avisos.eliminar.ejecutar({
+        idUsuario: identidadDe(request).idUsuario,
+        endpoint: request.body.endpoint,
+      });
+      return reply.code(204).send();
+    },
+  );
+}

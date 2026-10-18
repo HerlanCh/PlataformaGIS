@@ -638,7 +638,8 @@ describe('zonas suscritas (HU-07)', () => {
     api((s) => (s.url.includes('/v1/suscripciones') ? json({ zonas: [zona(1)] }) : undefined));
     useEstado.setState({ zonasAbiertas: true });
     const { container } = montar(<HojaDeZonas />);
-    await screen.findByText('Zona 1 · radio de 800 m');
+    // En la CI la lista puede tardar más que la espera por defecto de 1 s.
+    await screen.findByText('Zona 1 · radio de 800 m', {}, { timeout: 5000 });
 
     expect(await infracciones(container)).toEqual([]);
   });

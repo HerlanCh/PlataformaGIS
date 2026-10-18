@@ -129,3 +129,13 @@ export function useEnfoque(mapaRef: RefMapa): void {
     });
   }, [mapaRef, enfoque]);
 }
+
+/** Lleva el mapa al reporte de un aviso push, cerca, para que entre en la ventana. */
+export function useDestino(mapaRef: RefMapa): void {
+  const destino = useEstado((s) => s.destino);
+  useEffect(() => {
+    const mapa = mapaRef.current;
+    if (!mapa || !destino) return;
+    mapa.setView([destino.punto.latitud, destino.punto.longitud], 16);
+  }, [mapaRef, destino]);
+}

@@ -313,3 +313,17 @@ Las pruebas de extremo a extremo con Playwright contra staging y Lighthouse CI c
 | HU-07 | Crear con centro, radio (100–2000 m) y líneas; eliminar; límite de 5 | `features/zonas/` (mira fija y control deslizante), `services/zonas.ts` | `features/interaccion.test.tsx`, `services/interaccion.test.ts`, `features/mapa/capas.test.tsx` |
 | Accesibilidad | Sin infracciones de axe en las hojas y el editor nuevos | `ui/Hoja.tsx`, `ui/Segmentado.tsx`, `features/` | `features/interaccion.test.tsx` |
 | Rendimiento | JS inicial < 250 KB comprimido | `vite build`; `leaflet.heat` en un chunk aparte | 166 KB (bitácora 8b) |
+
+### 9.3 Entrega 8c
+
+| Historia | Escenario | Implementación | Pruebas |
+| :--- | :--- | :--- | :--- |
+| HU-08 | 1. Aviso con la categoría y la `public_location` a cada dispositivo del suscriptor | Módulo `notifications` (`EnviarAvisoPush`, `EmisorWebPush`), puente `EnviadorDeNotificacionesPush` en `apps/api/src/composicion/manejadores.ts` | `packages/modules/notifications/tests/casos-de-uso.test.ts`, `apps/api/src/http/avisos.test.ts` |
+| HU-08 | 2 a 4. Fuera de la zona o la categoría, una vez por reporte, nunca al autor | `NotificarSuscriptores` (`subscriptions`, Fase 5); el canal push solo entrega | `packages/modules/subscriptions/tests/casos-de-uso.test.ts` |
+| HU-08 | Alta y baja del dispositivo; suscripción vencida (404/410) borrada | `RegistrarSuscripcionPush`, `EliminarSuscripcionPush`, rutas `/v1/notificaciones/*` | `persistencia.integration.test.ts`, `avisos.test.ts`, `e2e/historias.spec.ts` |
+| HU-08 | Activar los avisos en la PWA; el aviso abre el reporte | `apps/web/src/services/push.ts`, `features/avisos/`, `sw.ts`, `services/aviso.ts` | `features/avisos.test.tsx`, `e2e/historias.spec.ts` |
+| Instalación | Instalable (manifiesto, iconos PNG, service worker) y ayuda para iPhone y Android | `vite.config.ts`, `public/*.png`, `features/instalar/` | `e2e/historias.spec.ts`, `features/avisos.test.tsx` |
+| HU-01, 02, 03, 05, 06, 07 | De extremo a extremo con una API real | La PWA completa | `apps/web/e2e/historias.spec.ts` (Playwright; en staging tras cada Release) |
+| HU-04 | Caducidad automática | Verificada en staging en la Fase 7 | Bitácora de la Fase 7 |
+| Accesibilidad | axe-core en el navegador real, en la pantalla y en cada hoja; Lighthouse ≥ 90 | `ui/`, `features/` | `e2e/historias.spec.ts`, Lighthouse CI (100) |
+| Rendimiento | JS inicial < 250 KB comprimido; Performance ≥ 90 | Teselas iniciales precargadas; `leaflet.heat` aparte | `tools/presupuesto/js-inicial.mjs` (164 KB), Lighthouse CI (93) |

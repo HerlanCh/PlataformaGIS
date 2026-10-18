@@ -13,6 +13,19 @@ export interface Caja {
 /** Centro de La Paz: donde se abre el mapa si no hay posición del usuario. */
 export const CENTRO_LA_PAZ: Punto = { latitud: -16.4955, longitud: -68.1336 };
 
+/** Zoom con el que abre el mapa, centrado en La Paz. */
+export const ZOOM_INICIAL = 15;
+
+/** Tesela (x, y) de OpenStreetMap que contiene el punto en ese zoom (proyección Web Mercator). */
+export function teselaDe(punto: Punto, zoom: number): { readonly x: number; readonly y: number } {
+  const n = 2 ** zoom;
+  const latitudRad = (punto.latitud * Math.PI) / 180;
+  return {
+    x: Math.floor(((punto.longitud + 180) / 360) * n),
+    y: Math.floor(((1 - Math.asinh(Math.tan(latitudRad)) / Math.PI) / 2) * n),
+  };
+}
+
 /** Rectángulo de servicio (SRS 1.3): La Paz y El Alto. */
 export const AREA_DE_SERVICIO: Caja = {
   latitudMin: -16.67,

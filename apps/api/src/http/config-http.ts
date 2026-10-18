@@ -11,6 +11,9 @@ const secreto = z.preprocess(
   z.string().min(32, 'debe tener al menos 32 caracteres').optional(),
 );
 
+// Igual que `secreto`: vacía cuenta como ausente.
+const opcional = z.preprocess((valor) => (valor === '' ? undefined : valor), z.string().optional());
+
 const esquema = z
   .object({
     NODE_ENV: z.string().default('development'),
@@ -25,6 +28,10 @@ const esquema = z
     LIMITE_POR_MINUTO: z.coerce.number().int().min(1).default(300),
     DESPACHO_INTERVALO_MS: z.coerce.number().int().min(10).default(250),
     CADUCIDAD_INTERVALO_S: z.coerce.number().int().min(1).default(60),
+    /** Claves VAPID de Web Push (HU-08). Sin ellas los avisos solo quedan en el log. */
+    VAPID_PUBLIC_KEY: opcional,
+    VAPID_PRIVATE_KEY: opcional,
+    VAPID_SUBJECT: opcional,
   })
   .refine((env) => env.NODE_ENV !== 'production' || env.JWT_SECRET !== undefined, {
     message: 'es obligatorio en producción',
@@ -37,6 +44,14 @@ export interface ConfigJwt {
   readonly duracionS: number;
 }
 
+/** Claves VAPID con las que la API firma los avisos Web Push. */
+export interface ConfigVapid {
+  readonly publica: string;
+  readonly privada: string;
+  /** `mailto:` de contacto que exige VAPID. */
+  readonly contacto: string;
+}
+
 export interface ConfigHttp {
   readonly jwt: ConfigJwt;
   /** Solicitudes por minuto y por IP en toda la API. */
@@ -45,7 +60,12 @@ export interface ConfigHttp {
   readonly despachoIntervaloMs: number;
   /** Cada cuánto se caducan los reportes vencidos. */
   readonly caducidadIntervaloS: number;
+  /** `null` si faltan las claves: no se envían avisos push. */
+  readonly vapid: ConfigVapid | null;
 }
+
+/** Contacto por defecto de VAPID si no se configura otro. */
+const CONTACTO_VAPID = 'mailto:alerta-lp@example.org';
 
 /** Configuración propia del proceso de la API (HTTP, tiempo real y tareas). Si es inválida, no arranca. */
 export function cargarConfigHttp(env: Entorno = process.env): ConfigHttp {
@@ -61,5 +81,13 @@ export function cargarConfigHttp(env: Entorno = process.env): ConfigHttp {
     limitePorMinuto: datos.LIMITE_POR_MINUTO,
     despachoIntervaloMs: datos.DESPACHO_INTERVALO_MS,
     caducidadIntervaloS: datos.CADUCIDAD_INTERVALO_S,
+    vapid:
+      datos.VAPID_PUBLIC_KEY && datos.VAPID_PRIVATE_KEY
+        ? {
+            publica: datos.VAPID_PUBLIC_KEY,
+            privada: datos.VAPID_PRIVATE_KEY,
+            contacto: datos.VAPID_SUBJECT ?? CONTACTO_VAPID,
+          }
+        : null,
   };
 }

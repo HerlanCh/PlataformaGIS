@@ -6,7 +6,7 @@ Contrato del módulo. Mantenerlo al día es parte de la Definición de Hecho.
 
 Guardar las zonas de interés de cada usuario: un círculo (centro y radio) y las categorías de incidentes que quiere recibir en él.
 
-También decide a quién avisar de un reporte nuevo. El envío lo hace el adaptador de `EnviadorDeNotificaciones` (registro en log en la Fase 7; Web Push y Telegram en las Fases 8 y 9).
+También decide a quién avisar de un reporte nuevo. El envío lo hace el adaptador de `EnviadorDeNotificaciones`: desde la Fase 8, Web Push con el módulo `notifications` (o el log, si está apagado); Telegram llega en la Fase 9.
 
 ## Modelo de dominio
 

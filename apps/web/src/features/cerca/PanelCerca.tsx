@@ -7,6 +7,7 @@ import type { ReportePublico } from '../../domain/reportes.js';
 import { useEstado } from '../../estado.js';
 import { Estacion } from '../../ui/Estacion.js';
 import { TRAZO } from '../../ui/iconos.js';
+import { OfertaDeInstalar } from '../instalar/OfertaDeInstalar.js';
 import { leerPosicion } from '../reporte/usarReportar.js';
 
 /** Estaciones que caben en el diagrama de un teléfono (390 × 844) sin cortar una fila. */
@@ -191,6 +192,7 @@ export function PanelCerca({
         )}
       </div>
 
+      <OfertaDeInstalar />
       <Ocultos cantidad={ocultos} />
       <Diagrama
         filas={filas}

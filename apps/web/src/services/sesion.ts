@@ -35,9 +35,13 @@ export class ErrorDeRegistro extends Error {
   }
 }
 
+/** Registro en curso: al abrir la app varias partes piden el token a la vez y comparten uno. */
+let registroEnCurso: Promise<string> | null = null;
+
 /**
  * Token vigente del dispositivo. Si no hay o está por vencer, registra el dispositivo de nuevo:
- * `POST /v1/dispositivos` es idempotente y devuelve el mismo usuario con un token nuevo.
+ * `POST /v1/dispositivos` es idempotente y devuelve el mismo usuario con un token nuevo. Las
+ * llamadas simultáneas comparten el mismo registro.
  */
 export async function obtenerToken(
   urlApi: string,
@@ -45,8 +49,14 @@ export async function obtenerToken(
 ): Promise<string> {
   const sesion = await leer();
   if (!opciones.forzar && vigente(sesion, Date.now())) return sesion.token!;
+  registroEnCurso ??= registrar(urlApi, sesion, opciones.fetch ?? fetch).finally(() => {
+    registroEnCurso = null;
+  });
+  return registroEnCurso;
+}
 
-  const respuesta = await (opciones.fetch ?? fetch)(`${urlApi}/v1/dispositivos`, {
+async function registrar(urlApi: string, sesion: Sesion, pedir: typeof fetch): Promise<string> {
+  const respuesta = await pedir(`${urlApi}/v1/dispositivos`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ hashDispositivo: sesion.hashDispositivo }),

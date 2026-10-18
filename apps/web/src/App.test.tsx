@@ -20,6 +20,7 @@ const json = (cuerpo: unknown, status = 200) =>
   new Response(JSON.stringify(cuerpo), { status, headers: { 'content-type': 'application/json' } });
 
 let sinSenal = false;
+let reportesDeLaVentana: unknown[] = [];
 const reportesEnviados: unknown[] = [];
 
 function api(entrada: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -55,7 +56,7 @@ function api(entrada: RequestInfo | URL, init?: RequestInit): Promise<Response> 
       ),
     );
   }
-  return Promise.resolve(json({ reportes: [] }));
+  return Promise.resolve(json({ reportes: reportesDeLaVentana }));
 }
 
 function montar() {
@@ -71,6 +72,7 @@ beforeEach(() => {
   globalThis.indexedDB = new IDBFactory();
   reiniciarAlmacen();
   sinSenal = false;
+  reportesDeLaVentana = [];
   reportesEnviados.length = 0;
   useEstado.setState({
     hojaAbierta: false,
@@ -96,12 +98,36 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const reportarBloqueo = () => {
+/** La hoja de categorías se descarga al abrirla: se espera a que aparezca. */
+const reportarBloqueo = async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Reportar' }));
-  fireEvent.click(screen.getByRole('button', { name: /Bloqueo o protesta vial/ }));
+  fireEvent.click(await screen.findByRole('button', { name: /Bloqueo o protesta vial/ }));
 };
 
 describe('PWA: mapa en vivo y reporte en dos toques', () => {
+  it('HU-08: al tocar un aviso, la app abre el reporte y limpia la URL', async () => {
+    reportesDeLaVentana = [
+      {
+        id: '33333333-3333-4333-8333-333333333333',
+        codigoCategoria: 'bloqueo',
+        estado: 'ACTIVO',
+        publicLocation: { latitud: -16.4955, longitud: -68.1336 },
+        creadoEn: '2026-10-18T12:00:00.000Z',
+        caducaEn: '2026-10-18T18:00:00.000Z',
+      },
+    ];
+    globalThis.history.pushState(
+      null,
+      '',
+      '/?reporte=33333333-3333-4333-8333-333333333333&lat=-16.4955&lon=-68.1336',
+    );
+    montar();
+
+    expect(await screen.findByRole('heading', { name: 'Bloqueo o protesta vial' })).toBeTruthy();
+    expect(globalThis.location.search).toBe('');
+    expect(useEstado.getState().destino).toBeNull();
+  });
+
   it('muestra el mapa de OpenStreetMap y el panel «Cerca de ti»', async () => {
     const { container } = montar();
 
@@ -113,7 +139,7 @@ describe('PWA: mapa en vivo y reporte en dos toques', () => {
   it('HU-01: dos toques envían el reporte con la ubicación del GPS', async () => {
     montar();
 
-    reportarBloqueo();
+    await reportarBloqueo();
 
     expect(await screen.findByText('Reporte enviado. Ya aparece en el mapa.')).toBeTruthy();
     expect(reportesEnviados).toEqual([
@@ -125,7 +151,7 @@ describe('PWA: mapa en vivo y reporte en dos toques', () => {
     montar();
     sinSenal = true;
 
-    reportarBloqueo();
+    await reportarBloqueo();
 
     expect(await screen.findByText(/Sin señal: tu reporte se enviará solo/)).toBeTruthy();
     expect(await screen.findByText('1 reporte pendiente de envío')).toBeTruthy();
@@ -147,7 +173,7 @@ describe('PWA: mapa en vivo y reporte en dos toques', () => {
     });
     montar();
 
-    reportarBloqueo();
+    await reportarBloqueo();
 
     expect(await screen.findByText(/Activa la ubicación para reportar/)).toBeTruthy();
     expect(reportesEnviados).toEqual([]);

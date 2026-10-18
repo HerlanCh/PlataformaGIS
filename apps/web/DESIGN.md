@@ -363,6 +363,14 @@ Barra blanca con borde de tinta de 1,5 px, esquina de 14 px y sombra de control 
 
 La hoja «Mis zonas» lista cada zona en filas de 64 px con divisoria de 1 px: nombre en 700 y sus líneas como estaciones de 18 px con nombre corto en Secondary; eliminar es un redondo chico plano que, al tocarlo, se cambia por «Cancelar» y «Sí, eliminar». Al pie, «Nueva zona» y una nota centrada en Secondary. El editor muestra la mira en el centro del mapa, el radio con su valor en 800 tabular y un control deslizante de 48 px con `accent-color` de tinta, los chips de líneas y, al pie, «Cancelar» y «Guardar zona».
 
+### Avisos de las zonas e instalación
+
+Arriba de «Mis zonas», un bloque separado por una divisoria de 1 px con el estado de los avisos push. Si están inactivos, un botón de texto a todo el ancho (48 px) «Activar avisos en este dispositivo» con campana. Si están activos, la frase en 700 con campana y «Desactivar» chico. Si están bloqueados, no hay soporte o es un iPhone sin instalar, la explicación en Secondary con la campana tachada y, en iPhone, «Cómo instalar».
+
+La hoja «Instalar Alerta LP» tiene dos versiones. En Android y escritorio, el botón primario «Instalar app». En iPhone, tres pasos en filas de 64 px con borde `borde`: el pictograma en un cuadro de `superficie` de 48 px y esquina de 14 px, nunca en un anillo (el anillo es del reporte), «Paso N.» en 800 y el texto. Bajo el título del panel, la oferta «Instala la app.» ocupa una línea con «Cómo instalar» y un redondo chico para descartarla para siempre.
+
+El aviso del sistema dice «<Categoría> en tu zona» y «Línea X. Toca para verlo en el mapa.», con el icono de 192 px. Los iconos PNG salen de `icon.svg`; el maskable y el de Apple llevan el dibujo al 80 % sobre tinta a sangre.
+
 ### Avisos
 
 Rectángulo de tinta con texto blanco 700, arriba y centrado, máximo 440 px; el tono es un filo inferior de 4 px, nunca un fondo de color.

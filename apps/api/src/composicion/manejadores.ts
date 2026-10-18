@@ -8,6 +8,11 @@ import {
   RepositorioReportesPostgis,
   UnidadDeTrabajoReportePg,
 } from '@gis/module-reports';
+import {
+  EmisorWebPush,
+  EnviarAvisoPush,
+  RepositorioSuscripcionesPushPg,
+} from '@gis/module-notifications';
 import { NotificarSuscriptores, RepositorioSuscripcionesPg } from '@gis/module-subscriptions';
 import type { AvisoDeReporte, EnviadorDeNotificaciones } from '@gis/module-subscriptions';
 import {
@@ -21,12 +26,13 @@ import type { Db, InterruptoresDeFunciones, Registro } from '@gis/platform';
 import { idReporte } from '@gis/shared-kernel';
 import type { GeneradorDeId, Reloj } from '@gis/shared-kernel';
 import { suscribirPublicador } from '../tiempo-real/publicador.js';
+import type { ConfigVapid } from '../http/config-http.js';
 import type { TiempoReal } from '../tiempo-real/servidor.js';
 import { consultaDeAutor, consultaParaVerificacion } from './puentes.js';
 
 /**
- * Hasta las Fases 8 y 9 (Web Push y Telegram), los avisos a suscriptores quedan en el log.
- * Solo se registran identificadores y la ubicación pública.
+ * Avisos a suscriptores en el log: solo identificadores y la ubicación pública. Es el canal cuando
+ * `notifications` está apagado o faltan las claves VAPID.
  */
 export class EnviadorDeNotificacionesEnRegistro implements EnviadorDeNotificaciones {
   constructor(private readonly registro: Registro) {}
@@ -45,6 +51,54 @@ export class EnviadorDeNotificacionesEnRegistro implements EnviadorDeNotificacio
   }
 }
 
+/**
+ * Puente entre `subscriptions` y `notifications` (HU-08): el aviso a un suscriptor se envía por
+ * Web Push a cada dispositivo suyo y además se registra. Vive en la raíz de composición porque un
+ * módulo nunca importa a otro (ADR-001).
+ */
+export class EnviadorDeNotificacionesPush implements EnviadorDeNotificaciones {
+  private readonly enRegistro: EnviadorDeNotificacionesEnRegistro;
+
+  constructor(
+    private readonly enviarAviso: Pick<EnviarAvisoPush, 'ejecutar'>,
+    private readonly registro: Registro,
+  ) {
+    this.enRegistro = new EnviadorDeNotificacionesEnRegistro(registro);
+  }
+
+  async enviar(aviso: AvisoDeReporte): Promise<void> {
+    await this.enRegistro.enviar(aviso);
+    const resultado = await this.enviarAviso.ejecutar(aviso.idUsuario, {
+      idReporte: aviso.idReporte,
+      codigoCategoria: aviso.codigoCategoria,
+      publicLocation: {
+        latitud: aviso.publicLocation.latitud,
+        longitud: aviso.publicLocation.longitud,
+      },
+    });
+    if (resultado.fallidos > 0) {
+      this.registro.warn({ idUsuario: aviso.idUsuario, ...resultado }, 'avisos push no entregados');
+    }
+  }
+}
+
+/** El canal de avisos según los interruptores y las claves VAPID. */
+export function enviadorDeAvisos(
+  db: Db,
+  interruptores: InterruptoresDeFunciones,
+  registro: Registro,
+  vapid: ConfigVapid | null,
+): EnviadorDeNotificaciones {
+  if (!interruptores.estaActivo('notifications') || !vapid) {
+    return new EnviadorDeNotificacionesEnRegistro(registro);
+  }
+  const enviar = new EnviarAvisoPush({
+    suscripciones: new RepositorioSuscripcionesPushPg(db),
+    emisor: new EmisorWebPush(vapid),
+  });
+  return new EnviadorDeNotificacionesPush(enviar, registro);
+}
+
 export interface DependenciasManejadores {
   readonly bus: BusDeEventos;
   readonly db: Db;
@@ -53,6 +107,7 @@ export interface DependenciasManejadores {
   readonly tiempoReal: Pick<TiempoReal, 'difundir'>;
   readonly reloj: Reloj;
   readonly ids: GeneradorDeId;
+  readonly vapid?: ConfigVapid | null;
 }
 
 export function suscribirManejadores(deps: DependenciasManejadores): void {
@@ -88,7 +143,7 @@ export function suscribirManejadores(deps: DependenciasManejadores): void {
     const notificar = new NotificarSuscriptores({
       suscripciones: new RepositorioSuscripcionesPg(db),
       consultaDeAutor: consultaDeAutor(reportes),
-      enviador: new EnviadorDeNotificacionesEnRegistro(deps.registro),
+      enviador: enviadorDeAvisos(db, interruptores, deps.registro, deps.vapid ?? null),
     });
     bus.suscribir('ReporteCreado.v1', 'subscriptions.notificar', async (e) => {
       await notificar.manejar(e);

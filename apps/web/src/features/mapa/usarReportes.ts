@@ -9,7 +9,7 @@ import type { EventoPublico, ReportePublico } from '../../domain/reportes.js';
 import { useEstado } from '../../estado.js';
 import { api } from '../../services/api.js';
 import { obtenerToken } from '../../services/sesion.js';
-import { ConexionTiempoReal } from '../../services/tiempo-real.js';
+import type { ConexionTiempoReal } from '../../services/tiempo-real.js';
 
 export const claveDeReportes = (ventana: Caja) => ['reportes', ventana] as const;
 
@@ -53,21 +53,33 @@ export function useTiempoReal(): void {
 
   useEffect(() => {
     const vistos = new Set<string>();
-    const conexion = new ConexionTiempoReal(URL_API, (o) => obtenerToken(URL_API, o), {
-      alEvento: (evento) => {
-        // La entrega es "al menos una vez": cada evento trae su id para descartar repetidos.
-        if (vistos.has(evento.id)) return;
-        vistos.add(evento.id);
-        fusionarEvento(consulta, evento);
+    let conexion: ConexionTiempoReal | null = null;
+    let activo = true;
+    // Socket.io se descarga después del primer pintado: no hace falta para dibujar el mapa.
+    void import('../../services/tiempo-real.js').then(
+      ({ ConexionTiempoReal: Conexion }) => {
+        if (!activo) return;
+        conexion = new Conexion(URL_API, (o) => obtenerToken(URL_API, o), {
+          alEvento: (evento) => {
+            // La entrega es "al menos una vez": cada evento trae su id para descartar repetidos.
+            if (vistos.has(evento.id)) return;
+            vistos.add(evento.id);
+            fusionarEvento(consulta, evento);
+          },
+          alEstado: (estado) => useEstado.getState().fijarConexion(estado),
+          alPerderEventos: () => void consulta.invalidateQueries({ queryKey: ['reportes'] }),
+        });
+        conexion.conectar();
+        conexionRef.current = conexion;
+        const { ventana: actual } = useEstado.getState();
+        if (actual) conexion.actualizarVentana(aBbox(actual));
       },
-      alEstado: (estado) => useEstado.getState().fijarConexion(estado),
-      alPerderEventos: () => void consulta.invalidateQueries({ queryKey: ['reportes'] }),
-    });
-    conexion.conectar();
-    conexionRef.current = conexion;
+      () => useEstado.getState().fijarConexion('sin-conexion'),
+    );
     return () => {
+      activo = false;
       conexionRef.current = null;
-      conexion.cerrar();
+      conexion?.cerrar();
     };
   }, [consulta]);
 

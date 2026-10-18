@@ -15,3 +15,6 @@ apps/web/.impeccable/questions/
 apps/web/.impeccable/hook.cache.json
 apps/web/.impeccable/hook.pending.json
 apps/web/.impeccable/config.local.json
+apps/web/playwright-report/
+apps/web/test-results/
+.lighthouseci/

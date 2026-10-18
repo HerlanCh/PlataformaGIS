@@ -2,13 +2,15 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": ["node"]
   },
   "include": ["index.ts", "domain", "application", "adapters", "tests"],
   "references": [
     { "path": "../../shared-kernel" },
     { "path": "../../contracts" },
     { "path": "../../event-bus" },
-    { "path": "../../platform" }
+    { "path": "../../platform" },
+    { "path": "../../testing" }
   ]
 }

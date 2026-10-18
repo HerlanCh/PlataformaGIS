@@ -49,7 +49,12 @@ describeIntegration('migraciones de toda la plataforma', () => {
     await migrar(TODOS_ENCENDIDOS);
 
     expect(await tablas()).toEqual(
-      [...TABLAS_IMPRESCINDIBLES, 'acciones_moderacion', 'zonas_suscritas'].sort(),
+      [
+        ...TABLAS_IMPRESCINDIBLES,
+        'acciones_moderacion',
+        'suscripciones_push',
+        'zonas_suscritas',
+      ].sort(),
     );
   });
 
@@ -71,7 +76,9 @@ describeIntegration('migraciones de toda la plataforma', () => {
   it('con FEATURE_SUBSCRIPTIONS=false no crea su tabla y el resto queda completo', async () => {
     await migrar({ ...TODOS_ENCENDIDOS, FEATURE_SUBSCRIPTIONS: 'false' });
 
-    expect(await tablas()).toEqual([...TABLAS_IMPRESCINDIBLES, 'acciones_moderacion'].sort());
+    expect(await tablas()).toEqual(
+      [...TABLAS_IMPRESCINDIBLES, 'acciones_moderacion', 'suscripciones_push'].sort(),
+    );
   });
 
   it('encender un módulo más tarde añade solo sus tablas', async () => {

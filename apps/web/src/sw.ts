@@ -4,6 +4,7 @@ import { ExpirationPlugin } from 'workbox-expiration';
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
+import { avisoDeReporte } from './services/aviso.js';
 import { enviarPendientes, ETIQUETA_DE_SINCRONIZACION } from './services/cola.js';
 
 declare const self: ServiceWorkerGlobalScope;
@@ -44,6 +45,41 @@ self.addEventListener('sync', ((evento: EventoDeSincronizacion) => {
     }),
   );
 }) as EventListener);
+
+// Avisos de las zonas (HU-08): el aviso solo trae la categoría y la ubicación pública.
+self.addEventListener('push', (evento) => {
+  const aviso = avisoDeReporte(evento.data?.json() as unknown);
+  if (!aviso) return;
+  evento.waitUntil(
+    self.registration.showNotification(aviso.titulo, {
+      body: aviso.cuerpo,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      // Un reporte se avisa una vez: si llega repetido, reemplaza al anterior.
+      tag: aviso.etiqueta,
+      lang: 'es-BO',
+      data: { url: aviso.url },
+    }),
+  );
+});
+
+// Tocar el aviso abre la app en el reporte, o la trae al frente si ya estaba abierta.
+self.addEventListener('notificationclick', (evento) => {
+  evento.notification.close();
+  const url = (evento.notification.data as { url?: string } | null)?.url ?? '/';
+  evento.waitUntil(
+    (async () => {
+      const abiertas = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const ventana = abiertas[0];
+      if (!ventana) {
+        await self.clients.openWindow(url);
+        return;
+      }
+      ventana.postMessage({ tipo: 'abrir-reporte', url });
+      await ventana.focus();
+    })(),
+  );
+});
 
 self.addEventListener('message', (evento) => {
   if ((evento.data as { tipo?: string } | null)?.tipo === 'SKIP_WAITING') void self.skipWaiting();

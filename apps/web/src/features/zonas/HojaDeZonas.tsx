@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { Download, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { categoriaDe } from '../../domain/categorias.js';
 import { formatearDistancia } from '../../domain/geo.js';
@@ -6,6 +6,8 @@ import { useEstado } from '../../estado.js';
 import { Estacion } from '../../ui/Estacion.js';
 import { Hoja } from '../../ui/Hoja.js';
 import { TRAZO } from '../../ui/iconos.js';
+import { ActivarAvisos } from '../avisos/ActivarAvisos.js';
+import { useFormaDeInstalar } from '../instalar/instalacion.js';
 import { MAX_ZONAS, useZonas, zonasNoDisponibles } from './usarZonas.js';
 import type { Zona } from './usarZonas.js';
 
@@ -116,6 +118,19 @@ function Contenido() {
   );
 }
 
+/** Instalar con el aviso del navegador (Android y escritorio), si aún no está instalada. */
+function InstalarDesdeZonas() {
+  const forma = useFormaDeInstalar();
+  const abrirInstalar = useEstado((s) => s.abrirInstalar);
+  // En iPhone el bloque de avisos ya lleva a la ayuda («Cómo instalar»).
+  if (forma !== 'aviso-del-navegador') return null;
+  return (
+    <button type="button" className="boton-texto boton-texto--chico" onClick={abrirInstalar}>
+      <Download aria-hidden="true" size={18} strokeWidth={TRAZO} /> Instalar la app
+    </button>
+  );
+}
+
 /** Zonas suscritas (HU-07): listar, eliminar y crear una nueva dibujándola en el mapa. */
 export function HojaDeZonas() {
   const abierta = useEstado((s) => s.zonasAbiertas);
@@ -125,8 +140,12 @@ export function HojaDeZonas() {
       abierta={abierta}
       alCerrar={cerrar}
       titulo="Mis zonas"
-      ayuda="Recibirás avisos de incidentes nuevos en estas zonas cuando actives las notificaciones."
+      ayuda="Te avisamos cuando alguien reporta un incidente nuevo dentro de tus zonas."
     >
+      <section className="hoja__bloque" aria-label="Avisos">
+        <ActivarAvisos />
+        <InstalarDesdeZonas />
+      </section>
       <Contenido />
     </Hoja>
   );

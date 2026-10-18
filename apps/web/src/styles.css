@@ -1228,6 +1228,106 @@ button:disabled {
   align-items: center;
 }
 
+/* Avisos e instalación (Fase 8c) */
+
+.hoja__bloque {
+  display: grid;
+  justify-items: start;
+  gap: var(--e-2);
+  margin-bottom: var(--e-4);
+  padding-bottom: var(--e-4);
+  border-bottom: 1px solid var(--borde);
+}
+
+.hoja__bloque .boton-texto {
+  margin-top: 0;
+}
+
+.boton-texto.boton-texto--ancho {
+  justify-content: center;
+  width: 100%;
+  min-height: var(--toque);
+}
+
+.avisos-push {
+  display: grid;
+  justify-items: start;
+  gap: var(--e-2);
+  width: 100%;
+}
+
+.avisos-push__texto {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--e-2);
+  font-size: var(--t-2);
+  color: var(--tinta-2);
+}
+
+.avisos-push__texto svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.avisos-push[data-estado='activos'] .avisos-push__texto {
+  color: var(--tinta);
+  font-weight: 700;
+}
+
+.pasos {
+  display: grid;
+  gap: var(--e-2);
+  margin: 0 0 var(--e-3);
+  padding: 0;
+  list-style: none;
+}
+
+.paso {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  align-items: center;
+  gap: var(--e-3);
+  min-height: 64px;
+  padding: var(--e-2) var(--e-3) var(--e-2) var(--e-2);
+  border: 1.5px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+/* Los pasos no son estaciones: el pictograma va en un cuadro, nunca en un anillo. */
+.paso__icono {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radio);
+  background: var(--superficie);
+}
+
+.paso__numero {
+  font-weight: 800;
+}
+
+.oferta {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e-2);
+  padding: 0 var(--e-4) var(--e-2);
+  font-size: var(--t-2);
+  font-weight: 700;
+}
+
+.oferta__acciones {
+  display: flex;
+  align-items: center;
+  gap: var(--e-1);
+}
+
+.oferta .boton-texto {
+  margin-top: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

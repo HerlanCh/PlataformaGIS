@@ -37,8 +37,16 @@ El estado del servidor vive en TanStack Query (`['reportes', ventana]`); el loca
 - **Historial (HU-06):** el interruptor «Ahora / Historial» cambia las estaciones por el mapa de calor de `GET /v1/mapa-calor` (7, 30 o 90 días, solo las líneas visibles). `leaflet.heat` se descarga al activarlo por primera vez. Si la API responde 404 (módulo apagado), el interruptor se esconde.
 - **Zonas (HU-07):** la campana del encabezado lista las zonas propias (`GET /v1/suscripciones`), permite eliminarlas con confirmación y crear una nueva: el mapa muestra una mira fija, el centro es el del mapa y el radio sale de un control deslizante de 100 a 2000 m. Las zonas guardadas se dibujan con trazo discontinuo.
 
+- **Avisos de las zonas (HU-08):** en «Mis zonas», «Activar avisos en este dispositivo» pide el permiso (solo al tocarlo), se suscribe con la clave VAPID de `GET /v1/notificaciones/clave-publica` y envía la suscripción a `POST /v1/notificaciones/push`.
+  - El service worker muestra el aviso («Bloqueo en tu zona») con una etiqueta por reporte; al tocarlo abre la app con `?reporte=&lat=&lon=`, el mapa va al punto y se abre el detalle.
+  - En iPhone los avisos solo llegan a la app instalada (iOS 16.4 o superior): sin instalar, se ofrece la ayuda.
+- **Instalación:** en Android y escritorio se guarda el evento `beforeinstallprompt` para el botón «Instalar app»; en iPhone, una hoja con los pasos en Safari. El panel lo ofrece una vez (se puede descartar) y «Mis zonas» siempre. Iconos PNG generados con `node tools/iconos/generar.mjs` (192, 512, maskable y `apple-touch-icon`).
+- **Rendimiento:** el HTML precarga las teselas de la vista inicial (centro de La Paz, zoom 15), que son el LCP; `vercel.json` define la CSP y las cabeceras de seguridad.
+
 ## Comandos
 
 - `pnpm --filter @gis/web dev`: la web en `:5173`, contra `VITE_API_URL` (la API local por defecto).
 - `pnpm --filter @gis/web build`: la PWA en `dist/`; Vite informa el tamaño comprimido del JS inicial, que debe quedar bajo 250 KB.
 - `pnpm exec vitest run apps/web`: las pruebas (componentes, servicios con IndexedDB en memoria y accesibilidad con axe-core).
+- `pnpm --filter @gis/web e2e`: Playwright (`e2e/`) contra `BASE_URL` y `API_URL` (por defecto, `vite preview` en `:5173` y la API local). Usa el build: `vite dev` no registra el service worker. En la CI corre contra staging después de cada Release (`.github/workflows/e2e.yml`).
+- `pnpm exec lhci autorun` (desde la raíz): Lighthouse con Performance y Accesibilidad ≥ 90; `node tools/presupuesto/js-inicial.mjs` comprueba el JS inicial < 250 KB comprimido.

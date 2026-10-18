@@ -46,6 +46,7 @@ const app = await construirApp({
       db,
       interruptores,
       limitador: new LimitadorDeFrecuenciaEnProceso(relojDelSistema),
+      clavePublicaPush: configHttp.vapid?.publica ?? null,
     }),
     tokens,
     limitePorMinuto: configHttp.limitePorMinuto,
@@ -61,6 +62,7 @@ suscribirManejadores({
   tiempoReal,
   reloj: relojDelSistema,
   ids: generadorUuid,
+  vapid: configHttp.vapid,
 });
 const despachador = new DespachadorDeSalida(db, bus, {
   registro,

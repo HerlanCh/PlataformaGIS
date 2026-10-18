@@ -68,6 +68,15 @@ describe('sesión del dispositivo (RF-01)', () => {
     expect(a!.hashDispositivo).toBe(b!.hashDispositivo);
   });
 
+  it('varias llamadas simultáneas comparten un solo registro', async () => {
+    const { pedir, pedidos } = servidor(() => creado());
+
+    const tokens = await Promise.all([1, 2, 3, 4].map(() => obtenerToken(API, { fetch: pedir })));
+
+    expect(new Set(tokens).size).toBe(1);
+    expect(pedidos).toHaveLength(1);
+  });
+
   it('un registro rechazado es un error con su estado', async () => {
     const pedir = vi.fn(async () => json({}, 503)) as unknown as typeof fetch;
 

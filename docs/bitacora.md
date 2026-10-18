@@ -509,3 +509,40 @@ Con `v2.4.0` desplegada y el monitor de UptimeRobot activo. El detalle está en 
 - Web Push con su backend y los avisos reales de las zonas.
 - Ayuda para instalar e iconos PNG.
 - Playwright contra staging, Lighthouse CI y las casillas del roadmap.
+
+## [2026-10-19] — Fase 8c: avisos Web Push, instalación y verificación
+
+### Qué se hizo
+- **Módulo `notifications`** (antes un esqueleto vacío):
+  - entidad `SuscripcionPush`, tabla `suscripciones_push` con su reversa, casos de uso para registrar, eliminar y enviar el aviso, y adaptadores `RepositorioSuscripcionesPushPg` y `EmisorWebPush` (librería `web-push` con VAPID);
+  - interruptor `FEATURE_NOTIFICATIONS`; sin él o sin las claves VAPID, los avisos vuelven al log.
+- **Raíz de composición:** `EnviadorDeNotificacionesPush` une `subscriptions` (a quién avisar) con `notifications` (cómo enviar) sin que un módulo importe al otro.
+- **Rutas:** `GET /v1/notificaciones/clave-publica`, `POST` y `DELETE /v1/notificaciones/push`. Contrato y cliente regenerados.
+- **PWA:**
+  - activar y desactivar los avisos en «Mis zonas»;
+  - el service worker muestra el aviso y, al tocarlo, abre la app en el reporte;
+  - ayuda para instalar (aviso del navegador en Android y escritorio, pasos de Safari en iPhone) y oferta única en el panel;
+  - iconos PNG (192, 512, maskable y `apple-touch-icon`) generados con `@resvg/resvg-js`, y manifiesto completo;
+  - CSP y cabeceras de seguridad en `apps/web/vercel.json`.
+- **Verificación:**
+  - Playwright (`apps/web/e2e/`) por historia, con axe-core en el navegador real, y el flujo `.github/workflows/e2e.yml` contra staging después de cada Release;
+  - Lighthouse CI y el presupuesto de JS en cada PR (`ci.yml`, `lighthouserc.json`, `tools/presupuesto/js-inicial.mjs`).
+
+### Decisiones
+1. **`EnviarAvisoPush` no lanza ante un envío fallido:** solo los cuenta. Si lanzara, el manejador del evento se reintentaría y repetiría el aviso a quienes sí lo recibieron. Las suscripciones vencidas (404 o 410) se borran.
+2. **La clave VAPID pública la da la API**, así la web no necesita otra variable por entorno.
+3. **Playwright usa el Chromium completo sin interfaz:** el mínimo (`headless-shell`) deniega siempre las notificaciones.
+4. **La prueba de HU-08 simula solo `pushManager.subscribe`:** un navegador automatizado no puede hablar con el servicio push real (FCM). El permiso, el alta y la baja contra la API son reales; la entrega se prueba en el backend con un emisor falso.
+5. **Teselas iniciales precargadas:** la primera tesela del mapa era el LCP (3,7 s, Performance 87). El build calcula las teselas del centro de La Paz en zoom 15 y las precarga sin `crossorigin`, igual que Leaflet, para reutilizarlas. El LCP pasó a 3,0 s y Performance a 93.
+6. **Lighthouse 12 ya no tiene la categoría PWA:** que la app sea instalable lo comprueba Playwright (manifiesto, iconos y service worker).
+7. **CSP con `style-src 'unsafe-inline'`:** React (variables CSS en `style`) y Leaflet escriben estilos en línea. Los scripts quedan solo en `'self'`.
+8. **Las pruebas E2E reportan en un punto al azar de la ciudad,** para no chocar con reportes vigentes de corridas anteriores (duplicados).
+
+### Verificación
+- 1209 pruebas en verde, con integración contra PostGIS; lint, typecheck, depcruise y duplicación del 0,7 %.
+- Playwright local contra el build y la API local: 8 de 8.
+- Lighthouse local: Performance 93 y Accesibilidad 100. JS inicial: 164 KB comprimidos.
+
+### Pendiente
+- Crear las claves VAPID de staging en Render (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT`) y `FEATURE_NOTIFICATIONS=true`.
+- Primera corrida de `e2e.yml` contra staging, después del merge, y el PR de cierre de la Fase 8 con las casillas del roadmap.

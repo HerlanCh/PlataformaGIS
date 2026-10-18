@@ -95,6 +95,7 @@ describe('cargarConfigHttp', () => {
       limitePorMinuto: 300,
       despachoIntervaloMs: 250,
       caducidadIntervaloS: 60,
+      vapid: null,
     });
   });
 
@@ -115,6 +116,7 @@ describe('cargarConfigHttp', () => {
       limitePorMinuto: 60,
       despachoIntervaloMs: 250,
       caducidadIntervaloS: 60,
+      vapid: null,
     });
   });
 
