@@ -1,42 +1,667 @@
+/* Alerta LP — mundo «Señalética de Mi Teleférico»: paneles blancos de estación, tinta casi negra y
+   el color de cada línea solo como tinta de línea y de estación, nunca como relleno de página. */
+
+:root {
+  /* Tinta y fondos */
+  --fondo: #ffffff;
+  --superficie: #f4f5f7;
+  --tinta: #14181d;
+  --tinta-2: #4a525c;
+  --borde: #d6dbe1;
+  --velo: rgb(20 24 29 / 45%);
+
+  /* Líneas de la red (Mi Teleférico) */
+  --linea-amarilla: #f2b705;
+  --linea-roja: #d0102e;
+  --linea-morada: #6d2c97;
+  --linea-cafe: #7b4a22;
+  --linea-naranja: #e46c00;
+  --linea-verde: #00843d;
+  --linea-azul: #0063bf;
+  --linea-plateada: #8a939c;
+
+  /* Tipografía: una sola familia muy legible, en una escala fija */
+  --fuente: 'Atkinson Hyperlegible Next Variable', system-ui, sans-serif;
+  --t-1: 0.8125rem;
+  --t-2: 0.9375rem;
+  --t-3: 1.0625rem;
+  --t-4: 1.25rem;
+  --t-5: 1.5rem;
+
+  /* Espacio y forma */
+  --e-1: 4px;
+  --e-2: 8px;
+  --e-3: 12px;
+  --e-4: 16px;
+  --e-5: 24px;
+  --radio: 14px;
+  --toque: 48px;
+
+  /* Movimiento: salida exponencial, breve */
+  --salida: cubic-bezier(0.16, 1, 0.3, 1);
+  --rapido: 180ms;
+  --medio: 260ms;
+
+  color-scheme: light;
+  accent-color: var(--linea-azul);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html,
 body,
-#root,
-.app,
-.mapa {
+#root {
   height: 100%;
   margin: 0;
 }
 
 body {
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--fuente);
+  font-size: var(--t-3);
+  line-height: 1.4;
+  color: var(--tinta);
+  background: var(--fondo);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+::selection {
+  background: var(--linea-amarilla);
+  color: var(--tinta);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--tinta-2) transparent;
+}
+
+:focus-visible {
+  outline: 3px solid var(--linea-azul);
+  outline-offset: 2px;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.solo-lector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Estructura */
 
 .app {
-  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100dvh;
 }
 
-.ping {
-  position: absolute;
-  left: 12px;
-  bottom: 24px;
-  z-index: 1000;
+.app__cuerpo {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border-left: 5px solid #b3261e;
-  background: #ffffff;
-  color: #1b1b1f;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 25%);
-  font-size: 14px;
+  min-height: 0;
 }
 
-.ping[data-conectado='true'] {
-  border-left-color: #1b7f3b;
+@media (min-width: 960px) {
+  .app__cuerpo {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+  }
+
+  .app__cuerpo > .panel {
+    order: -1;
+    max-height: none;
+    border-top: 0;
+    border-right: 1px solid var(--borde);
+  }
+}
+
+/* Cabecera y franja de la red */
+
+.encabezado {
+  background: var(--fondo);
+  padding-top: env(safe-area-inset-top);
+}
+
+.encabezado__fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e-3);
+  padding: var(--e-3) var(--e-4);
+}
+
+.encabezado__nombre {
+  font-size: var(--t-5);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+.encabezado__lugar {
+  font-size: var(--t-1);
+  font-weight: 600;
+  color: var(--tinta-2);
+  letter-spacing: 0.04em;
+}
+
+.conexion {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e-2);
+  min-height: 32px;
+  padding: 0 var(--e-3);
+  border: 1.5px solid var(--tinta);
+  border-radius: 999px;
+  font-size: var(--t-2);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.conexion__punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--linea-plateada);
+}
+
+.conexion[data-estado='en-vivo'] .conexion__punto {
+  background: var(--linea-verde);
+}
+
+.conexion[data-estado='sin-conexion'] {
+  color: var(--tinta-2);
+  border-color: var(--tinta-2);
+}
+
+.red {
+  display: flex;
+  height: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.red__linea {
+  flex: 1;
+}
+
+/* Mapa */
+
+.mapa {
+  position: relative;
+  flex: 1;
+  min-height: 42dvh;
+}
+
+.mapa__lienzo {
+  position: absolute;
+  inset: 0;
+  background: var(--superficie);
+}
+
+/* Teselas apagadas para que las líneas de color sean lo que se lee primero. */
+.teselas {
+  filter: grayscale(1) contrast(0.9) brightness(1.06);
+}
+
+.mapa__ubicarme {
+  position: absolute;
+  right: var(--e-3);
+  bottom: calc(var(--e-3) + 20px);
+  z-index: 500;
+}
+
+.boton-redondo {
+  display: inline-grid;
+  place-items: center;
+  width: var(--toque);
+  height: var(--toque);
+  border: 1.5px solid var(--tinta);
+  border-radius: 50%;
+  background: var(--fondo);
+  box-shadow: 0 2px 8px rgb(20 24 29 / 18%);
+  transition: transform var(--rapido) var(--salida);
+}
+
+.boton-redondo:active {
+  transform: scale(0.94);
+}
+
+.marcador {
+  background: none;
+  border: 0;
+}
+
+.marcador svg {
+  display: block;
+  filter: drop-shadow(0 1px 2px rgb(20 24 29 / 30%));
+}
+
+/* Un grupo es una estación de transbordo: anillo de tinta con el total. */
+.transbordo {
+  display: grid;
+  place-items: center;
+  border: 4px solid var(--tinta);
+  border-radius: 50%;
+  background: var(--fondo);
+  font-weight: 800;
+  font-size: var(--t-2);
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 6px rgb(20 24 29 / 25%);
+}
+
+.yo {
+  fill: var(--linea-azul);
+  fill-opacity: 1;
+  stroke: var(--fondo);
+  stroke-width: 3;
+}
+
+.leaflet-container {
+  font-family: var(--fuente);
+}
+
+.leaflet-control-attribution {
+  font-size: 11px;
+}
+
+.leaflet-control-attribution a {
+  color: var(--tinta-2);
+}
+
+/* En el teléfono se acerca con los dedos; en escritorio, botones de 48 px como el de ubicación. */
+.leaflet-control-zoom {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .leaflet-touch .leaflet-control-zoom,
+  .leaflet-control-zoom {
+    display: grid;
+    gap: var(--e-2);
+    border: 0;
+  }
+
+  .leaflet-touch .leaflet-bar a,
+  .leaflet-control-zoom a {
+    width: var(--toque);
+    height: var(--toque);
+    border: 1.5px solid var(--tinta);
+    border-radius: 50%;
+    background: var(--fondo);
+    color: var(--tinta);
+    font: 700 24px/44px var(--fuente);
+    box-shadow: 0 2px 8px rgb(20 24 29 / 18%);
+  }
+}
+
+/* Panel «Cerca de ti» */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  max-height: 46dvh;
+  background: var(--fondo);
+  border-top: 1px solid var(--borde);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.panel__cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--e-3);
+  padding: var(--e-4) var(--e-4) var(--e-2);
+}
+
+.panel__titulo {
+  font-size: var(--t-4);
+  font-weight: 800;
+}
+
+.panel__cuenta {
+  font-size: var(--t-2);
+  color: var(--tinta-2);
+}
+
+.panel__vacio {
+  padding: var(--e-3) var(--e-4) var(--e-4);
+  color: var(--tinta-2);
+}
+
+/* El diagrama de línea: cada fila, una estación sobre el tramo de su color. */
+.diagrama {
+  flex: 1;
+  margin: 0;
+  padding: 0 var(--e-4);
+  overflow-y: auto;
+  list-style: none;
+}
+
+.diagrama__fila {
+  display: grid;
+  grid-template-columns: 30px 1fr auto;
+  align-items: stretch;
+  min-height: 60px;
+}
+
+/* La raya divisoria empieza después del tramo de color: no lo corta. */
+.diagrama__texto,
+.diagrama__datos {
+  align-content: center;
+  padding-left: var(--e-3);
+  border-bottom: 1px solid var(--borde);
+}
+
+.diagrama__fila:last-child .diagrama__texto,
+.diagrama__fila:last-child .diagrama__datos {
+  border-bottom: 0;
+}
+
+.diagrama__mas {
+  padding: var(--e-3) 0 var(--e-1) calc(30px + var(--e-3));
+  font-size: var(--t-2);
+  color: var(--tinta-2);
+}
+
+.diagrama__tramo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+}
+
+.diagrama__tramo::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 6px;
+  translate: -50% 0;
+  background: var(--linea);
+}
+
+.estacion {
+  position: relative;
+  display: grid;
+  line-height: 0;
+}
+
+.diagrama__texto,
+.diagrama__datos {
+  display: grid;
+  gap: 2px;
+}
+
+.diagrama__nombre {
+  font-weight: 700;
+}
+
+.diagrama__estado {
+  font-size: var(--t-2);
+  color: var(--tinta-2);
+}
+
+.diagrama__datos {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.diagrama__distancia {
+  font-weight: 700;
+}
+
+.diagrama__vence {
+  font-size: var(--t-2);
+  color: var(--tinta-2);
+}
+
+.diagrama__fila--cargando {
+  background: linear-gradient(90deg, var(--superficie), var(--fondo), var(--superficie)) 0 0 / 200%
+    100%;
+  border-radius: 8px;
+  margin: var(--e-2) 0;
+  animation: brillo 1.4s linear infinite;
+}
+
+@keyframes brillo {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.panel__accion {
+  display: grid;
+  gap: var(--e-2);
+  padding: var(--e-3) var(--e-4) var(--e-4);
+}
+
+.pendientes {
+  display: flex;
+  align-items: center;
+  gap: var(--e-2);
+  font-size: var(--t-2);
+  font-weight: 700;
+}
+
+.boton-reportar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--e-2);
+  min-height: 60px;
+  border: 0;
+  border-radius: var(--radio);
+  background: var(--tinta);
+  color: var(--fondo);
+  font-size: var(--t-4);
+  font-weight: 800;
+  transition:
+    transform var(--rapido) var(--salida),
+    background-color var(--rapido) var(--salida);
+}
+
+.boton-reportar:hover {
+  background: #262c33;
+}
+
+.boton-reportar:active {
+  transform: scale(0.98);
+}
+
+.boton-texto.boton-texto--chico {
+  min-height: 40px;
+  margin-top: 0;
+  font-size: var(--t-2);
+}
+
+.boton-texto {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e-2);
+  min-height: var(--toque);
+  margin-top: var(--e-2);
+  padding: 0 var(--e-3);
+  border: 1.5px solid var(--tinta);
+  border-radius: 999px;
+  background: var(--fondo);
+  font-weight: 700;
+}
+
+/* Hoja de categorías */
+
+.hoja {
+  width: 100%;
+  max-width: 520px;
+  margin: auto auto 0;
+  padding: 0;
+  border: 0;
+  border-radius: 20px 20px 0 0;
+  background: var(--fondo);
+  color: var(--tinta);
+  box-shadow: 0 -8px 32px rgb(20 24 29 / 22%);
+}
+
+.hoja[open] {
+  animation: subir var(--medio) var(--salida);
+}
+
+.hoja::backdrop {
+  background: var(--velo);
+  animation: aparecer var(--medio) var(--salida);
+}
+
+@keyframes subir {
+  from {
+    transform: translateY(24px);
+    opacity: 0.6;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+.hoja__contenido {
+  padding: var(--e-4) var(--e-4) calc(var(--e-4) + env(safe-area-inset-bottom));
+}
+
+.hoja__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hoja__titulo {
+  font-size: var(--t-5);
+  font-weight: 800;
+}
+
+.hoja__ayuda {
+  margin: var(--e-1) 0 var(--e-4);
+  color: var(--tinta-2);
+}
+
+.lineas {
+  display: grid;
+  gap: var(--e-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.linea {
+  display: grid;
+  grid-template-columns: 30px 1fr 26px;
+  align-items: center;
+  gap: var(--e-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--e-2) var(--e-3);
+  border: 1.5px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--fondo);
+  text-align: left;
+  transition:
+    border-color var(--rapido) var(--salida),
+    transform var(--rapido) var(--salida);
+}
+
+.linea:hover {
+  border-color: var(--tinta);
+}
+
+.linea:active {
+  transform: scale(0.98);
+}
+
+.linea__texto {
+  display: grid;
+}
+
+.linea__nombre {
+  font-weight: 700;
+}
+
+.linea__detalle {
+  font-size: var(--t-2);
+  color: var(--tinta-2);
+}
+
+.linea__icono {
+  color: var(--tinta);
+}
+
+/* Avisos */
+
+.avisos {
+  position: fixed;
+  left: var(--e-4);
+  right: var(--e-4);
+  top: calc(var(--e-4) + env(safe-area-inset-top));
+  z-index: 1000;
+  display: grid;
+  justify-items: center;
+  pointer-events: none;
+}
+
+.aviso {
+  max-width: 440px;
+  padding: var(--e-3) var(--e-4);
+  border-radius: var(--radio);
+  background: var(--tinta);
+  color: var(--fondo);
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgb(20 24 29 / 30%);
+  animation: entrar var(--medio) var(--salida);
+}
+
+.aviso[data-tono='exito'] {
+  box-shadow:
+    inset 0 -4px 0 var(--linea-verde),
+    0 6px 20px rgb(20 24 29 / 30%);
+}
+
+.aviso[data-tono='problema'] {
+  box-shadow:
+    inset 0 -4px 0 var(--linea-amarilla),
+    0 6px 20px rgb(20 24 29 / 30%);
+}
+
+@keyframes entrar {
+  from {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after,
+  .hoja::backdrop {
+    animation: none !important;
+    transition: none !important;
+  }
 }

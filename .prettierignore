@@ -9,3 +9,4 @@ CLAUDE.md
 .mcp.json
 **/migrations/meta
 packages/api-client/openapi.json
+**/.impeccable/hook.*.json

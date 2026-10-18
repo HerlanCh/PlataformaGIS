@@ -10,3 +10,8 @@ dev-dist/
 *.log
 .DS_Store
 tools/carga/resultado.json
+apps/web/.impeccable/mocks/
+apps/web/.impeccable/questions/
+apps/web/.impeccable/hook.cache.json
+apps/web/.impeccable/hook.pending.json
+apps/web/.impeccable/config.local.json

@@ -1,0 +1,410 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-18T13:22:34.056Z",
+  "title": "Design System: Alerta LP",
+  "extensions": {
+    "colorMeta": {
+      "tinta": {
+        "role": "primary",
+        "displayName": "Tinta de señal",
+        "canonical": "#14181d",
+        "tonalRamp": [
+          "oklch(15.0% 0.007 254.1)",
+          "oklch(26.0% 0.012 254.1)",
+          "oklch(38.0% 0.012 254.1)",
+          "oklch(50.0% 0.012 254.1)",
+          "oklch(62.0% 0.012 254.1)",
+          "oklch(74.0% 0.012 254.1)",
+          "oklch(85.0% 0.012 254.1)",
+          "oklch(95.0% 0.004 254.1)"
+        ]
+      },
+      "tinta-2": {
+        "role": "neutral",
+        "displayName": "Tinta secundaria",
+        "canonical": "#4a525c",
+        "tonalRamp": [
+          "oklch(15.0% 0.012 254.0)",
+          "oklch(26.0% 0.019 254.0)",
+          "oklch(38.0% 0.019 254.0)",
+          "oklch(50.0% 0.019 254.0)",
+          "oklch(62.0% 0.019 254.0)",
+          "oklch(74.0% 0.019 254.0)",
+          "oklch(85.0% 0.019 254.0)",
+          "oklch(95.0% 0.007 254.0)"
+        ]
+      },
+      "fondo": {
+        "role": "neutral",
+        "displayName": "Panel blanco",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15.0% 0.000 89.9)",
+          "oklch(26.0% 0.000 89.9)",
+          "oklch(38.0% 0.000 89.9)",
+          "oklch(50.0% 0.000 89.9)",
+          "oklch(62.0% 0.000 89.9)",
+          "oklch(74.0% 0.000 89.9)",
+          "oklch(85.0% 0.000 89.9)",
+          "oklch(95.0% 0.000 89.9)"
+        ]
+      },
+      "superficie": {
+        "role": "neutral",
+        "displayName": "Andén",
+        "canonical": "#f4f5f7",
+        "tonalRamp": [
+          "oklch(15.0% 0.002 264.5)",
+          "oklch(26.0% 0.003 264.5)",
+          "oklch(38.0% 0.003 264.5)",
+          "oklch(50.0% 0.003 264.5)",
+          "oklch(62.0% 0.003 264.5)",
+          "oklch(74.0% 0.003 264.5)",
+          "oklch(85.0% 0.003 264.5)",
+          "oklch(95.0% 0.001 264.5)"
+        ]
+      },
+      "borde": {
+        "role": "neutral",
+        "displayName": "Borde de panel",
+        "canonical": "#d6dbe1",
+        "tonalRamp": [
+          "oklch(15.0% 0.006 252.8)",
+          "oklch(26.0% 0.010 252.8)",
+          "oklch(38.0% 0.010 252.8)",
+          "oklch(50.0% 0.010 252.8)",
+          "oklch(62.0% 0.010 252.8)",
+          "oklch(74.0% 0.010 252.8)",
+          "oklch(85.0% 0.010 252.8)",
+          "oklch(95.0% 0.003 252.8)"
+        ]
+      },
+      "linea-amarilla": {
+        "role": "secondary",
+        "displayName": "Línea Amarilla",
+        "canonical": "#f2b705",
+        "tonalRamp": [
+          "oklch(15.0% 0.099 85.0)",
+          "oklch(26.0% 0.166 85.0)",
+          "oklch(38.0% 0.166 85.0)",
+          "oklch(50.0% 0.166 85.0)",
+          "oklch(62.0% 0.166 85.0)",
+          "oklch(74.0% 0.166 85.0)",
+          "oklch(85.0% 0.166 85.0)",
+          "oklch(95.0% 0.058 85.0)"
+        ]
+      },
+      "linea-roja": {
+        "role": "secondary",
+        "displayName": "Línea Roja",
+        "canonical": "#d0102e",
+        "tonalRamp": [
+          "oklch(15.0% 0.128 22.8)",
+          "oklch(26.0% 0.214 22.8)",
+          "oklch(38.0% 0.214 22.8)",
+          "oklch(50.0% 0.214 22.8)",
+          "oklch(62.0% 0.214 22.8)",
+          "oklch(74.0% 0.214 22.8)",
+          "oklch(85.0% 0.214 22.8)",
+          "oklch(95.0% 0.075 22.8)"
+        ]
+      },
+      "linea-morada": {
+        "role": "secondary",
+        "displayName": "Línea Morada",
+        "canonical": "#6d2c97",
+        "tonalRamp": [
+          "oklch(15.0% 0.102 308.8)",
+          "oklch(26.0% 0.169 308.8)",
+          "oklch(38.0% 0.169 308.8)",
+          "oklch(50.0% 0.169 308.8)",
+          "oklch(62.0% 0.169 308.8)",
+          "oklch(74.0% 0.169 308.8)",
+          "oklch(85.0% 0.169 308.8)",
+          "oklch(95.0% 0.059 308.8)"
+        ]
+      },
+      "linea-cafe": {
+        "role": "secondary",
+        "displayName": "Línea Café",
+        "canonical": "#7b4a22",
+        "tonalRamp": [
+          "oklch(15.0% 0.052 57.4)",
+          "oklch(26.0% 0.086 57.4)",
+          "oklch(38.0% 0.086 57.4)",
+          "oklch(50.0% 0.086 57.4)",
+          "oklch(62.0% 0.086 57.4)",
+          "oklch(74.0% 0.086 57.4)",
+          "oklch(85.0% 0.086 57.4)",
+          "oklch(95.0% 0.030 57.4)"
+        ]
+      },
+      "linea-naranja": {
+        "role": "secondary",
+        "displayName": "Línea Naranja",
+        "canonical": "#e46c00",
+        "tonalRamp": [
+          "oklch(15.0% 0.105 50.4)",
+          "oklch(26.0% 0.175 50.4)",
+          "oklch(38.0% 0.175 50.4)",
+          "oklch(50.0% 0.175 50.4)",
+          "oklch(62.0% 0.175 50.4)",
+          "oklch(74.0% 0.175 50.4)",
+          "oklch(85.0% 0.175 50.4)",
+          "oklch(95.0% 0.061 50.4)"
+        ]
+      },
+      "linea-verde": {
+        "role": "tertiary",
+        "displayName": "Línea Verde",
+        "canonical": "#00843d",
+        "tonalRamp": [
+          "oklch(15.0% 0.087 150.6)",
+          "oklch(26.0% 0.146 150.6)",
+          "oklch(38.0% 0.146 150.6)",
+          "oklch(50.0% 0.146 150.6)",
+          "oklch(62.0% 0.146 150.6)",
+          "oklch(74.0% 0.146 150.6)",
+          "oklch(85.0% 0.146 150.6)",
+          "oklch(95.0% 0.051 150.6)"
+        ]
+      },
+      "linea-azul": {
+        "role": "tertiary",
+        "displayName": "Línea Azul",
+        "canonical": "#0063bf",
+        "tonalRamp": [
+          "oklch(15.0% 0.098 254.5)",
+          "oklch(26.0% 0.164 254.5)",
+          "oklch(38.0% 0.164 254.5)",
+          "oklch(50.0% 0.164 254.5)",
+          "oklch(62.0% 0.164 254.5)",
+          "oklch(74.0% 0.164 254.5)",
+          "oklch(85.0% 0.164 254.5)",
+          "oklch(95.0% 0.057 254.5)"
+        ]
+      },
+      "linea-plateada": {
+        "role": "tertiary",
+        "displayName": "Línea Plateada",
+        "canonical": "#8a939c",
+        "tonalRamp": [
+          "oklch(15.0% 0.010 248.1)",
+          "oklch(26.0% 0.017 248.1)",
+          "oklch(38.0% 0.017 248.1)",
+          "oklch(50.0% 0.017 248.1)",
+          "oklch(62.0% 0.017 248.1)",
+          "oklch(74.0% 0.017 248.1)",
+          "oklch(85.0% 0.017 248.1)",
+          "oklch(95.0% 0.006 248.1)"
+        ]
+      },
+      "velo": {
+        "role": "neutral",
+        "displayName": "Velo",
+        "canonical": "rgb(20 24 29 / 45%)"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Nombre de la app y título de la hoja."
+      },
+      "title": {
+        "displayName": "Título",
+        "purpose": "Título del panel y texto del botón Reportar."
+      },
+      "body": {
+        "displayName": "Cuerpo",
+        "purpose": "Texto base."
+      },
+      "body-strong": {
+        "displayName": "Cuerpo fuerte",
+        "purpose": "Nombre de categoría y distancia."
+      },
+      "secondary": {
+        "displayName": "Secundario",
+        "purpose": "Estado, vigencia, detalle y botón chico."
+      },
+      "label": {
+        "displayName": "Etiqueta",
+        "purpose": "Lugar bajo el nombre."
+      }
+    },
+    "shadows": [
+      {
+        "name": "control-flotante",
+        "value": "0 2px 8px rgb(20 24 29 / 18%)",
+        "purpose": "Botones redondos y zoom sobre el mapa."
+      },
+      {
+        "name": "transbordo",
+        "value": "0 2px 6px rgb(20 24 29 / 25%)",
+        "purpose": "Grupo de reportes en el mapa."
+      },
+      {
+        "name": "estacion-sobre-mapa",
+        "value": "drop-shadow(0 1px 2px rgb(20 24 29 / 30%))",
+        "purpose": "Filtro de los marcadores individuales."
+      },
+      {
+        "name": "hoja",
+        "value": "0 -8px 32px rgb(20 24 29 / 22%)",
+        "purpose": "Hoja de categorías."
+      },
+      {
+        "name": "aviso",
+        "value": "0 6px 20px rgb(20 24 29 / 30%)",
+        "purpose": "Avisos; con filo interno de 4 px para el tono."
+      }
+    ],
+    "motion": [
+      {
+        "name": "salida",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Curva de todas las transiciones y entradas."
+      },
+      {
+        "name": "rapido",
+        "value": "180ms",
+        "purpose": "Respuesta al toque y al puntero."
+      },
+      {
+        "name": "medio",
+        "value": "260ms",
+        "purpose": "Entrada de la hoja, del velo y de los avisos."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "escritorio",
+        "value": "960px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón Reportar",
+      "kind": "button",
+      "refersTo": "boton-reportar",
+      "description": "Acción principal a ancho completo; lleva una estación amarilla abierta, no un «+».",
+      "html": "<button class=\"ds-reportar\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"26\" height=\"26\" viewBox=\"0 0 26 26\" aria-hidden=\"true\"><circle cx=\"13\" cy=\"13\" r=\"11.75\" fill=\"#14181d\"/><circle cx=\"13\" cy=\"13\" r=\"9.5\" fill=\"#f2b705\"/><circle cx=\"13\" cy=\"13\" r=\"5\" fill=\"#ffffff\"/></svg>Reportar</button>",
+      "css": ".ds-reportar{font-family:'Atkinson Hyperlegible Next Variable',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:60px;border:0;border-radius:14px;background:#14181d;color:#fff;font-size:1.25rem;font-weight:800;cursor:pointer;transition:transform 180ms cubic-bezier(0.16,1,0.3,1),background-color 180ms cubic-bezier(0.16,1,0.3,1)}.ds-reportar:hover{background:#262c33}.ds-reportar:active{transform:scale(0.98)}.ds-reportar:focus-visible{outline:3px solid #0063bf;outline-offset:2px}"
+    },
+    {
+      "name": "Botón de texto",
+      "kind": "button",
+      "refersTo": "boton-texto",
+      "description": "Acción secundaria en pastilla con borde de tinta y pictograma.",
+      "html": "<button class=\"ds-texto\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><line x1=\"2\" x2=\"5\" y1=\"12\" y2=\"12\"/><line x1=\"19\" x2=\"22\" y1=\"12\" y2=\"12\"/><line x1=\"12\" x2=\"12\" y1=\"2\" y2=\"5\"/><line x1=\"12\" x2=\"12\" y1=\"19\" y2=\"22\"/><circle cx=\"12\" cy=\"12\" r=\"7\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg> Usar mi ubicación</button>",
+      "css": ".ds-texto{font-family:'Atkinson Hyperlegible Next Variable',system-ui,sans-serif;display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 12px;border:1.5px solid #14181d;border-radius:999px;background:#fff;color:#14181d;font-size:1.0625rem;font-weight:700;cursor:pointer}.ds-texto:focus-visible{outline:3px solid #0063bf;outline-offset:2px}"
+    },
+    {
+      "name": "Botón redondo",
+      "kind": "button",
+      "refersTo": "boton-redondo",
+      "description": "Control de 48 px que flota sobre el mapa (ubicarme, cerrar la hoja, zoom en escritorio).",
+      "html": "<button class=\"ds-redondo\" aria-label=\"Centrar en mi ubicación\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><line x1=\"2\" x2=\"5\" y1=\"12\" y2=\"12\"/><line x1=\"19\" x2=\"22\" y1=\"12\" y2=\"12\"/><line x1=\"12\" x2=\"12\" y1=\"2\" y2=\"5\"/><line x1=\"12\" x2=\"12\" y1=\"19\" y2=\"22\"/><circle cx=\"12\" cy=\"12\" r=\"7\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg></button>",
+      "css": ".ds-redondo{display:inline-grid;place-items:center;width:48px;height:48px;border:1.5px solid #14181d;border-radius:50%;background:#fff;color:#14181d;box-shadow:0 2px 8px rgb(20 24 29 / 18%);cursor:pointer;transition:transform 180ms cubic-bezier(0.16,1,0.3,1)}.ds-redondo:active{transform:scale(0.94)}.ds-redondo:focus-visible{outline:3px solid #0063bf;outline-offset:2px}"
+    },
+    {
+      "name": "Estado de conexión",
+      "kind": "chip",
+      "refersTo": "estado-conexion",
+      "description": "Pastilla de la cabecera con el estado del tiempo real; punto plano, sin halo.",
+      "html": "<p class=\"ds-conexion\"><span class=\"ds-conexion__punto\"></span>En vivo</p>",
+      "css": ".ds-conexion{font-family:'Atkinson Hyperlegible Next Variable',system-ui,sans-serif;display:inline-flex;align-items:center;gap:8px;min-height:32px;margin:0;padding:0 12px;border:1.5px solid #14181d;border-radius:999px;font-size:0.9375rem;font-weight:700;color:#14181d}.ds-conexion__punto{width:10px;height:10px;border-radius:50%;background:#00843d}"
+    },
+    {
+      "name": "Cabecera con franja de la red",
+      "kind": "nav",
+      "description": "Nombre, lugar y la franja de 6 px que hace de leyenda de las cinco líneas.",
+      "html": "<header class=\"ds-cab\"><div class=\"ds-cab__fila\"><h1 class=\"ds-cab__nombre\">Alerta LP</h1><p class=\"ds-cab__lugar\">La Paz · El Alto</p></div><ul class=\"ds-red\"><li style=\"background:#f2b705\"></li><li style=\"background:#d0102e\"></li><li style=\"background:#6d2c97\"></li><li style=\"background:#7b4a22\"></li><li style=\"background:#e46c00\"></li></ul></header>",
+      "css": ".ds-cab{font-family:'Atkinson Hyperlegible Next Variable',system-ui,sans-serif;background:#fff;color:#14181d}.ds-cab__fila{padding:12px 16px}.ds-cab__nombre{margin:0;font-size:1.5rem;font-weight:800;letter-spacing:-0.01em;line-height:1.1}.ds-cab__lugar{margin:0;font-size:0.8125rem;font-weight:600;letter-spacing:0.04em;color:#4a525c}.ds-red{display:flex;height:6px;margin:0;padding:0;list-style:none}.ds-red li{flex:1}"
+    },
+    {
+      "name": "Diagrama de línea",
+      "kind": "custom",
+      "description": "Lista del panel: cada fila es una estación sobre el tramo de su color; la divisoria empieza después del tramo.",
+      "html": "<ol class=\"ds-diagrama\"><li class=\"ds-fila\" style=\"--linea:#f2b705\"><span class=\"ds-tramo\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"26\" height=\"26\" viewBox=\"0 0 26 26\" aria-hidden=\"true\"><circle cx=\"13\" cy=\"13\" r=\"11.75\" fill=\"#14181d\"/><circle cx=\"13\" cy=\"13\" r=\"9.5\" fill=\"#f2b705\"/><circle cx=\"13\" cy=\"13\" r=\"5\" fill=\"#ffffff\"/></svg></span><span class=\"ds-txt\"><b>Bloqueo</b><span>Sin confirmar</span></span><span class=\"ds-dat\"><b>a 10 m</b><span>hasta 15:10</span></span></li><li class=\"ds-fila\" style=\"--linea:#6d2c97\"><span class=\"ds-tramo\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"26\" height=\"26\" viewBox=\"0 0 26 26\" aria-hidden=\"true\"><circle cx=\"13\" cy=\"13\" r=\"11.75\" fill=\"#14181d\"/><circle cx=\"13\" cy=\"13\" r=\"9.5\" fill=\"#6d2c97\"/><circle cx=\"13\" cy=\"13\" r=\"5\" fill=\"#6d2c97\"/></svg></span><span class=\"ds-txt\"><b>Robo</b><span>Confirmado</span></span><span class=\"ds-dat\"><b>a 440 m</b><span>hasta 11:10</span></span></li></ol>",
+      "css": ".ds-diagrama{font-family:'Atkinson Hyperlegible Next Variable',system-ui,sans-serif;margin:0;padding:0 16px;list-style:none;color:#14181d;font-size:1.0625rem;line-height:1.4}.ds-fila{display:grid;grid-template-columns:30px 1fr auto;min-height:60px}.ds-tramo{position:relative;display:grid;place-items:center}.ds-tramo::before{content:'';position:absolute;top:0;bottom:0;left:50%;width:6px;transform:translateX(-50%);background:var(--linea)}.ds-tramo svg{position:relative;display:block}.ds-txt,.ds-dat{display:grid;gap:2px;align-content:center;padding-left:12px;border-bottom:1px solid #d6dbe1}.ds-fila:last-child .ds-txt,.ds-fila:last-child .ds-dat{border-bottom:0}.ds-dat{text-align:right;font-variant-numeric:tabular-nums}.ds-txt span,.ds-dat span{font-size:0.9375rem;color:#4a525c}"
+    },
+    {
+      "name": "Fila de la hoja de categorías",
+      "kind": "card",
+      "refersTo": "fila-de-linea",
+      "description": "Botón grande de una categoría en la hoja de reportar: un toque envía el reporte.",
+      "html": "<button class=\"ds-linea\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"30\" height=\"30\" viewBox=\"0 0 30 30\" aria-hidden=\"true\"><circle cx=\"15\" cy=\"15\" r=\"13.75\" fill=\"#14181d\"/><circle cx=\"15\" cy=\"15\" r=\"11.5\" fill=\"#d0102e\"/><circle cx=\"15\" cy=\"15\" r=\"7\" fill=\"#d0102e\"/></svg><span class=\"ds-linea__txt\"><b>Accidente de tránsito</b><span>Línea Roja · se muestra 3 h</span></span><svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8\"/><path d=\"M7 14h.01\"/><path d=\"M17 14h.01\"/><rect width=\"18\" height=\"8\" x=\"3\" y=\"10\" rx=\"2\"/><path d=\"M5 18v2\"/><path d=\"M19 18v2\"/></svg></button>",
+      "css": ".ds-linea{font-family:'Atkinson Hyperlegible Next Variable',system-ui,sans-serif;display:grid;grid-template-columns:30px 1fr 26px;align-items:center;gap:12px;width:100%;min-height:64px;padding:8px 12px;border:1.5px solid #d6dbe1;border-radius:14px;background:#fff;color:#14181d;text-align:left;font-size:1.0625rem;cursor:pointer;transition:border-color 180ms cubic-bezier(0.16,1,0.3,1),transform 180ms cubic-bezier(0.16,1,0.3,1)}.ds-linea:hover{border-color:#14181d}.ds-linea:active{transform:scale(0.98)}.ds-linea:focus-visible{outline:3px solid #0063bf;outline-offset:2px}.ds-linea__txt{display:grid}.ds-linea__txt span{font-size:0.9375rem;color:#4a525c}"
+    },
+    {
+      "name": "Transbordo",
+      "kind": "custom",
+      "description": "Grupo de reportes en el mapa: estación de transbordo con el total.",
+      "html": "<span class=\"ds-transbordo\">7</span>",
+      "css": ".ds-transbordo{font-family:'Atkinson Hyperlegible Next Variable',system-ui,sans-serif;display:inline-grid;place-items:center;width:38px;height:38px;border:4px solid #14181d;border-radius:50%;background:#fff;color:#14181d;font-weight:800;font-size:0.9375rem;font-variant-numeric:tabular-nums;box-shadow:0 2px 6px rgb(20 24 29 / 25%)}"
+    },
+    {
+      "name": "Aviso",
+      "kind": "custom",
+      "refersTo": "aviso",
+      "description": "Mensaje breve sobre tinta; el tono es un filo inferior de 4 px.",
+      "html": "<p class=\"ds-aviso\">Reporte enviado.</p>",
+      "css": ".ds-aviso{font-family:'Atkinson Hyperlegible Next Variable',system-ui,sans-serif;max-width:440px;margin:0;padding:12px 16px;border-radius:14px;background:#14181d;color:#fff;font-weight:700;box-shadow:inset 0 -4px 0 #00843d,0 6px 20px rgb(20 24 29 / 30%)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Señalética de Mi Teleférico",
+    "overview": "Alerta LP se lee como un panel de estación del teleférico de La Paz: fondo blanco, tinta casi negra, y el color reservado a las líneas. Cada categoría de incidente es una línea de la red con su color, y cada reporte es una estación sobre esa línea. El mapa base va en gris para que lo primero que se lea sean las estaciones de color; la urgencia se comunica con orden y código, no con rojo por todas partes.\n\nLa densidad es la de un panel de señalización: pocas piezas, grandes, en una sola familia tipográfica muy legible, pensada para leerse a pleno sol y con una mano. Las formas se reducen a tres: el anillo (estación), la franja (línea) y la pastilla o el rectángulo de esquinas suaves (botones y hojas). La profundidad es mínima y blanda; nada flota sin motivo.",
+    "keyCharacteristics": [
+      "Blanco y tinta como base; el color de las líneas solo como tinta de línea o de estación, nunca como relleno de página.",
+      "La estación en anillo como signo único del reporte, en el mapa, en el diagrama, en la hoja y en el botón de reportar.",
+      "Franja multicolor de 6 px bajo la cabecera como leyenda de la red.",
+      "Mapa de OpenStreetMap en escala de grises.",
+      "Una sola familia (Atkinson Hyperlegible Next) en una escala fija de cinco pasos."
+    ],
+    "rules": [
+      {
+        "name": "La regla de la tinta de línea",
+        "body": "Un color de línea solo pinta líneas (tramos, franja) y estaciones; nunca un fondo de página, una tarjeta ni un texto de párrafo.",
+        "section": "colors"
+      },
+      {
+        "name": "La regla de un color, un significado",
+        "body": "Las cinco líneas de categoría no se reutilizan para otra cosa (salvo la amarilla como estación de «Reportar», que es añadir una estación a la red). Verde, azul y plateada son de sistema y no se asignan a categorías.",
+        "section": "colors"
+      },
+      {
+        "name": "La regla del contorno de tinta",
+        "body": "Toda estación lleva un anillo exterior de tinta: así la línea amarilla y cualquier color se distinguen sobre blanco o sobre el mapa (WCAG 1.4.11).",
+        "section": "colors"
+      },
+      {
+        "name": "La regla de la escala fija",
+        "body": "Solo los cinco tamaños de la escala; nada de tamaños fluidos ni intermedios.",
+        "section": "typography"
+      },
+      {
+        "name": "La regla del mapa abajo",
+        "body": "Solo lo que está sobre el mapa o sobre el velo lleva sombra; lo que está en la página se separa con bordes.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** dibujar todo reporte como estación en anillo con contorno de tinta, con el color de su línea tomado de `categorias.ts`.",
+      "**Do** usar el centro relleno solo para «confirmado» y el centro blanco para «activo».",
+      "**Do** mantener el mapa base en escala de grises para que las líneas sean lo primero que se lee.",
+      "**Do** separar lo que está en la página con bordes de 1 px y reservar la sombra a lo que flota.",
+      "**Do** dar 48 px como mínimo a todo control táctil y usar cifras tabulares en distancias y horas.",
+      "**Do** marcar el tono de un aviso con un filo de 4 px del color de sistema, sobre fondo de tinta."
+    ],
+    "donts": [
+      "**Don't** usar un color de línea como fondo de página, de tarjeta o de botón.",
+      "**Don't** asignar verde, azul ni plateada a una categoría: son colores de sistema.",
+      "**Don't** usar alfileres rojos ni un botón flotante azul con «+» para reportar: reportar es añadir una estación.",
+      "**Don't** añadir halos, resplandores ni pulsos al punto de conexión o a las estaciones.",
+      "**Don't** introducir una segunda familia tipográfica ni tamaños fuera de la escala de cinco pasos.",
+      "**Don't** cortar el tramo de color del diagrama con divisorias."
+    ]
+  }
+}

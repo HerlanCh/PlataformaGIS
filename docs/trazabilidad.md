@@ -276,3 +276,25 @@ Entrega de eventos en `packages/platform/src/despachador.ts` (`BusDeEventosConSa
 | HU-08 | Los suscriptores reciben el aviso de un reporte nuevo | `NotificarSuscriptores` ← `ReporteCreado.v1`, con `EnviadorDeNotificacionesEnRegistro` | `tiempo-real.test.ts` |
 | ADR-001 | Con `subscriptions` y `notifications` apagados, la difusión y los votos siguen funcionando | Suscripción condicionada por interruptor | `tiempo-real.integration.test.ts` (corre con los opcionales apagados), `tiempo-real.test.ts` |
 | RNF-13 | Solo clientes con token reciben eventos; solo los eventos públicos salen | Handshake con `ServicioDeTokens`; `CLAVES_PUBLICAS` | `tiempo-real.integration.test.ts` ("conexión"), `tiempo-real.test.ts` |
+
+---
+
+## 9. Fase 8: frontend PWA
+
+### 9.1 Entrega 8a
+
+| Historia | Escenario | Implementación (`apps/web/src`) | Pruebas |
+| :--- | :--- | :--- | :--- |
+| RF-01 | Registro anónimo del dispositivo | `services/sesion.ts` | `services/servicios.test.ts` |
+| HU-01 | 1. Reporte en dos toques con el GPS | `features/reporte/HojaDeCategorias.tsx`, `usarReportar.ts` | `App.test.tsx`, `features/interfaz.test.tsx` |
+| HU-01 | 2 a 5. Duplicado, fuera del área, propio y límite: mensajes visibles | `features/reporte/mensajes.ts` | `features/interfaz.test.tsx`, `services/servicios.test.ts` |
+| HU-02 | 1. Reportes vigentes de la ventana | `features/mapa/usarReportes.ts`, `Mapa.tsx` | `App.test.tsx` |
+| HU-02 | 2. Actualización en vivo por celdas | `services/tiempo-real.ts`, `domain/reportes.ts` (`aplicarEvento`) | `features/tiempo-real.test.tsx`, `domain/dominio.test.ts` |
+| HU-02 | 3 y 4. Solo la ubicación pública | El cliente solo recibe `publicLocation`, que garantiza la API (Fase 6) | `api.integration.test.ts` (RNF-14) |
+| HU-05 | 1. Guardado local con su clave y aviso «pendiente de envío» | `services/cola.ts`, `features/cerca/PanelCerca.tsx` | `services/servicios.test.ts`, `App.test.tsx` |
+| HU-05 | 2. Envío al reconectar (`online` o Background Sync) | `App.tsx`, `sw.ts` | `App.test.tsx` |
+| HU-05 | 3. Reenvío idempotente, sin duplicados | `Idempotency-Key` = clave de la cola | `services/servicios.test.ts` |
+| Accesibilidad | Sin infracciones de axe; botones de 48 px o más | `ui/`, `features/` | `features/interfaz.test.tsx` |
+| Rendimiento | JS inicial < 250 KB comprimido | `vite build` | 157 KB (bitácora 8a) |
+
+Las pruebas de extremo a extremo con Playwright contra staging y Lighthouse CI cierran la fase en la entrega 8c.

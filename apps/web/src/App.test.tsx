@@ -1,76 +1,155 @@
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { IDBFactory } from 'fake-indexeddb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App.js';
+import { useEstado } from './estado.js';
+import { reiniciarAlmacen } from './services/almacen.js';
 
-type Manejador = (dato?: unknown) => void;
-
-const socket = vi.hoisted(() => {
-  const manejadores = new Map<string, (dato?: unknown) => void>();
-  return {
-    manejadores,
-    on: vi.fn((evento: string, manejador: (dato?: unknown) => void) => {
-      manejadores.set(evento, manejador);
-    }),
+vi.mock('socket.io-client', () => ({
+  io: vi.fn(() => ({
+    on: vi.fn(),
+    connect: vi.fn(),
     close: vi.fn(),
+    connected: false,
+  })),
+}));
+
+const LA_PAZ = { coords: { latitude: -16.4955, longitude: -68.1336 } };
+const json = (cuerpo: unknown, status = 200) =>
+  new Response(JSON.stringify(cuerpo), { status, headers: { 'content-type': 'application/json' } });
+
+let sinSenal = false;
+const reportesEnviados: unknown[] = [];
+
+function api(entrada: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const url = new Request(entrada, init).url;
+  if (sinSenal) return Promise.reject(new TypeError('Failed to fetch'));
+  if (url.includes('/v1/dispositivos')) {
+    return Promise.resolve(
+      json({
+        idUsuario: '11111111-1111-4111-8111-111111111111',
+        rol: 'CIUDADANO',
+        esNuevo: true,
+        token: 'tok',
+        expiraEn: new Date(Date.now() + 86_400_000).toISOString(),
+      }),
+    );
+  }
+  if (url.includes('/v1/reportes') && init?.method === 'POST') {
+    reportesEnviados.push(JSON.parse(String(init.body)));
+    return Promise.resolve(
+      json(
+        {
+          resultado: 'CREADO',
+          reporte: {
+            id: '22222222-2222-4222-8222-222222222222',
+            codigoCategoria: 'bloqueo',
+            estado: 'ACTIVO',
+            publicLocation: { latitud: -16.4955, longitud: -68.1336 },
+            creadoEn: '2026-10-18T12:00:00.000Z',
+            caducaEn: '2026-10-18T18:00:00.000Z',
+          },
+        },
+        201,
+      ),
+    );
+  }
+  return Promise.resolve(json({ reportes: [] }));
+}
+
+function montar() {
+  const consulta = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={consulta}>
+      <App />
+    </QueryClientProvider>,
+  );
+}
+
+beforeEach(() => {
+  globalThis.indexedDB = new IDBFactory();
+  reiniciarAlmacen();
+  sinSenal = false;
+  reportesEnviados.length = 0;
+  useEstado.setState({
+    hojaAbierta: false,
+    pendientes: 0,
+    aviso: null,
+    posicion: null,
+    ventana: null,
+  });
+  vi.stubGlobal('fetch', vi.fn(api));
+  Object.defineProperty(navigator, 'geolocation', {
+    configurable: true,
+    value: { getCurrentPosition: (ok: (p: unknown) => void) => ok(LA_PAZ) },
+  });
+  HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+    this.setAttribute('open', '');
+  };
+  HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
+    this.removeAttribute('open');
   };
 });
 
-vi.mock('socket.io-client', () => ({ io: vi.fn(() => socket) }));
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
-const emitir = (evento: string, dato?: unknown) =>
-  act(() => (socket.manejadores.get(evento) as Manejador)(dato));
+const reportarBloqueo = () => {
+  fireEvent.click(screen.getByRole('button', { name: 'Reportar' }));
+  fireEvent.click(screen.getByRole('button', { name: /Bloqueo o protesta vial/ }));
+};
 
-describe('PWA mínima', () => {
-  beforeEach(() => {
-    socket.manejadores.clear();
-    socket.close.mockClear();
-  });
-
-  afterEach(cleanup);
-
-  it('muestra el mapa centrado en La Paz', () => {
-    const { container } = render(<App urlApi="http://api.test" />);
+describe('PWA: mapa en vivo y reporte en dos toques', () => {
+  it('muestra el mapa de OpenStreetMap y el panel «Cerca de ti»', async () => {
+    const { container } = montar();
 
     expect(screen.getByRole('application', { name: 'Mapa de incidentes' })).toBeTruthy();
     expect(container.querySelector('.leaflet-container')).not.toBeNull();
+    expect(await screen.findByText(/Todo tranquilo/)).toBeTruthy();
   });
 
-  it('empieza sin conexión y a la espera del primer ping', () => {
-    render(<App urlApi="http://api.test" />);
+  it('HU-01: dos toques envían el reporte con la ubicación del GPS', async () => {
+    montar();
 
-    expect(screen.getByRole('status').textContent).toContain('Sin conexión');
-    expect(screen.getByRole('status').textContent).toContain('Esperando el primer ping');
+    reportarBloqueo();
+
+    expect(await screen.findByText('Reporte enviado. Ya aparece en el mapa.')).toBeTruthy();
+    expect(reportesEnviados).toEqual([
+      { codigoCategoria: 'bloqueo', latitud: -16.4955, longitud: -68.1336 },
+    ]);
   });
 
-  it('muestra el último ping recibido', () => {
-    render(<App urlApi="http://api.test" />);
+  it('HU-05: sin señal el reporte queda pendiente y se envía al volver la conexión', async () => {
+    montar();
+    sinSenal = true;
 
-    emitir('connect');
-    emitir('ping', { secuencia: 7, en: '2026-10-11T16:30:00Z' });
+    reportarBloqueo();
 
-    const estado = screen.getByRole('status').textContent;
-    expect(estado).toContain('Conectado');
-    expect(estado).toContain('Ping n.º 7');
-    // 16:30 UTC son las 12:30 en La Paz.
-    expect(estado).toContain('12:30');
+    expect(await screen.findByText(/Sin señal: tu reporte se enviará solo/)).toBeTruthy();
+    expect(await screen.findByText('1 reporte pendiente de envío')).toBeTruthy();
+
+    sinSenal = false;
+    window.dispatchEvent(new Event('online'));
+
+    expect(await screen.findByText('Reporte enviado. Ya aparece en el mapa.')).toBeTruthy();
+    expect(reportesEnviados).toHaveLength(1);
+    expect(screen.queryByText(/pendiente de envío/)).toBeNull();
   });
 
-  it('avisa cuando se pierde la conexión y conserva el último ping', () => {
-    render(<App urlApi="http://api.test" />);
-    emitir('ping', { secuencia: 3, en: '2026-10-11T16:30:00Z' });
+  it('sin permiso de ubicación explica cómo activarla', async () => {
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: {
+        getCurrentPosition: (_ok: unknown, fallo: (e: unknown) => void) => fallo({ code: 1 }),
+      },
+    });
+    montar();
 
-    emitir('disconnect');
+    reportarBloqueo();
 
-    const estado = screen.getByRole('status').textContent;
-    expect(estado).toContain('Sin conexión');
-    expect(estado).toContain('Ping n.º 3');
-  });
-
-  it('cierra la conexión al desmontar', () => {
-    const { unmount } = render(<App urlApi="http://api.test" />);
-
-    unmount();
-
-    expect(socket.close).toHaveBeenCalledOnce();
+    expect(await screen.findByText(/Activa la ubicación para reportar/)).toBeTruthy();
+    expect(reportesEnviados).toEqual([]);
   });
 });
