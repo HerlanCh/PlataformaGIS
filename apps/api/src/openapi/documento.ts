@@ -20,6 +20,7 @@ const TODOS_LOS_CASOS = Object.fromEntries(
     'obtenerMapaDeCalor',
     'suscribirZona',
     'eliminarZona',
+    'listarZonas',
     'rechazarReporte',
   ].map((nombre) => [nombre, sinUso]),
 ) as unknown as CasosDeUso;

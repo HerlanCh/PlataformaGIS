@@ -3,12 +3,13 @@ import type { CodigoCategoria, IdReporte, IdUsuario, PuntoGeo } from '@gis/share
 import { desplazar, GeneradorDeIdSecuencial, RelojFijo } from '@gis/testing';
 import { describe, expect, it } from 'vitest';
 import { EliminarZona } from '../application/eliminar-zona.js';
+import { ListarZonas } from '../application/listar-zonas.js';
 import { NotificarSuscriptores } from '../application/notificar-suscriptores.js';
 import type { AvisoDeReporte } from '../application/ports.js';
 import { MAX_ZONAS_POR_USUARIO, SuscribirZona } from '../application/suscribir-zona.js';
 import type { RepositorioDeSuscripciones } from '../domain/ports.js';
 import type { IdSuscripcion, ZonaSuscrita } from '../domain/zone-subscription.js';
-import { ana, beto, bloqueo, idZona, plazaMurillo, zona } from './fixtures.js';
+import { ahora, ana, beto, bloqueo, idZona, plazaMurillo, zona } from './fixtures.js';
 
 /** Mismo contrato que `RepositorioSuscripcionesPg`, con distancias haversine. */
 class SuscripcionesEnMemoria implements RepositorioDeSuscripciones {
@@ -166,6 +167,27 @@ describe('EliminarZona', () => {
     await expect(
       new EliminarZona(suscripciones).ejecutar({ idUsuario: ana, idZona: idZona(9) }),
     ).rejects.toMatchObject({ tipo: 'NO_ENCONTRADO' });
+  });
+});
+
+describe('ListarZonas', () => {
+  it('HU-07: lista solo las zonas propias, de la más reciente a la más antigua', async () => {
+    const { suscripciones } = escenario();
+    await suscripciones.guardar(zona({ id: idZona(1) }));
+    await suscripciones.guardar(zona({ id: idZona(2), ahora: new Date(ahora.getTime() + 60_000) }));
+    await suscripciones.guardar(zona({ id: idZona(3), idUsuario: beto }));
+
+    const zonas = await new ListarZonas(suscripciones).ejecutar({ idUsuario: ana });
+
+    expect(zonas.map((z) => z.id)).toEqual([idZona(2), idZona(1)]);
+  });
+
+  it('un identificador de usuario inválido es un error de validación', async () => {
+    const { suscripciones } = escenario();
+
+    await expect(
+      new ListarZonas(suscripciones).ejecutar({ idUsuario: 'no-es-uuid' }),
+    ).rejects.toMatchObject({ tipo: 'VALIDACION_FALLIDA' });
   });
 });
 

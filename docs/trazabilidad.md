@@ -298,3 +298,18 @@ Entrega de eventos en `packages/platform/src/despachador.ts` (`BusDeEventosConSa
 | Rendimiento | JS inicial < 250 KB comprimido | `vite build` | 157 KB (bitácora 8a) |
 
 Las pruebas de extremo a extremo con Playwright contra staging y Lighthouse CI cierran la fase en la entrega 8c.
+
+### 9.2 Entrega 8b
+
+| Historia | Escenario | Implementación | Pruebas |
+| :--- | :--- | :--- | :--- |
+| HU-03 | Detalle con «Sigue ahí» / «Ya no está» y la posición del momento | `apps/web/src/features/votos/HojaDeDetalle.tsx`, `usarVotar.ts`, `services/votos.ts` | `features/interaccion.test.tsx`, `services/interaccion.test.ts` |
+| HU-03 | 3, 5 y 6. Autor, voto repetido y votante lejano: mensaje de la regla | `features/votos/mensajes.ts`; memoria local de propios y votados (`services/memoria.ts`) | `features/interaccion.test.tsx`, `services/interaccion.test.ts` |
+| HU-03 | 2. Un reporte resuelto o caducado deja el mapa y cierra su detalle | `domain/reportes.ts` (`aplicarEvento`), `HojaDeDetalle.tsx` | `features/interaccion.test.tsx`, `features/tiempo-real.test.tsx` |
+| HU-03 | Aviso «¿Sigue ahí?» automático: app abierta, a menos de 150 m, una vez por reporte | `domain/cercania.ts`, `features/votos/usarSigueAhi.ts`, `AvisoSigueAhi.tsx` | `domain/interaccion.test.ts`, `features/interaccion.test.tsx` |
+| HU-02 | Filtros por línea y por antigüedad (última hora, 3 h, hoy) | `domain/filtros.ts`, `features/filtros/HojaDeFiltros.tsx`, `ui/Encabezado.tsx` | `domain/interaccion.test.ts`, `features/interaccion.test.tsx` |
+| HU-06 | 1 y 2. Capa de calor con las celdas de 3 o más reportes y el umbral explicado | `features/calor/` (`leaflet.heat` cargado bajo demanda), `features/mapa/capas.ts` | `features/interaccion.test.tsx`, `features/mapa/capas.test.tsx` |
+| HU-07 | Listar las zonas propias | `GET /v1/suscripciones` (`ListarZonas`, módulo `subscriptions`) | `packages/modules/subscriptions/tests/casos-de-uso.test.ts`, `api.integration.test.ts` |
+| HU-07 | Crear con centro, radio (100–2000 m) y líneas; eliminar; límite de 5 | `features/zonas/` (mira fija y control deslizante), `services/zonas.ts` | `features/interaccion.test.tsx`, `services/interaccion.test.ts`, `features/mapa/capas.test.tsx` |
+| Accesibilidad | Sin infracciones de axe en las hojas y el editor nuevos | `ui/Hoja.tsx`, `ui/Segmentado.tsx`, `features/` | `features/interaccion.test.tsx` |
+| Rendimiento | JS inicial < 250 KB comprimido | `vite build`; `leaflet.heat` en un chunk aparte | 166 KB (bitácora 8b) |

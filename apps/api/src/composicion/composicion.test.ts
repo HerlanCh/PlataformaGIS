@@ -48,6 +48,7 @@ describe('composición', () => {
 
     expect(casos.obtenerMapaDeCalor).toBeNull();
     expect(casos.suscribirZona).toBeNull();
+    expect(casos.listarZonas).toBeNull();
     expect(casos.rechazarReporte).toBeNull();
     expect(casos.crearReporte).toBeDefined();
   });

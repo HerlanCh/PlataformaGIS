@@ -195,6 +195,12 @@ export const esquemaZona = conId(
   'Zona suscrita',
 );
 
+export const esquemaListaDeZonas = conId(
+  z.object({ zonas: z.array(esquemaZona) }),
+  'ListaDeZonas',
+  'Zonas suscritas del usuario, de la más reciente a la más antigua',
+);
+
 // --- Moderación ---
 
 export const esquemaRechazo = conId(

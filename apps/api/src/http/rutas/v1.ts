@@ -110,7 +110,7 @@ export const rutasV1 =
       );
     }
 
-    const { obtenerMapaDeCalor, suscribirZona, eliminarZona, rechazarReporte } = casos;
+    const { obtenerMapaDeCalor, suscribirZona, eliminarZona, listarZonas, rechazarReporte } = casos;
 
     if (obtenerMapaDeCalor) {
       app.get(
@@ -137,7 +137,24 @@ export const rutasV1 =
       );
     }
 
-    if (suscribirZona && eliminarZona) {
+    if (suscribirZona && eliminarZona && listarZonas) {
+      app.get(
+        '/suscripciones',
+        {
+          ...conToken,
+          schema: {
+            tags: ['suscripciones'],
+            summary: 'Zonas suscritas propias (HU-07)',
+            security: SEGURIDAD_BEARER,
+            response: { 200: http.esquemaListaDeZonas, ...ERRORES },
+          },
+        },
+        async (request) => {
+          const zonas = await listarZonas.ejecutar({ idUsuario: identidadDe(request).idUsuario });
+          return { zonas: zonas.map(aZonaHttp) };
+        },
+      );
+
       app.post(
         '/suscripciones',
         {

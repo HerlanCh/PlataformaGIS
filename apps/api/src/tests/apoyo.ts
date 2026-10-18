@@ -30,6 +30,7 @@ export const casosFalsos = (cambios: Partial<CasosDeUso> = {}): CasosDeUso =>
     obtenerMapaDeCalor: null,
     suscribirZona: null,
     eliminarZona: null,
+    listarZonas: null,
     rechazarReporte: null,
     ...cambios,
   }) as CasosDeUso;

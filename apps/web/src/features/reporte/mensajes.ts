@@ -44,12 +44,16 @@ function mensajeDeRechazo(codigo: string, reintentarEnS: number | null): Mensaje
   return { tono: 'problema', texto: 'No se pudo enviar el reporte. Intenta de nuevo.' };
 }
 
-/** Por qué no se pudo leer la posición del GPS. */
-export function mensajeDeUbicacion(error: GeolocationPositionError | null): Mensaje {
+/** Por qué no se pudo leer la posición del GPS, al reportar o al votar. */
+export function mensajeDeUbicacion(
+  error: GeolocationPositionError | null,
+  accion: 'reportar' | 'votar' = 'reportar',
+): Mensaje {
   if (error?.code === 1) {
+    const que = accion === 'votar' ? 'el voto' : 'el reporte';
     return {
       tono: 'problema',
-      texto: 'Activa la ubicación para reportar: el reporte usa tu posición.',
+      texto: `Activa la ubicación para ${accion}: ${que} usa tu posición.`,
     };
   }
   return {

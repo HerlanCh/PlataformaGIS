@@ -29,6 +29,8 @@ export type Origen = 'gps' | 'mapa';
 
 interface PropsPanel {
   readonly reportes: readonly ReportePublico[];
+  /** Reportes de la ventana que los filtros esconden. */
+  readonly ocultos?: number;
   readonly desde: Punto;
   readonly origen: Origen;
   readonly cargando: boolean;
@@ -51,21 +53,28 @@ function FilaEstacion({ fila, conGps }: { readonly fila: Fila; readonly conGps: 
   const categoria = categoriaDe(reporte.codigoCategoria);
   const confirmado = reporte.estado === 'CONFIRMADO';
   return (
-    <li className="diagrama__fila" style={{ '--linea': categoria.color } as React.CSSProperties}>
-      <span className="diagrama__tramo" aria-hidden="true">
-        <Estacion color={categoria.color} estado={confirmado ? 'CONFIRMADO' : 'ACTIVO'} />
-      </span>
-      <span className="diagrama__texto">
-        <span className="diagrama__nombre">{categoria.corto}</span>
-        <span className="diagrama__estado">{confirmado ? 'Confirmado' : 'Sin confirmar'}</span>
-      </span>
-      <span className="diagrama__datos">
-        <span className="diagrama__distancia">
-          a {formatearDistancia(metros)}
-          {conGps ? '' : ' del centro'}
+    <li>
+      <button
+        type="button"
+        className="diagrama__fila"
+        style={{ '--linea': categoria.color } as React.CSSProperties}
+        onClick={() => useEstado.getState().abrirDetalle(reporte.id)}
+      >
+        <span className="diagrama__tramo" aria-hidden="true">
+          <Estacion color={categoria.color} estado={confirmado ? 'CONFIRMADO' : 'ACTIVO'} />
         </span>
-        <span className="diagrama__vence">hasta {vigenciaDe(reporte.caducaEn)}</span>
-      </span>
+        <span className="diagrama__texto">
+          <span className="diagrama__nombre">{categoria.corto}</span>
+          <span className="diagrama__estado">{confirmado ? 'Confirmado' : 'Sin confirmar'}</span>
+        </span>
+        <span className="diagrama__datos">
+          <span className="diagrama__distancia">
+            a {formatearDistancia(metros)}
+            {conGps ? '' : ' del centro'}
+          </span>
+          <span className="diagrama__vence">hasta {vigenciaDe(reporte.caducaEn)}</span>
+        </span>
+      </button>
     </li>
   );
 }
@@ -119,6 +128,20 @@ function Diagrama({ filas, resto, conGps, cargando, fallo, reintentar }: PropsDi
   );
 }
 
+/** Un filtro olvidado no debe parecer una zona sin incidentes: se dice cuántos esconde. */
+function Ocultos({ cantidad }: { readonly cantidad: number }) {
+  const quitarFiltros = useEstado((s) => s.quitarFiltros);
+  if (cantidad === 0) return null;
+  return (
+    <p className="ocultos">
+      {cantidad === 1 ? '1 incidente oculto' : `${cantidad} incidentes ocultos`} por los filtros
+      <button type="button" className="boton-texto boton-texto--chico" onClick={quitarFiltros}>
+        Quitar filtros
+      </button>
+    </p>
+  );
+}
+
 function Pendientes({ cantidad }: { readonly cantidad: number }) {
   if (cantidad === 0) return null;
   return (
@@ -135,7 +158,15 @@ function Pendientes({ cantidad }: { readonly cantidad: number }) {
  * se titula «En esta zona» y mide desde el centro del mapa. Debajo, el botón de reportar con el
  * mismo peso que la lista.
  */
-export function PanelCerca({ reportes, desde, origen, cargando, fallo, reintentar }: PropsPanel) {
+export function PanelCerca({
+  reportes,
+  ocultos = 0,
+  desde,
+  origen,
+  cargando,
+  fallo,
+  reintentar,
+}: PropsPanel) {
   const abrirHoja = useEstado((s) => s.abrirHoja);
   const pendientes = useEstado((s) => s.pendientes);
   const todas = cercanos(reportes, desde);
@@ -160,6 +191,7 @@ export function PanelCerca({ reportes, desde, origen, cargando, fallo, reintenta
         )}
       </div>
 
+      <Ocultos cantidad={ocultos} />
       <Diagrama
         filas={filas}
         resto={resto}

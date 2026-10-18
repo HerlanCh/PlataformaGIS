@@ -3,13 +3,15 @@
 // La clave de idempotencia evita duplicados aunque el mismo reporte se envíe más de una vez.
 import { abrirAlmacen } from './almacen.js';
 import type { ReportePendiente } from './almacen.js';
-import { obtenerToken } from './sesion.js';
+import { recordar } from './memoria.js';
+import { esRechazo, JSON_CABECERA, pedirConToken, rechazoDe } from './peticion.js';
+import type { Rechazo } from './peticion.js';
 
 export type { ReportePendiente };
 
 export type Resultado =
   | { readonly tipo: 'CREADO' | 'DUPLICADO' | 'PROPIO_EXISTENTE'; readonly idReporte: string }
-  | { readonly tipo: 'RECHAZADO'; readonly codigo: string; readonly reintentarEnS: number | null }
+  | Rechazo
   | { readonly tipo: 'PENDIENTE' };
 
 export interface ResultadoDeEnvio {
@@ -43,53 +45,35 @@ export async function pendientes(): Promise<ReportePendiente[]> {
   return (await abrirAlmacen()).getAllFromIndex('cola', 'orden');
 }
 
-interface Problema {
-  readonly codigo?: string;
-}
-
 async function enviarUno(
   urlApi: string,
   pendiente: ReportePendiente,
   pedir: typeof fetch,
 ): Promise<Resultado> {
-  const enviar = async (forzar: boolean) => {
-    const token = await obtenerToken(urlApi, { forzar, fetch: pedir });
-    return pedir(`${urlApi}/v1/reportes`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${token}`,
-        'idempotency-key': pendiente.clave,
-      },
-      body: JSON.stringify({
-        codigoCategoria: pendiente.codigoCategoria,
-        latitud: pendiente.latitud,
-        longitud: pendiente.longitud,
-      }),
-    });
-  };
-
-  let respuesta = await enviar(false);
-  // Token vencido o de una clave rotada: se renueva una vez.
-  if (respuesta.status === 401) respuesta = await enviar(true);
+  const respuesta = await pedirConToken(urlApi, pedir, '/v1/reportes', {
+    method: 'POST',
+    headers: { ...JSON_CABECERA, 'idempotency-key': pendiente.clave },
+    body: JSON.stringify({
+      codigoCategoria: pendiente.codigoCategoria,
+      latitud: pendiente.latitud,
+      longitud: pendiente.longitud,
+    }),
+  });
 
   if (respuesta.ok) {
     const cuerpo = (await respuesta.json()) as {
       resultado: 'CREADO' | 'DUPLICADO' | 'PROPIO_EXISTENTE';
       reporte: { id: string };
     };
+    // Se recuerda para no ofrecer votar: el autor no puede, y un duplicado ya contó como confirmación.
+    await recordar(
+      cuerpo.reporte.id,
+      cuerpo.resultado === 'DUPLICADO' ? { voto: 'CONFIRMACION' } : { propio: true },
+    );
     return { tipo: cuerpo.resultado, idReporte: cuerpo.reporte.id };
   }
   // 4xx: la API respondió y no lo aceptará aunque se reintente; se informa y se descarta.
-  if (respuesta.status >= 400 && respuesta.status < 500) {
-    const problema = (await respuesta.json().catch(() => ({}))) as Problema;
-    const espera = Number(respuesta.headers.get('retry-after'));
-    return {
-      tipo: 'RECHAZADO',
-      codigo: problema.codigo ?? `HTTP_${respuesta.status}`,
-      reintentarEnS: Number.isFinite(espera) && espera > 0 ? espera : null,
-    };
-  }
+  if (esRechazo(respuesta)) return rechazoDe(respuesta);
   return { tipo: 'PENDIENTE' };
 }
 

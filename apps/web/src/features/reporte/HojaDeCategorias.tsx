@@ -1,8 +1,7 @@
-import { X } from 'lucide-react';
-import { useEffect, useRef } from 'react';
 import { CATEGORIAS } from '../../domain/categorias.js';
 import { useEstado } from '../../estado.js';
 import { Estacion } from '../../ui/Estacion.js';
+import { Hoja } from '../../ui/Hoja.js';
 import { ICONO_DE_CATEGORIA, TRAZO } from '../../ui/iconos.js';
 
 interface PropsHoja {
@@ -17,70 +16,38 @@ interface PropsHoja {
 export function HojaDeCategorias({ alElegir }: PropsHoja) {
   const abierta = useEstado((s) => s.hojaAbierta);
   const cerrar = useEstado((s) => s.cerrarHoja);
-  const dialogo = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const d = dialogo.current;
-    if (!d) return;
-    if (abierta && !d.open) d.showModal?.();
-    if (!abierta && d.open) d.close();
-  }, [abierta]);
-
-  // Un toque fuera de la hoja (sobre el fondo) la cierra; con el teclado se cierra con Escape,
-  // que el <dialog> ya maneja.
-  useEffect(() => {
-    const d = dialogo.current;
-    if (!d) return;
-    const alTocarFondo = (e: MouseEvent) => {
-      if (e.target === d) cerrar();
-    };
-    d.addEventListener('click', alTocarFondo);
-    return () => d.removeEventListener('click', alTocarFondo);
-  }, [cerrar]);
 
   return (
-    <dialog ref={dialogo} className="hoja" aria-labelledby="titulo-hoja" onClose={cerrar}>
-      <div className="hoja__contenido">
-        <div className="hoja__cabecera">
-          <h2 id="titulo-hoja" className="hoja__titulo">
-            ¿Qué está pasando?
-          </h2>
-          <button type="button" className="boton-redondo" onClick={cerrar}>
-            <X aria-hidden="true" size={22} strokeWidth={TRAZO} />
-            <span className="solo-lector">Cerrar</span>
-          </button>
-        </div>
-        <p className="hoja__ayuda">Se envía con tu ubicación actual.</p>
-        <ul className="lineas">
-          {CATEGORIAS.map((categoria) => {
-            const Icono = ICONO_DE_CATEGORIA[categoria.codigo];
-            return (
-              <li key={categoria.codigo}>
-                <button
-                  type="button"
-                  className="linea"
-                  style={{ '--linea': categoria.color } as React.CSSProperties}
-                  onClick={() => alElegir(categoria.codigo)}
-                >
-                  <Estacion color={categoria.color} estado="CONFIRMADO" tamano={30} />
-                  <span className="linea__texto">
-                    <span className="linea__nombre">{categoria.nombre}</span>
-                    <span className="linea__detalle">
-                      Línea {categoria.linea} · se muestra {categoria.horas} h
-                    </span>
+    <Hoja
+      abierta={abierta}
+      alCerrar={cerrar}
+      titulo="¿Qué está pasando?"
+      ayuda="Se envía con tu ubicación actual."
+    >
+      <ul className="lineas">
+        {CATEGORIAS.map((categoria) => {
+          const Icono = ICONO_DE_CATEGORIA[categoria.codigo];
+          return (
+            <li key={categoria.codigo}>
+              <button
+                type="button"
+                className="linea"
+                style={{ '--linea': categoria.color } as React.CSSProperties}
+                onClick={() => alElegir(categoria.codigo)}
+              >
+                <Estacion color={categoria.color} estado="CONFIRMADO" tamano={30} />
+                <span className="linea__texto">
+                  <span className="linea__nombre">{categoria.nombre}</span>
+                  <span className="linea__detalle">
+                    Línea {categoria.linea} · se muestra {categoria.horas} h
                   </span>
-                  <Icono
-                    className="linea__icono"
-                    aria-hidden="true"
-                    size={26}
-                    strokeWidth={TRAZO}
-                  />
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    </dialog>
+                </span>
+                <Icono className="linea__icono" aria-hidden="true" size={26} strokeWidth={TRAZO} />
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </Hoja>
   );
 }

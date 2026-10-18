@@ -6,10 +6,10 @@ Adaptador web de la plataforma: una PWA instalable que muestra los incidentes en
 
 | Carpeta         | Qué contiene                                                                                                                                                      |
 | :-------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/domain/`   | Categorías (cada una, una línea de Mi Teleférico), geometría (distancias, ventana) y `aplicarEvento`, que actualiza la lista de una ventana con un evento público |
-| `src/services/` | `almacen` (IndexedDB), `sesion` (registro anónimo y token), `cola` (reportes pendientes de envío) y `tiempo-real` (Socket.io)                                     |
-| `src/features/` | `mapa` (Leaflet y la consulta por ventana), `cerca` (panel «Cerca de ti») y `reporte` (hoja de categorías, envío y mensajes)                                      |
-| `src/ui/`       | Encabezado con la franja de la red, estación, avisos e iconos                                                                                                     |
+| `src/domain/`   | Categorías (cada una, una línea de Mi Teleférico), geometría, `aplicarEvento` (actualiza la lista con un evento público), filtros y la elección del «¿Sigue ahí?» |
+| `src/services/` | `almacen` (IndexedDB), `sesion`, `peticion` (token y rechazos), `cola`, `memoria` (propios, votados y preguntados), `votos`, `zonas`, `api` y `tiempo-real`       |
+| `src/features/` | `mapa` (Leaflet, capas de calor y zonas), `cerca`, `reporte`, `votos` (detalle y «¿Sigue ahí?»), `filtros`, `calor` y `zonas` (lista y editor)                    |
+| `src/ui/`       | Encabezado con la franja de la red, estación, hoja, selector segmentado, avisos e iconos                                                                          |
 | `src/sw.ts`     | Service worker (Workbox): precaché, teselas de OSM con límite y Background Sync de la cola                                                                        |
 
 El estado del servidor vive en TanStack Query (`['reportes', ventana]`); el local, en un almacén Zustand (`src/estado.ts`). El diseño está en `DESIGN.md` y la verdad del producto, en `PRODUCT.md`.
@@ -28,6 +28,14 @@ El estado del servidor vive en TanStack Query (`['reportes', ventana]`); el loca
   - lo que no se pudo enviar queda pendiente, visible en el panel;
   - se reenvía al volver el evento `online`, al abrir la app o, donde exista, con Background Sync, aunque la app esté cerrada;
   - un 4xx sale de la cola con su mensaje; un 5xx o la falta de red lo dejan pendiente.
+- **Detalle y votos (HU-03):**
+  - tocar una estación del mapa o una fila del panel abre su detalle, que se actualiza con los eventos en vivo y se cierra si el reporte deja el mapa;
+  - «Sigue ahí» / «Ya no está» votan con la posición del momento; los votos no se encolan sin conexión;
+  - el dispositivo recuerda en IndexedDB sus reportes propios y sus votos, para no ofrecer votar lo que la API rechazaría. Nunca se guarda ni se pide `author_id`.
+- **«¿Sigue ahí?» automático (HU-03):** solo si el permiso de ubicación ya está concedido (nunca lo pide) y con la app visible. Se sigue la posición con `watchPosition`; ante un reporte a menos de 150 m que no es propio ni se votó, aparece una tarjeta una sola vez por reporte.
+- **Filtros:** por línea y por antigüedad (última hora, 3 h, hoy), en el cliente y sobre la lista de la caché. Se recuerdan en `localStorage`; la franja de la red raya las líneas ocultas y el panel dice cuántos incidentes esconden.
+- **Historial (HU-06):** el interruptor «Ahora / Historial» cambia las estaciones por el mapa de calor de `GET /v1/mapa-calor` (7, 30 o 90 días, solo las líneas visibles). `leaflet.heat` se descarga al activarlo por primera vez. Si la API responde 404 (módulo apagado), el interruptor se esconde.
+- **Zonas (HU-07):** la campana del encabezado lista las zonas propias (`GET /v1/suscripciones`), permite eliminarlas con confirmación y crear una nueva: el mapa muestra una mira fija, el centro es el del mapa y el radio sale de un control deslizante de 100 a 2000 m. Las zonas guardadas se dibujan con trazo discontinuo.
 
 ## Comandos
 
