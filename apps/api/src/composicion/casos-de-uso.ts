@@ -5,6 +5,11 @@ import { ObtenerMapaDeCalor, ConsultaMapaCalorPg } from '@gis/module-heatmap';
 import { RegistrarDispositivo, RepositorioUsuariosPg } from '@gis/module-identity';
 import { RechazarReporte, UnidadDeTrabajoModeracionPg } from '@gis/module-moderation';
 import {
+  EliminarSuscripcionPush,
+  RegistrarSuscripcionPush,
+  RepositorioSuscripcionesPushPg,
+} from '@gis/module-notifications';
+import {
   CrearReporte,
   ListarReportesEnVentana,
   RepositorioCategoriasPg,
@@ -42,6 +47,15 @@ export interface CasosDeUso {
   readonly eliminarZona: Caso<EliminarZona> | null;
   readonly listarZonas: Caso<ListarZonas> | null;
   readonly rechazarReporte: Caso<RechazarReporte> | null;
+  /** Avisos Web Push (HU-08): `null` con `notifications` apagado o sin claves VAPID. */
+  readonly avisosPush: AvisosPush | null;
+}
+
+export interface AvisosPush {
+  readonly registrar: Caso<RegistrarSuscripcionPush>;
+  readonly eliminar: Caso<EliminarSuscripcionPush>;
+  /** Clave VAPID pública, que la web necesita para suscribirse. */
+  readonly clavePublica: string;
 }
 
 export const relojDelSistema: Reloj = { ahora: () => new Date() };
@@ -53,6 +67,8 @@ export interface Infraestructura {
   readonly limitador: LimitadorDeFrecuencia;
   readonly reloj?: Reloj;
   readonly ids?: GeneradorDeId;
+  /** Clave VAPID pública; sin ella no se ofrecen avisos push. */
+  readonly clavePublicaPush?: string | null;
 }
 
 const siActivo = <T>(activo: boolean, crear: () => T): T | null => (activo ? crear() : null);
@@ -108,6 +124,17 @@ export function componerCasosDeUso(infraestructura: Infraestructura): CasosDeUso
     listarZonas: siActivo(
       interruptores.estaActivo('subscriptions'),
       () => new ListarZonas(suscripciones),
+    ),
+    avisosPush: siActivo(
+      interruptores.estaActivo('notifications') && Boolean(infraestructura.clavePublicaPush),
+      () => {
+        const push = new RepositorioSuscripcionesPushPg(db);
+        return {
+          registrar: new RegistrarSuscripcionPush({ suscripciones: push, reloj, ids }),
+          eliminar: new EliminarSuscripcionPush(push),
+          clavePublica: infraestructura.clavePublicaPush!,
+        };
+      },
     ),
     rechazarReporte: siActivo(
       interruptores.estaActivo('moderation'),

@@ -1,0 +1,60 @@
+name: E2E
+
+# Pruebas de extremo a extremo con Playwright contra staging (roadmap 8, criterio de salida):
+# la web de Vercel contra la API de Render. Corre después de cada versión publicada, cuando
+# Render ya desplegó `main`, y a pedido.
+on:
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  API_URL: https://plataforma-gis-api.onrender.com
+  BASE_URL: https://plataformagis-apps.vercel.app
+
+jobs:
+  e2e:
+    name: Playwright contra staging
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Instalar
+        run: pnpm install --frozen-lockfile
+      - name: Instalar Chromium
+        run: pnpm --filter @gis/web exec playwright install --with-deps chromium
+
+      - name: Esperar a que staging sirva el último commit de main
+        run: |
+          esperado=$(git rev-parse HEAD)
+          for intento in $(seq 1 60); do
+            version=$(curl -fsS "$API_URL/health" | jq -r '.version' || true)
+            if [ "$version" = "$esperado" ]; then echo "staging en $version"; break; fi
+            echo "staging en '${version}', se espera ${esperado} (intento ${intento})"
+            sleep 20
+          done
+          test "$version" = "$esperado" || { echo "::error::staging no desplegó ${esperado} a tiempo"; exit 1; }
+          curl -fsS -o /dev/null "$BASE_URL/manifest.webmanifest"
+
+      - name: Playwright
+        run: pnpm --filter @gis/web e2e
+
+      - name: Informe
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: informe-playwright
+          path: apps/web/playwright-report/
+          retention-days: 14

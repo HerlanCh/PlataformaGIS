@@ -10,20 +10,23 @@ const sinUso = {
 };
 
 /** Todos los módulos activos, para que el documento describa la API completa. */
-const TODOS_LOS_CASOS = Object.fromEntries(
-  [
-    'registrarDispositivo',
-    'crearReporte',
-    'listarReportes',
-    'confirmarReporte',
-    'negarReporte',
-    'obtenerMapaDeCalor',
-    'suscribirZona',
-    'eliminarZona',
-    'listarZonas',
-    'rechazarReporte',
-  ].map((nombre) => [nombre, sinUso]),
-) as unknown as CasosDeUso;
+const TODOS_LOS_CASOS = {
+  ...Object.fromEntries(
+    [
+      'registrarDispositivo',
+      'crearReporte',
+      'listarReportes',
+      'confirmarReporte',
+      'negarReporte',
+      'obtenerMapaDeCalor',
+      'suscribirZona',
+      'eliminarZona',
+      'listarZonas',
+      'rechazarReporte',
+    ].map((nombre) => [nombre, sinUso]),
+  ),
+  avisosPush: { registrar: sinUso, eliminar: sinUso, clavePublica: 'documento' },
+} as unknown as CasosDeUso;
 
 /**
  * Documento OpenAPI de la API `/v1`, generado desde los esquemas de `packages/contracts`.

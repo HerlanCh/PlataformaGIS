@@ -49,8 +49,23 @@ describe('composición', () => {
     expect(casos.obtenerMapaDeCalor).toBeNull();
     expect(casos.suscribirZona).toBeNull();
     expect(casos.listarZonas).toBeNull();
+    expect(casos.avisosPush).toBeNull();
     expect(casos.rechazarReporte).toBeNull();
     expect(casos.crearReporte).toBeDefined();
+  });
+
+  it('HU-08: los avisos push existen solo con notifications encendido y la clave VAPID', () => {
+    const componer = (env: Record<string, string>, clavePublicaPush: string | null) =>
+      componerCasosDeUso({
+        db: {} as Db,
+        interruptores: cargarInterruptores(env),
+        limitador: new LimitadorDeFrecuenciaEnProceso(relojDelSistema),
+        clavePublicaPush,
+      }).avisosPush;
+
+    expect(componer({ FEATURE_NOTIFICATIONS: 'true' }, null)).toBeNull();
+    expect(componer({}, 'pub')).toBeNull();
+    expect(componer({ FEATURE_NOTIFICATIONS: 'true' }, 'pub')?.clavePublica).toBe('pub');
   });
 
   it('el reloj y el generador del sistema dan la hora actual y UUID distintos', () => {

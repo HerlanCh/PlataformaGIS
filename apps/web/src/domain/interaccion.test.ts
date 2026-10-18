@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RADIO_DE_PREGUNTA_M, reporteParaPreguntar } from './cercania.js';
 import { desdeCuando, filtrarReportes, hayFiltros, inicioDeHoy, SIN_FILTROS } from './filtros.js';
-import { CENTRO_LA_PAZ } from './geo.js';
+import { CENTRO_LA_PAZ, teselaDe } from './geo.js';
 import type { ReportePublico } from './reportes.js';
 
 const AHORA = new Date('2026-10-18T16:00:00.000Z'); // 12:00 en La Paz
@@ -86,5 +86,12 @@ describe('«¿Sigue ahí?» automático', () => {
 
     expect(reporteParaPreguntar(lista, CENTRO_LA_PAZ, new Set(['propio']))?.id).toBe('otro');
     expect(reporteParaPreguntar(lista, CENTRO_LA_PAZ, new Set(['propio', 'otro']))).toBeNull();
+  });
+});
+
+describe('tesela inicial del mapa', () => {
+  it('el centro de La Paz en zoom 15 cae en la tesela 10182/17906', () => {
+    expect(teselaDe(CENTRO_LA_PAZ, 15)).toEqual({ x: 10182, y: 17906 });
+    expect(teselaDe({ latitud: 0, longitud: 0 }, 1)).toEqual({ x: 1, y: 1 });
   });
 });

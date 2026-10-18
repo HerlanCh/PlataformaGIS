@@ -10,6 +10,16 @@
     "@gis/contracts": "workspace:*",
     "@gis/event-bus": "workspace:*",
     "@gis/platform": "workspace:*",
-    "@gis/shared-kernel": "workspace:*"
+    "@gis/shared-kernel": "workspace:*",
+    "drizzle-orm": "^0.45.4",
+    "web-push": "3.6.7",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@gis/testing": "workspace:*",
+    "@types/web-push": "3.6.4"
+  },
+  "scripts": {
+    "db:generate": "drizzle-kit generate"
   }
 }

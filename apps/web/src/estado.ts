@@ -44,6 +44,9 @@ interface EstadoApp {
   readonly zonaEnEdicion: ZonaEnEdicion | null;
   /** Punto que el mapa debe dejar a la vista (por ejemplo, el del «¿Sigue ahí?»). */
   readonly enfoque: Punto | null;
+  readonly instalarAbierta: boolean;
+  /** Reporte al que llevar el mapa (al tocar un aviso push): se abre su detalle al cargarlo. */
+  readonly destino: { readonly idReporte: string; readonly punto: Punto } | null;
   fijarVentana(ventana: Caja): void;
   fijarPosicion(posicion: Punto): void;
   fijarConexion(conexion: EstadoDeConexion): void;
@@ -69,6 +72,10 @@ interface EstadoApp {
   fijarCentroZona(centro: Punto): void;
   terminarZona(): void;
   enfocar(punto: Punto | null): void;
+  abrirInstalar(): void;
+  cerrarInstalar(): void;
+  irAReporte(idReporte: string, punto: Punto): void;
+  limpiarDestino(): void;
 }
 
 const CLAVE_FILTROS = 'alerta-lp:filtros';
@@ -111,6 +118,8 @@ export const useEstado = create<EstadoApp>((set) => ({
   zonasAbiertas: false,
   zonaEnEdicion: null,
   enfoque: null,
+  instalarAbierta: false,
+  destino: null,
   fijarVentana: (ventana) => set({ ventana }),
   // Con una posición nueva, un aviso viejo de «no pudimos obtener tu ubicación» ya no es cierto.
   fijarPosicion: (posicion) =>
@@ -161,4 +170,8 @@ export const useEstado = create<EstadoApp>((set) => ({
     ),
   terminarZona: () => set({ zonaEnEdicion: null }),
   enfocar: (enfoque) => set({ enfoque }),
+  abrirInstalar: () => set({ instalarAbierta: true, zonasAbiertas: false }),
+  cerrarInstalar: () => set({ instalarAbierta: false }),
+  irAReporte: (idReporte, punto) => set({ destino: { idReporte, punto }, capa: 'incidentes' }),
+  limpiarDestino: () => set({ destino: null }),
 }));

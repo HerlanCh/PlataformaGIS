@@ -1,12 +1,14 @@
 import { useEffect, useMemo } from 'react';
 import { URL_API } from './configuracion.js';
 import { filtrarReportes } from './domain/filtros.js';
+import type { Punto } from './domain/geo.js';
 import type { ReportePublico } from './domain/reportes.js';
 import { useEstado } from './estado.js';
 import { useMapaDeCalor } from './features/calor/usarMapaDeCalor.js';
 import { PanelCerca } from './features/cerca/PanelCerca.js';
 import { useOrigen } from './features/cerca/usarOrigen.js';
 import { HojaDeFiltros } from './features/filtros/HojaDeFiltros.js';
+import { HojaDeInstalar } from './features/instalar/HojaDeInstalar.js';
 import { Mapa } from './features/mapa/Mapa.js';
 import { useReportesEnVentana, useTiempoReal } from './features/mapa/usarReportes.js';
 import { HojaDeCategorias } from './features/reporte/HojaDeCategorias.js';
@@ -50,6 +52,46 @@ function usePuestaEnMarcha() {
 const SIN_REPORTES: readonly ReportePublico[] = [];
 const SIN_ZONAS: readonly Zona[] = [];
 
+/** Lee `?reporte=<id>&lat=&lon=` (al tocar un aviso push) y limpia la URL. */
+export function destinoDeLaUrl(busqueda: string): { idReporte: string; punto: Punto } | null {
+  const parametros = new URLSearchParams(busqueda);
+  const idReporte = parametros.get('reporte');
+  const [lat, lon] = [parametros.get('lat'), parametros.get('lon')];
+  if (!idReporte || !lat || !lon) return null;
+  const [latitud, longitud] = [Number(lat), Number(lon)];
+  if (!Number.isFinite(latitud) || !Number.isFinite(longitud)) return null;
+  return { idReporte, punto: { latitud, longitud } };
+}
+
+/**
+ * Tocar un aviso push abre la app en el reporte: el mapa va a su ubicación pública y, cuando el
+ * reporte llega con la ventana, se abre su detalle.
+ */
+function useDestinoDeAviso(reportes: readonly ReportePublico[]) {
+  const destino = useEstado((s) => s.destino);
+
+  useEffect(() => {
+    const inicial = destinoDeLaUrl(globalThis.location.search);
+    if (inicial) {
+      useEstado.getState().irAReporte(inicial.idReporte, inicial.punto);
+      globalThis.history.replaceState(null, '', globalThis.location.pathname);
+    }
+    const alMensaje = (e: MessageEvent<{ tipo?: string; url?: string }>) => {
+      if (e.data?.tipo !== 'abrir-reporte' || !e.data.url) return;
+      const elegido = destinoDeLaUrl(new URL(e.data.url, globalThis.location.href).search);
+      if (elegido) useEstado.getState().irAReporte(elegido.idReporte, elegido.punto);
+    };
+    navigator.serviceWorker?.addEventListener('message', alMensaje);
+    return () => navigator.serviceWorker?.removeEventListener('message', alMensaje);
+  }, []);
+
+  useEffect(() => {
+    if (!destino || !reportes.some((r) => r.id === destino.idReporte)) return;
+    useEstado.getState().abrirDetalle(destino.idReporte);
+    useEstado.getState().limpiarDestino();
+  }, [destino, reportes]);
+}
+
 /** Reportes de la ventana con los filtros aplicados, y cuántos quedaron fuera. */
 function useReportesVisibles() {
   const consulta = useReportesEnVentana();
@@ -66,6 +108,7 @@ export function App() {
   useSeguirPosicion();
   const reportar = useReportar();
   const { consulta, todos, visibles, ocultos } = useReportesVisibles();
+  useDestinoDeAviso(todos);
   const calor = useMapaDeCalor();
   const zonas = useZonas().lista.data ?? SIN_ZONAS;
   const { desde, conGps } = useOrigen();
@@ -103,6 +146,7 @@ export function App() {
       <HojaDeDetalle reportes={todos} />
       <HojaDeFiltros />
       <HojaDeZonas />
+      <HojaDeInstalar />
     </div>
   );
 }

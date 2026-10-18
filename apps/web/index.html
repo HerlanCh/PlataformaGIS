@@ -8,7 +8,14 @@
       name="description"
       content="Alerta temprana comunitaria de incidentes urbanos en La Paz y El Alto"
     />
+    <!-- La primera tesela del mapa suele ser el LCP: la conexión se abre antes de pedirla. -->
+    <link rel="preconnect" href="https://tile.openstreetmap.org" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- iOS 16.4 o superior: con la app agregada a inicio se abre sin barra y recibe avisos. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Alerta LP" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>Alerta La Paz y El Alto</title>
   </head>
   <body>

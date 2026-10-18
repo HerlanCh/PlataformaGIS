@@ -25,6 +25,7 @@ Esquema físico de la Plataforma GIS sobre PostgreSQL 18 + PostGIS 3.6. Se deriv
 | `votos` | `verification` | Votos "¿Sigue ahí?" sobre los reportes |
 | `reputaciones` | `verification` | Reputación de cada usuario |
 | `zonas_suscritas` | `subscriptions` (opcional) | Zonas de interés de los usuarios |
+| `suscripciones_push` | `notifications` (opcional) | Dispositivos que reciben avisos Web Push |
 | `acciones_moderacion` | `moderation` (opcional) | Auditoría de las decisiones de moderación |
 
 ## `platform` (compartido)
@@ -171,6 +172,23 @@ Una zona es inmutable: para cambiarla se elimina y se crea otra.
 - `zonas_suscritas_centro_idx`: GiST sobre `centro` (zonas que contienen un punto: `buscarSuscriptores`).
 - `zonas_suscritas_usuario_idx`: B-tree sobre `id_usuario` (zonas de un usuario y su límite de 5).
 
+## `notifications` (opcional)
+
+### `suscripciones_push`
+
+A dónde enviar los avisos Web Push de un usuario (HU-08): una fila por dispositivo. Si el navegador vuelve a enviar el mismo `endpoint`, la fila se reemplaza y pasa al usuario actual. Un 404 o 410 del servicio push la borra.
+
+| Columna | Tipo | Restricción | Descripción |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | PK | Identificador de la suscripción |
+| `id_usuario` | `uuid` | NOT NULL. Referencia lógica a `usuarios.id` | Usuario que recibe los avisos |
+| `endpoint` | `text` | NOT NULL, UNIQUE | URL https del servicio push del navegador; identifica al dispositivo |
+| `p256dh` | `text` | NOT NULL | Clave pública del navegador para cifrar el aviso |
+| `auth` | `text` | NOT NULL | Secreto de autenticación del navegador |
+| `creado_en` | `timestamptz` | NOT NULL | Fecha del alta o de su última renovación |
+
+**Índices:** `suscripciones_push_usuario_idx`, B-tree sobre `id_usuario` (dispositivos de un usuario al enviar un aviso).
+
 ## `moderation` (opcional)
 
 ### `acciones_moderacion`
@@ -200,6 +218,7 @@ Auditoría: quién decidió qué sobre qué reporte y por qué. Solo se inserta.
 | `reports` | `0002_indices_de_consulta` | Índices `reportes_ubicacion_geography_idx` y `reportes_creado_en_idx`; elimina `reportes_ubicacion_idx` |
 | `verification` | `0000_votos_reputaciones` | `votos` y `reputaciones` |
 | `subscriptions` | `0000_zonas_suscritas` | `zonas_suscritas` y sus índices |
+| `notifications` | `0000_suscripciones_push` | `suscripciones_push` y su índice |
 | `moderation` | `0000_acciones_moderacion` | `acciones_moderacion` y su índice |
 
 Cada migración tiene su reversa escrita a mano en `<nombre>.down.sql`, porque Drizzle Kit solo genera el avance. Las pruebas de integración aplican, revierten y vuelven a aplicar cada conjunto contra PostGIS real.

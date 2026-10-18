@@ -7,6 +7,10 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import { App } from './App.js';
+import { escucharInstalacion } from './features/instalar/instalacion.js';
+
+// El navegador ofrece instalar la app una sola vez y temprano: se escucha antes de pintar.
+escucharInstalacion();
 
 const raiz = document.getElementById('root');
 if (!raiz) throw new Error('Falta el elemento #root');

@@ -201,6 +201,29 @@ export const esquemaListaDeZonas = conId(
   'Zonas suscritas del usuario, de la más reciente a la más antigua',
 );
 
+// --- Avisos Web Push ---
+
+export const esquemaClavePublicaPush = conId(
+  z.object({ clavePublica: z.string() }),
+  'ClavePublicaPush',
+  'Clave VAPID pública para `pushManager.subscribe`',
+);
+
+export const esquemaSuscripcionPush = conId(
+  z.object({
+    endpoint: z.url(),
+    keys: z.object({ p256dh: z.string().min(1), auth: z.string().min(1) }),
+  }),
+  'SuscripcionPush',
+  'La suscripción del navegador (`PushSubscription.toJSON()`)',
+);
+
+export const esquemaBajaPush = conId(
+  z.object({ endpoint: z.url() }),
+  'BajaPush',
+  'Endpoint del dispositivo que deja de recibir avisos',
+);
+
 // --- Moderación ---
 
 export const esquemaRechazo = conId(
