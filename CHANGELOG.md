@@ -1,3 +1,20 @@
+# [2.7.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.6.0...v2.7.0) (2026-10-18)
+
+
+### Bug Fixes
+
+* observaciones de SonarCloud y cobertura del código nuevo ([7b693a0](https://github.com/HerlanCh/PlataformaGIS/commit/7b693a0302e1a8dca97cc6f7186e665214877c93))
+
+
+### Features
+
+* avisos Web Push, instalación de la PWA y verificación E2E (Fase 8c) ([b7c46d8](https://github.com/HerlanCh/PlataformaGIS/commit/b7c46d8c698e19c82fef9261af32dacf3dd48e51))
+
+
+### Performance Improvements
+
+* **web:** Lighthouse estable en la CI y registro único del dispositivo ([f4a418c](https://github.com/HerlanCh/PlataformaGIS/commit/f4a418c9cc20f40a8fe013c74c6af4ff82bef584))
+
 # [2.6.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.5.0...v2.6.0) (2026-10-18)
 
 
