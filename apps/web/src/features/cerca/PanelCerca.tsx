@@ -122,10 +122,10 @@ function Diagrama({ filas, resto, conGps, cargando, fallo, reintentar }: PropsDi
 function Pendientes({ cantidad }: { readonly cantidad: number }) {
   if (cantidad === 0) return null;
   return (
-    <p className="pendientes" role="status">
+    <output className="pendientes">
       <CloudOff aria-hidden="true" size={18} strokeWidth={TRAZO} />
       {cantidad === 1 ? '1 reporte pendiente de envío' : `${cantidad} reportes pendientes de envío`}
-    </p>
+    </output>
   );
 }
 

@@ -26,17 +26,20 @@ export function HojaDeCategorias({ alElegir }: PropsHoja) {
     if (!abierta && d.open) d.close();
   }, [abierta]);
 
+  // Un toque fuera de la hoja (sobre el fondo) la cierra; con el teclado se cierra con Escape,
+  // que el <dialog> ya maneja.
+  useEffect(() => {
+    const d = dialogo.current;
+    if (!d) return;
+    const alTocarFondo = (e: MouseEvent) => {
+      if (e.target === d) cerrar();
+    };
+    d.addEventListener('click', alTocarFondo);
+    return () => d.removeEventListener('click', alTocarFondo);
+  }, [cerrar]);
+
   return (
-    <dialog
-      ref={dialogo}
-      className="hoja"
-      aria-labelledby="titulo-hoja"
-      onClose={cerrar}
-      onClick={(e) => {
-        // Un toque fuera de la hoja (sobre el fondo) la cierra.
-        if (e.target === e.currentTarget) cerrar();
-      }}
-    >
+    <dialog ref={dialogo} className="hoja" aria-labelledby="titulo-hoja" onClose={cerrar}>
       <div className="hoja__contenido">
         <div className="hoja__cabecera">
           <h2 id="titulo-hoja" className="hoja__titulo">

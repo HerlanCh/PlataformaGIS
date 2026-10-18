@@ -16,7 +16,7 @@ import { mensajeDeResultado, mensajeDeUbicacion } from './mensajes.js';
 export function leerPosicion(): Promise<Punto> {
   return new Promise((resolver, rechazar) => {
     if (!('geolocation' in navigator)) {
-      rechazar(null);
+      rechazar(new Error('El navegador no ofrece geolocalización'));
       return;
     }
     navigator.geolocation.getCurrentPosition(

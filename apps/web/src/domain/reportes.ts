@@ -25,11 +25,11 @@ export function aplicarEvento(
   ventana: Caja,
 ): readonly ReportePublico[] {
   const { idReporte } = evento.contenido;
-  const existente = lista.find((r) => r.id === idReporte);
+  const existe = lista.some((r) => r.id === idReporte);
 
   if (evento.tipo === 'ReporteCreado') {
     const nuevo = evento.contenido as unknown as ReportePublico & { idReporte: string };
-    if (existente || !dentroDe(nuevo.publicLocation, ventana)) return lista;
+    if (existe || !dentroDe(nuevo.publicLocation, ventana)) return lista;
     const reporte: ReportePublico = {
       id: idReporte,
       codigoCategoria: nuevo.codigoCategoria,
@@ -40,7 +40,7 @@ export function aplicarEvento(
     };
     return [reporte, ...lista];
   }
-  if (!existente) return lista;
+  if (!existe) return lista;
   if (SALEN_DEL_MAPA.has(evento.tipo)) return lista.filter((r) => r.id !== idReporte);
 
   const caducaEn = evento.contenido.caducaEn;

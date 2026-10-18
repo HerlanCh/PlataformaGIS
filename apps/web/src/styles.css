@@ -366,6 +366,8 @@ button {
 /* La raya divisoria empieza después del tramo de color: no lo corta. */
 .diagrama__texto,
 .diagrama__datos {
+  display: grid;
+  gap: 2px;
   align-content: center;
   padding-left: var(--e-3);
   border-bottom: 1px solid var(--borde);
@@ -404,12 +406,6 @@ button {
   position: relative;
   display: grid;
   line-height: 0;
-}
-
-.diagrama__texto,
-.diagrama__datos {
-  display: grid;
-  gap: 2px;
 }
 
 .diagrama__nombre {
