@@ -573,3 +573,10 @@ Se cumplen los tres criterios de salida del roadmap: las historias del frontend 
 ### Pendiente para fases siguientes
 - **Entrega real de un aviso push en un teléfono:** la prueba automática simula solo el servicio push del navegador. Probarlo a mano en Android e iPhone instalado.
 - **Bot de Telegram:** Fase 9; el canal de avisos ya admite otro adaptador junto a Web Push.
+
+## [2026-10-19] — Incidente: el mapa en blanco desde la segunda visita
+
+- **Qué pasó:** en la web de producción, el mapa se veía en la primera visita y quedaba en gris a partir de la segunda. Las teselas fallaban con `net::ERR_FAILED`.
+- **Causa:** cuando el service worker ya controla la página, intercepta las teselas de OpenStreetMap para guardarlas en caché y las pide con `fetch()`. Esas peticiones se rigen por `connect-src` de la CSP, no por `img-src`, y `apps/web/vercel.json` no incluía `https://tile.openstreetmap.org` en `connect-src`.
+- **Por qué no se vio antes:** Playwright y Lighthouse abren cada página en un contexto nuevo, donde el service worker aún no controla la página, y en desarrollo no hay CSP.
+- **Corrección:** se añadió el origen de las teselas a `connect-src`. La prueba `apps/web/src/csp.test.ts` exige ese origen en `img-src` y en `connect-src`.
