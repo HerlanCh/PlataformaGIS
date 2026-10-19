@@ -1,3 +1,10 @@
+## [2.7.1](https://github.com/HerlanCh/PlataformaGIS/compare/v2.7.0...v2.7.1) (2026-10-19)
+
+
+### Bug Fixes
+
+* **api:** el bundle de la API arranca con dependencias CommonJS ([4168567](https://github.com/HerlanCh/PlataformaGIS/commit/41685673f059186fbda7fde7c6be4971b327ec17))
+
 # [2.7.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.6.0...v2.7.0) (2026-10-18)
 
 
