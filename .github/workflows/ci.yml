@@ -48,6 +48,9 @@ jobs:
       - name: Build
         if: ${{ !cancelled() }}
         run: pnpm build
+      - name: Arranque del bundle de la API
+        if: ${{ !cancelled() }}
+        run: node tools/arranque/api.mjs
       - name: Presupuesto — JS inicial < 250 KB comprimido (ISO 25010, eficiencia)
         if: ${{ !cancelled() }}
         run: node tools/presupuesto/js-inicial.mjs
