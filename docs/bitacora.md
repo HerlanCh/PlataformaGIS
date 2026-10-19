@@ -546,3 +546,30 @@ Con `v2.4.0` desplegada y el monitor de UptimeRobot activo. El detalle está en 
 ### Pendiente
 - Crear las claves VAPID de staging en Render (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT`) y `FEATURE_NOTIFICATIONS=true`.
 - Primera corrida de `e2e.yml` contra staging, después del merge, y el PR de cierre de la Fase 8 con las casillas del roadmap.
+
+### Cierre en staging (2026-10-19)
+Con `v2.7.1` desplegada en Render (API) y en Vercel (web).
+- **Playwright contra staging** ([corrida](https://github.com/HerlanCh/PlataformaGIS/actions/runs/39180148362)): 8 de 8 en 27 s. La web de producción de Vercel contra la API de Render:
+  - HU-01 y HU-02: otro navegador ve el reporte llegar en vivo;
+  - HU-03: el aviso a menos de 150 m y el voto;
+  - HU-05: 3 reportes sin conexión y exactamente 3 en la API al volver la señal (0 perdidos y 0 duplicados);
+  - HU-06, HU-07 y HU-08;
+  - que la app sea instalable y axe-core en la pantalla y las hojas.
+- **Lighthouse CI** (en cada PR, sin las teselas de OSM): Performance ≥ 90 y Accesibilidad 100. El JS inicial pesa 149 KB comprimidos.
+- **ZAP baseline** sobre `v2.7.1`: sin hallazgos altos.
+- **CSP y cabeceras de seguridad** activas en la web de producción (`apps/web/vercel.json`).
+
+### Incidente: la v2.7.0 no arrancó en Render
+- **Qué pasó:** `tsup` empaqueta `web-push`, una librería CommonJS que usa `require("crypto")`. En el bundle ESM `require` no existe, y la API falló al cargar con `Dynamic require of "crypto" is not supported`.
+  - Render mantuvo la v2.6.0, así que staging no se cayó.
+  - La corrida E2E y el ZAP esperaron la versión nueva sin llegar a probar nada.
+- **Por qué no se vio antes:** en desarrollo, en las pruebas y en la CI la API corre desde el código fuente con `tsx`; nada arrancaba el bundle construido.
+- **Corrección (v2.7.1):** un `banner` en `apps/api/tsup.config.ts` crea `require` con `createRequire(import.meta.url)`.
+- **Prevención:** la CI tiene un paso nuevo, «Arranque del bundle de la API» (`tools/arranque/api.mjs`). Arranca el bundle sin variables de entorno y exige que llegue a validar la configuración. Contra el bundle roto falla con el mismo error que Render.
+
+### Fase 8 cerrada
+Se cumplen los tres criterios de salida del roadmap: las historias del frontend aprobadas en Playwright contra staging, 0 reportes perdidos sin conexión y el presupuesto de Lighthouse.
+
+### Pendiente para fases siguientes
+- **Entrega real de un aviso push en un teléfono:** la prueba automática simula solo el servicio push del navegador. Probarlo a mano en Android e iPhone instalado.
+- **Bot de Telegram:** Fase 9; el canal de avisos ya admite otro adaptador junto a Web Push.
