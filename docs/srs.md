@@ -20,7 +20,7 @@ El sistema proporciona:
 - Deduplicación espacial y caducidad temporal automática por categoría.
 - Operación resiliente en modo fuera de línea con sincronización automática e idempotente.
 - Visualización agregada mediante mapa de calor.
-- Alertas para zonas de interés mediante Web Push y Bot de Telegram.
+- Alertas para zonas de interés mediante Web Push.
 
 Queda fuera del alcance: rutas alternas, botón de pánico, y cualquier función de despacho de emergencias. La plataforma no reemplaza a las líneas de emergencia.
 
@@ -47,13 +47,13 @@ El lenguaje ubicuo del dominio está en [`glosario.md`](glosario.md). Los térmi
 ## 2. Descripción General
 
 ### 2.1 Perspectiva del Producto
-Producto nuevo e independiente. Monolito modular hexagonal (ADR-001) con tres puntos de acceso sobre el mismo núcleo: PWA, API REST + WebSocket y bot de Telegram. Depende de servicios externos gratuitos: teselas de OpenStreetMap, API de bots de Telegram y servicios Web Push de los navegadores.
+Producto nuevo e independiente. Monolito modular hexagonal (ADR-001) con dos puntos de acceso sobre el mismo núcleo: PWA y API REST + WebSocket (el bot de Telegram se descartó por ADR-004). Depende de servicios externos gratuitos: teselas de OpenStreetMap y servicios Web Push de los navegadores.
 
 ### 2.2 Interesados y Clases de Usuario
 
 | Clase | Descripción | Historias |
 | :--- | :--- | :--- |
-| Ciudadano anónimo | Identificado solo por su dispositivo (o su cuenta de Telegram). Reporta, consulta, vota y se suscribe a zonas. | HU-01 a HU-09 |
+| Ciudadano anónimo | Identificado solo por su dispositivo. Reporta, consulta, vota y se suscribe a zonas. | HU-01 a HU-08 |
 | Moderador | Usuario con rol `MODERADOR`. Rechaza reportes falsos o que violan las reglas éticas. | HU-10, HU-12 |
 | Investigador / periodista | Consume los datos abiertos anonimizados. No requiere cuenta. | HU-11 |
 | Autor y tutor del proyecto de grado | Aprueban requisitos, ADR y resultados de cada fase. | — |
@@ -144,7 +144,7 @@ Valores iniciales, ajustables durante el piloto mediante configuración.
 
 | ID | Requisito | Prioridad | Historias |
 | :--- | :--- | :--- | :--- |
-| **RF-01** | El sistema registra dispositivos de forma anónima y les emite una credencial. | Imprescindible | HU-01, HU-09 |
+| **RF-01** | El sistema registra dispositivos de forma anónima y les emite una credencial. | Imprescindible | HU-01 |
 | **RF-02** | El sistema crea reportes georreferenciados dentro del rectángulo de la sección 1.3 y rechaza los que caen fuera. | Imprescindible | HU-01 |
 | **RF-03** | El sistema convierte en confirmación todo reporte de la misma categoría dentro del radio de deduplicación de uno vigente. | Imprescindible | HU-01 |
 | **RF-04** | El sistema devuelve los reportes `ACTIVO` y `CONFIRMADO` del área visible del mapa. | Imprescindible | HU-02 |
@@ -156,8 +156,8 @@ Valores iniciales, ajustables durante el piloto mediante configuración.
 | **RF-10** | La PWA encola reportes sin conexión y la API los procesa exactamente una vez por `idempotency_key`. | Imprescindible | HU-05 |
 | **RF-11** | El sistema entrega un mapa de calor agregado por celdas con umbral de anonimato. | Importante | HU-06 |
 | **RF-12** | El sistema permite crear y eliminar zonas suscritas. | Importante | HU-07 |
-| **RF-13** | El sistema notifica por Web Push y Telegram los reportes que caen en una zona suscrita. | Importante | HU-08 |
-| **RF-14** | El sistema permite reportar, consultar, votar y suscribirse desde un bot de Telegram. | Importante | HU-09 |
+| **RF-13** | El sistema notifica por Web Push los reportes que caen en una zona suscrita. | Importante | HU-08 |
+| **RF-14** | ~~El sistema permite reportar, consultar, votar y suscribirse desde un bot de Telegram.~~ Fuera de alcance (ADR-004). | — | HU-09 |
 | **RF-15** | El sistema clasifica de forma asíncrona los reportes sospechosos para la cola de moderación. | Deseable | HU-10 |
 | **RF-16** | El sistema publica y exporta datos históricos anonimizados. | Deseable | HU-11 |
 | **RF-17** | El sistema permite a un moderador rechazar reportes y deja auditoría. | Deseable | HU-12 |
@@ -310,7 +310,7 @@ Valores iniciales, ajustables durante el piloto mediante configuración.
 - **Para** recibir alertas prioritarias de incidentes en esas zonas.
 - **Criterios de Aceptación:**
   - **Escenario 1: Registro de suscripción**
-    - **Dado** un usuario registrado con dispositivo o Telegram,
+    - **Dado** un usuario registrado con su dispositivo,
     - **Cuando** define un punto central, un radio de 800 m y las categorías deseadas,
     - **Entonces** el sistema almacena la zona suscrita.
   - **Escenario 2: Radio fuera de rango**
@@ -348,6 +348,8 @@ Valores iniciales, ajustables durante el piloto mediante configuración.
     - **Entonces** no recibo notificación de ese reporte.
 
 #### HU-09: Bot de Telegram para consulta y reporte
+> **Fuera de alcance (ADR-004).** Se conserva el texto como referencia; no se implementa.
+
 - **Como** usuario frecuente de Telegram.
 - **Quiero** interactuar con un bot para reportar, consultar y suscribirme.
 - **Para** usar el servicio sin necesidad de abrir el navegador web.
@@ -424,7 +426,6 @@ Valores iniciales, ajustables durante el piloto mediante configuración.
 | Interfaz | Uso | Restricción |
 | :--- | :--- | :--- |
 | Teselas de OpenStreetMap | Mapa base de la PWA | Respetar la política de uso de teselas: caché con límite, sin descarga masiva |
-| API de bots de Telegram | Canal de entrada y de notificaciones | Webhook; respetar los límites de envío |
 | Web Push (VAPID) | Notificaciones en la PWA | En iOS requiere PWA instalada |
 | Geolocalización del navegador | Ubicación automática del reporte | Requiere permiso del usuario |
 

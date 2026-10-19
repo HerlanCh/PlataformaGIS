@@ -572,4 +572,21 @@ Se cumplen los tres criterios de salida del roadmap: las historias del frontend 
 
 ### Pendiente para fases siguientes
 - **Entrega real de un aviso push en un teléfono:** la prueba automática simula solo el servicio push del navegador. Probarlo a mano en Android e iPhone instalado.
-- **Bot de Telegram:** Fase 9; el canal de avisos ya admite otro adaptador junto a Web Push.
+- **Bot de Telegram:** descartado por el ADR-004 (ver la entrada siguiente).
+
+## [2026-10-19] — Fase 9 descartada: canal Telegram
+
+### Qué se hizo
+- **ADR-004** (`docs/adr/ADR-004.md`): HU-09 y RF-14 quedan fuera de alcance, RF-13 se cumple solo por Web Push y Telegraf sale del stack.
+- **Documentos ajustados:**
+  - `ROADMAP.md`: Fase 9 marcada como descartada, con su plan original como referencia; sin el bot en el diagrama, el stack ni la Fase 12;
+  - `srs.md`: RF-14 y HU-09 marcados fuera de alcance, RF-13 solo Web Push, sin la interfaz de Telegram;
+  - `trazabilidad.md`, `riesgos.md` (RSK-05 materializado y cerrado; RSK-08 sin el canal alterno), `diccionario-datos.md`, nota en el ADR-002 y `CLAUDE.md`.
+- **Código:** se eliminó el esqueleto vacío de `apps/bot` y `tools/modules/sync-modules.mjs` ya no lo busca.
+
+### Decisiones
+- **Motivo:** Telegram tiene poco uso en La Paz y El Alto (riesgo RSK-05) y la PWA ya cubre HU-01 a HU-08 con avisos Web Push en staging.
+- **Reversible sin migraciones:** se conservan la columna `usuarios.id_telegram` y el puerto `EnviadorDeNotificaciones`. Un canal futuro (Telegram o WhatsApp) sería un adaptador nuevo en la raíz de composición, con su propio ADR.
+
+### Siguiente
+- Fase 10: moderación, datos abiertos e IA.

@@ -17,7 +17,7 @@ PWA comunitaria para reportar y consultar incidentes urbanos georreferenciados e
 - API: Node.js + Fastify + Socket.io · Contratos: Zod (genera OpenAPI)
 - BD: PostgreSQL + PostGIS · Drizzle ORM + SQL espacial manual
 - Web: React + Vite + vite-plugin-pwa · Leaflet + OpenStreetMap
-- Bot: Telegraf · Pruebas: Vitest, Testcontainers, Playwright, k6
+- Pruebas: Vitest, Testcontainers, Playwright, k6 (el bot de Telegram se descartó: ADR-004)
 - Solo software libre o planes gratuitos. Nunca agregar un servicio de pago.
 
 ## Reglas de arquitectura (las verifica dependency-cruiser en CI)

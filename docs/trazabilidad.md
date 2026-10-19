@@ -2,7 +2,7 @@
 
 Esta matriz vincula requisito → historia → caso de prueba: los requisitos funcionales (RF) del [`srs.md`](srs.md), las historias de usuario (HU), los módulos y casos de uso que los implementan, y las pruebas asociadas. Se actualiza incrementalmente en cada fase del roadmap.
 
-Los nombres de casos de uso provienen del roadmap; los marcados "por definir" se nombran en la fase que los implementa. `apps/web` y `apps/bot` son adaptadores de entrada, no módulos: no contienen lógica de negocio.
+Los nombres de casos de uso provienen del roadmap; los marcados "por definir" se nombran en la fase que los implementa. `apps/web` es un adaptador de entrada, no un módulo: no contienen lógica de negocio.
 
 ---
 
@@ -17,8 +17,8 @@ Los nombres de casos de uso provienen del roadmap; los marcados "por definir" se
 | RF-10 | **HU-05** | Reportar sin conexión y enviar al reconectar | `reports` | `CrearReporte` (idempotente) | `HU-05: guarda el reporte en la cola local sin conexión`<br>`HU-05: envía la cola al reconectar`<br>`HU-05: procesa una solicitud repetida exactamente una vez` | Reenvío idempotente probado (Fase 5); cola local en la Fase 8 |
 | RF-11 | **HU-06** | Mapa de calor espacial agregado | `heatmap` | `ObtenerMapaDeCalor` | `HU-06: descarta celdas con menos de 3 reportes`<br>`HU-06: incluye celdas con 3 o más reportes` | Casos de uso probados (Fase 5) |
 | RF-12 | **HU-07** | Suscripción a zonas de interés | `subscriptions` | `SuscribirZona`<br>`EliminarZona` | `HU-07: guarda una zona válida`<br>`HU-07: rechaza un radio fuera de rango`<br>`HU-07: rechaza al superar el límite de zonas`<br>`HU-07: elimina una zona` | Casos de uso probados (Fase 5) |
-| RF-13 | **HU-08** | Notificaciones de incidentes cercanos | `subscriptions`<br>`notifications` | `NotificarSuscriptores` | `HU-08: notifica a los suscriptores de la zona y categoría`<br>`HU-08: no notifica fuera de la zona o de la categoría`<br>`HU-08: notifica una sola vez por reporte`<br>`HU-08: no notifica al autor` | Casos de uso probados (Fase 5); envío real en las Fases 8 y 9 |
-| RF-01<br>RF-14 | **HU-09** | Bot de Telegram para consulta y reporte | `identity`<br>`reports`<br>`verification`<br>`subscriptions` | `RegistrarDispositivo`<br>`CrearReporte`<br>`ConfirmarReporte` / `NegarReporte`<br>`SuscribirZona` | `HU-09: /start vincula la cuenta de Telegram`<br>`HU-09: /reportar crea un reporte con la ubicación compartida`<br>`HU-09: /cerca lista los reportes a 1 km`<br>`HU-09: /zona crea una zona suscrita` | Especificado (Fase 0) |
+| RF-13 | **HU-08** | Notificaciones de incidentes cercanos | `subscriptions`<br>`notifications` | `NotificarSuscriptores` | `HU-08: notifica a los suscriptores de la zona y categoría`<br>`HU-08: no notifica fuera de la zona o de la categoría`<br>`HU-08: notifica una sola vez por reporte`<br>`HU-08: no notifica al autor` | Casos de uso probados (Fase 5); envío por Web Push en la Fase 8 |
+| RF-01<br>RF-14 | **HU-09** | Bot de Telegram para consulta y reporte | `identity`<br>`reports`<br>`verification`<br>`subscriptions` | `RegistrarDispositivo`<br>`CrearReporte`<br>`ConfirmarReporte` / `NegarReporte`<br>`SuscribirZona` | `HU-09: /start vincula la cuenta de Telegram`<br>`HU-09: /reportar crea un reporte con la ubicación compartida`<br>`HU-09: /cerca lista los reportes a 1 km`<br>`HU-09: /zona crea una zona suscrita` | Descartada (ADR-004) |
 | RF-15 | **HU-10** | Clasificación automática de reportes sospechosos | `classifier` | Por definir (Fase 10) | `HU-10: marca un reporte con indicios de spam`<br>`HU-10: crear un reporte no depende del clasificador` | Especificado (Fase 0) |
 | RF-16 | **HU-11** | Datos abiertos anonimizados | `open-data` | Por definir (Fase 10) | `HU-11: exporta sin usuarios ni puntos exactos`<br>`HU-11: declara la licencia de los datos` | Especificado (Fase 0) |
 | RF-08<br>RF-17 | **HU-12** | Moderación y auditoría de incidentes | `moderation`<br>`verification` | `RechazarReporte`<br>`AplicarRechazoDeModeracion`<br>`AjustarReputacionPorDesenlace` | `HU-12: rechaza con motivo, audita y penaliza al autor`<br>`HU-12: deniega la acción sin rol MODERADOR` | Casos de uso probados (Fase 5) |
@@ -196,7 +196,7 @@ Cada caso de uso es una clase de `application/` con `ejecutar(entrada)`; cada ma
 | HU-12 | 1. Rechazo con motivo: auditoría, `RECHAZADO`, `ReporteRechazado.v1` y −0,50 al autor | `RechazarReporte` → `RechazoDeModeracion.v1` → `AplicarRechazoDeModeracion` → `AjustarReputacionPorDesenlace` | `moderation/tests/rechazar-reporte.test.ts`, `reports/tests/casos-de-uso.test.ts`, `verification/tests/casos-de-uso.test.ts`, `apps/api/src/casos-de-uso.integration.test.ts` |
 | HU-12 | 2. Sin rol `MODERADOR` se deniega | `RechazarReporte` | `moderation/tests/rechazar-reporte.test.ts` |
 
-Quedan para otras fases: HU-02 escenario 2 (difusión por WebSocket, Fase 7), HU-05 escenarios 1 y 2 (cola local de la PWA, Fase 8), HU-09 (bot, Fase 9), HU-10 y HU-11 (Fase 10) y HU-12 escenario 3 (criterio del moderador, no automatizable).
+Quedan para otras fases: HU-02 escenario 2 (difusión por WebSocket, Fase 7), HU-05 escenarios 1 y 2 (cola local de la PWA, Fase 8), HU-09 (descartada por ADR-004), HU-10 y HU-11 (Fase 10) y HU-12 escenario 3 (criterio del moderador, no automatizable).
 
 ### 6.2 Otras reglas cubiertas por los casos de uso
 
@@ -218,7 +218,7 @@ Quedan para otras fases: HU-02 escenario 2 (difusión por WebSocket, Fase 7), HU
 | `shared-kernel` | `GeneradorDeId` | Identificadores (antes en `reports`) | Raíz de composición (Fase 6) |
 | `verification` | `UnidadDeTrabajoDeVoto` | Voto, reputación y evento en una transacción | `UnidadDeTrabajoVotoPg` |
 | `subscriptions` | `ConsultaDeAutor` | Autor de un reporte, para no avisarle | `consultaDeAutor` en `apps/api/src/composicion/puentes.ts` |
-| `subscriptions` | `EnviadorDeNotificaciones` | Canal de los avisos | Registro en log en la Fase 7; Web Push y Telegram en las Fases 8 y 9 |
+| `subscriptions` | `EnviadorDeNotificaciones` | Canal de los avisos | Registro en log en la Fase 7; Web Push en la Fase 8 (Telegram descartado por ADR-004) |
 | `moderation` | `ConsultaDeReporte` | Estado de un reporte | `consultaParaModeracion` en `puentes.ts` |
 | `moderation` | `UnidadDeTrabajoDeModeracion` | Auditoría y evento en una transacción | `UnidadDeTrabajoModeracionPg` |
 
