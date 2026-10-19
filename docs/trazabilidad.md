@@ -327,3 +327,5 @@ Las pruebas de extremo a extremo con Playwright contra staging y Lighthouse CI c
 | HU-04 | Caducidad automática | Verificada en staging en la Fase 7 | Bitácora de la Fase 7 |
 | Accesibilidad | axe-core en el navegador real, en la pantalla y en cada hoja; Lighthouse ≥ 90 | `ui/`, `features/` | `e2e/historias.spec.ts`, Lighthouse CI (100) |
 | Rendimiento | JS inicial < 250 KB comprimido; Performance ≥ 90 | Teselas iniciales precargadas; `leaflet.heat` aparte | `tools/presupuesto/js-inicial.mjs` (164 KB), Lighthouse CI (93) |
+
+**Cierre en staging (v2.7.1):** la corrida de `e2e.yml` contra staging aprobó las 8 pruebas de `apps/web/e2e/historias.spec.ts` (HU-01, 02, 03, 05, 06, 07 y 08, la instalabilidad y la accesibilidad). Con eso se marcan los criterios de salida de la Fase 8 en el roadmap.

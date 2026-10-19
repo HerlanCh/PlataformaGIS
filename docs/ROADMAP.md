@@ -444,9 +444,9 @@ Resultado: la PWA instalable que cubre todas las historias Imprescindibles e Imp
 
 **Criterio de salida**
 
-- [ ] Todas las historias Imprescindibles e Importantes del frontend aprobadas en Playwright
-- [ ] 0 reportes perdidos en la prueba sin conexión
-- [ ] Presupuesto de Lighthouse cumplido
+- [x] Todas las historias Imprescindibles e Importantes del frontend aprobadas en Playwright
+- [x] 0 reportes perdidos en la prueba sin conexión
+- [x] Presupuesto de Lighthouse cumplido
 
 ## Fase 9: Canal Telegram
 
