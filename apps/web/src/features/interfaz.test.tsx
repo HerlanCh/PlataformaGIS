@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CENTRO_LA_PAZ } from '../domain/geo.js';
 import type { ReportePublico } from '../domain/reportes.js';
 import { useEstado } from '../estado.js';
@@ -52,6 +52,15 @@ beforeEach(() => {
 });
 
 describe('Cerca de ti (HU-02)', () => {
+  // La vigencia muestra solo la hora si vence hoy: se fija el día de los reportes de ejemplo.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-18T16:00:00.000Z'));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('lista los incidentes del más cercano al más lejano, con distancia, estado y vencimiento', () => {
     panel([
       reporte('lejos', 1200, { codigoCategoria: 'accidente' }),
