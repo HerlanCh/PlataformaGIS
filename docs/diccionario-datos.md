@@ -71,7 +71,7 @@ Usuarios anónimos. No guarda nombres, correos ni otros datos personales.
 | :--- | :--- | :--- | :--- |
 | `id` | `uuid` | PK | Identificador del usuario |
 | `hash_dispositivo` | `text` | NOT NULL, único | Hash anónimo del dispositivo |
-| `id_telegram` | `text` | Nulo, único | Cuenta de Telegram vinculada, si la hay |
+| `id_telegram` | `text` | Nulo, único | Sin uso desde el ADR-004 (canal Telegram descartado); se conserva para un canal futuro sin migraciones |
 | `rol` | `text` | NOT NULL, `CHECK` en (`CIUDADANO`, `MODERADOR`) | Rol del usuario |
 | `creado_en` | `timestamptz` | NOT NULL | Fecha de registro |
 
