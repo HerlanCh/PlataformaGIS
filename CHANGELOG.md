@@ -1,3 +1,10 @@
+## [2.7.2](https://github.com/HerlanCh/PlataformaGIS/compare/v2.7.1...v2.7.2) (2026-10-20)
+
+
+### Bug Fixes
+
+* **web:** permite al service worker descargar las teselas del mapa ([4693541](https://github.com/HerlanCh/PlataformaGIS/commit/46935418c2c23b710a973014d0c11b2430b57674))
+
 ## [2.7.1](https://github.com/HerlanCh/PlataformaGIS/compare/v2.7.0...v2.7.1) (2026-10-19)
 
 
