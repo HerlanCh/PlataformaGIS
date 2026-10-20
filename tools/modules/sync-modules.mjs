@@ -17,7 +17,7 @@ const COMPARTIDOS = [
   'platform',
   'api-client',
 ];
-const APPS = ['api', 'bot', 'web'];
+const APPS = ['api', 'web'];
 
 const leerJson = (archivo) => JSON.parse(readFileSync(archivo, 'utf8'));
 const escribirJson = (archivo, datos) =>

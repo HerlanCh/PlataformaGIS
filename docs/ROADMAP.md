@@ -6,7 +6,7 @@ Catorce fases en orden estricto de dependencia: una fase empieza solo cuando la 
 
 ## Arquitectura
 
-La plataforma será un **monolito modular con arquitectura hexagonal (puertos y adaptadores)**. No microservicios: con un solo equipo y hosting gratuito, los microservicios multiplican despliegues, red y fallos sin aportar escalabilidad que el piloto necesite. La arquitectura hexagonal da la mantenibilidad de los microservicios: el dominio no depende de nada, y la API, el WebSocket, el bot de Telegram y la IA son adaptadores intercambiables sobre el mismo núcleo.
+La plataforma será un **monolito modular con arquitectura hexagonal (puertos y adaptadores)**. No microservicios: con un solo equipo y hosting gratuito, los microservicios multiplican despliegues, red y fallos sin aportar escalabilidad que el piloto necesite. La arquitectura hexagonal da la mantenibilidad de los microservicios: el dominio no depende de nada, y la API, el WebSocket, las tareas programadas y la IA son adaptadores intercambiables sobre el mismo núcleo.
 
 **Regla de dependencia dentro de cada módulo (se verifica en CI):** `adapters → application → domain`. El dominio no importa nada externo; la capa de aplicación solo conoce el dominio y los puertos (interfaces).
 
@@ -15,7 +15,6 @@ flowchart LR
   subgraph Entrada[Adaptadores de entrada]
     API[API REST - Fastify]
     WS[Tiempo real - Socket.io]
-    BOT[Bot de Telegram]
     JOBS[Tareas programadas]
   end
   subgraph Nucleo[Núcleo de cada módulo]
@@ -24,12 +23,11 @@ flowchart LR
   subgraph Salida[Adaptadores de salida]
     DB[Repositorios PostGIS]
     EV[Publicador de eventos - outbox]
-    NOT[Notificaciones - Web Push y Telegram]
+    NOT[Notificaciones - Web Push]
     CLS[Clasificador - reglas o IA]
   end
   API --> APP
   WS --> APP
-  BOT --> APP
   JOBS --> APP
   DB -. implementa puerto .-> DOM
   EV -. implementa puerto .-> DOM
@@ -37,7 +35,7 @@ flowchart LR
   CLS -. implementa puerto .-> DOM
 ```
 
-La API, el WebSocket, el bot y las tareas son puertas de entrada al mismo núcleo; la base de datos, las notificaciones y la IA se conectan como implementaciones de sus puertos.
+La API, el WebSocket y las tareas son puertas de entrada al mismo núcleo; la base de datos, las notificaciones y la IA se conectan como implementaciones de sus puertos.
 
 ### Módulos por funcionalidad
 
@@ -49,7 +47,7 @@ El núcleo no se divide por capas sino por **módulos de funcionalidad**, cada u
 | `verification` | Votos, "¿Sigue ahí?", reputación | Imprescindible |
 | `identity` | Usuarios anónimos, JWT, roles | Imprescindible |
 | `subscriptions` | Zonas suscritas | Importante |
-| `notifications` | Web Push y Telegram | Importante |
+| `notifications` | Web Push | Importante |
 | `heatmap` | Agregación espacial por celdas | Importante |
 | `moderation` | Rechazo de reportes y auditoría | Deseable |
 | `open-data` | Vista anonimizada y exportación | Deseable |
@@ -72,10 +70,10 @@ El núcleo no se divide por capas sino por **módulos de funcionalidad**, cada u
 | Tiempo real | Socket.io | Reconexión y recuperación de estado incluidas |
 | Base de datos | PostgreSQL + PostGIS | Consultas espaciales e índices GiST |
 | Acceso a datos | Drizzle ORM + SQL espacial manual | Migraciones versionadas; PostGIS sin abstracciones ocultas |
-| Validación y contratos | Zod (genera OpenAPI) | Un solo esquema para API, web y bot |
+| Validación y contratos | Zod (genera OpenAPI) | Un solo esquema para API y web |
 | Frontend | React + Vite + vite-plugin-pwa | PWA estática con modo sin conexión más simple que Next.js |
 | Mapas | Leaflet + OpenStreetMap + leaflet.heat | Gratuito, liviano |
-| Bot | Telegraf (API de bots de Telegram) | Gratuito, adaptador del mismo núcleo |
+| Bot | ~~Telegraf (API de bots de Telegram)~~ | Descartado por ADR-004 |
 | IA (opcional) | Servicio Python FastAPI tras un puerto `ClassifierPort` | Se reemplaza por reglas sin tocar el núcleo |
 
 Nota: el documento del proyecto mencionaba Next.js; se cambia a Vite porque la PWA se sirve como sitio estático y su modo sin conexión es más directo. Actualizar la matriz de marco lógico.
@@ -157,7 +155,7 @@ Resultado: un esqueleto que compila, se prueba y se despliega, con la arquitectu
 2. Inicializar el monorepo con pnpm workspaces:
    1. `apps/api`: raíz de composición del servidor (Fastify + Socket.io). Solo registra módulos; no contiene lógica.
    2. `apps/web`: PWA React + Vite.
-   3. `apps/bot`: bot de Telegram.
+   3. `apps/bot`: bot de Telegram (eliminado por ADR-004).
    4. `packages/shared-kernel`: lo mínimo común a todos los módulos: `PuntoGeo`, IDs tipados, `EventoDeDominio`, `Result`, errores base, puerto `Clock`. Sin dependencias.
    5. `packages/event-bus`: puerto `BusDeEventos` y su implementación en memoria (la versión con outbox llega en la Fase 7).
    6. `packages/contracts`: esquemas Zod de la API y de los eventos de integración, versionados.
@@ -448,7 +446,9 @@ Resultado: la PWA instalable que cubre todas las historias Imprescindibles e Imp
 - [x] 0 reportes perdidos en la prueba sin conexión
 - [x] Presupuesto de Lighthouse cumplido
 
-## Fase 9: Canal Telegram
+## Fase 9: Canal Telegram — Descartada (ADR-004)
+
+> **Descartada el 2026-10-19.** Telegram tiene poco uso en el público objetivo (riesgo RSK-05) y la PWA ya cubre HU-01 a HU-08 con avisos Web Push. HU-09 y RF-14 quedan fuera de alcance; la Fase 10 sigue a la Fase 8. Se conserva el plan original como referencia.
 
 Resultado: un segundo adaptador de entrada sobre los mismos casos de uso; demuestra que el núcleo no depende de la interfaz.
 
@@ -471,9 +471,9 @@ Resultado: un segundo adaptador de entrada sobre los mismos casos de uso; demues
 
 **Criterio de salida**
 
-- [ ] Reportar, votar y suscribirse funcionan desde Telegram
-- [ ] Las alertas llegan por Telegram y por Web Push al mismo suscriptor
-- [ ] ADR-003 registrado
+- ~~Reportar, votar y suscribirse funcionan desde Telegram~~: descartado por ADR-004
+- ~~Las alertas llegan por Telegram y por Web Push al mismo suscriptor~~: descartado por ADR-004
+- [x] ADR registrado: ADR-004 (descarte del canal)
 
 ## Fase 10: Moderación, datos abiertos e IA
 
@@ -552,7 +552,7 @@ Resultado: el sistema en producción, monitoreado y con respaldo, desplegado por
 3. Migraciones como paso del pipeline antes de arrancar la nueva versión; solo migraciones compatibles hacia atrás (agregar antes de quitar).
 4. Copiar a producción el workflow de respaldo diario de la Fase 11.
 5. Monitoreo: UptimeRobot sobre `/health` de API y web, con alerta por correo. Errores de aplicación con GlitchTip (código abierto, compatible con el SDK de Sentry) o el plan gratuito de Sentry.
-6. Configurar las claves VAPID y el webhook de Telegram de producción.
+6. Configurar las claves VAPID de producción.
 7. Semilla de producción: categorías y el usuario moderador.
 
 **Documentación**
