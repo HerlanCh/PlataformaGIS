@@ -11,7 +11,11 @@ export interface Sesion {
   readonly token: string | null;
   /** Momento en que vence el token (ISO). */
   readonly expiraEn: string | null;
+  /** Rol de la última credencial. Falta en las sesiones guardadas antes de la Fase 10. */
+  readonly rol?: Rol;
 }
+
+export type Rol = 'CIUDADANO' | 'MODERADOR';
 
 export interface ReportePendiente {
   /** También es la `Idempotency-Key`: un reenvío nunca crea otro reporte. */

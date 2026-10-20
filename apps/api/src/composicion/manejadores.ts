@@ -13,6 +13,7 @@ import {
   RepositorioReportesPostgis,
   UnidadDeTrabajoReportePg,
 } from '@gis/module-reports';
+import { ActualizarColaDeModeracion, RepositorioColaPg } from '@gis/module-moderation';
 import {
   EmisorWebPush,
   EnviarAvisoPush,
@@ -153,6 +154,14 @@ export function suscribirManejadores(deps: DependenciasManejadores): void {
     bus.suscribir('ReporteCreado.v1', 'subscriptions.notificar', async (e) => {
       await notificar.manejar(e);
     });
+  }
+
+  // HU-12 y HU-10: la cola de moderación se alimenta de votos, clasificaciones y desenlaces.
+  if (interruptores.estaActivo('moderation')) {
+    const cola = new ActualizarColaDeModeracion(new RepositorioColaPg(db));
+    for (const clave of ActualizarColaDeModeracion.eventos) {
+      bus.suscribir(clave, 'moderation.actualizar-cola', (e) => cola.manejar(e));
+    }
   }
 
   // HU-10: clasifica de forma asíncrona, tras el outbox; crear un reporte nunca lo espera.

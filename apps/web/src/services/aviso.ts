@@ -1,6 +1,7 @@
 // Texto de un aviso push de reporte en una zona (HU-08). Lo usa el service worker; está aparte
 // para probarlo sin service worker.
 import { categoriaDe } from '../domain/categorias.js';
+import { enlaceAlReporte } from '../domain/reportes.js';
 
 export interface AvisoMostrable {
   readonly titulo: string;
@@ -33,16 +34,10 @@ const esContenido = (dato: unknown): dato is ContenidoDeAviso => {
 export function avisoDeReporte(dato: unknown): AvisoMostrable | null {
   if (!esContenido(dato)) return null;
   const categoria = categoriaDe(dato.codigoCategoria);
-  const { latitud, longitud } = dato.publicLocation;
-  const parametros = new URLSearchParams({
-    reporte: dato.idReporte,
-    lat: String(latitud),
-    lon: String(longitud),
-  });
   return {
     titulo: `${categoria.corto} en tu zona`,
     cuerpo: `Línea ${categoria.linea}. Toca para verlo en el mapa.`,
     etiqueta: `reporte-${dato.idReporte}`,
-    url: `/?${parametros.toString()}`,
+    url: enlaceAlReporte(dato.idReporte, dato.publicLocation),
   };
 }

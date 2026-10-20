@@ -50,7 +50,7 @@ describe('composición', () => {
     expect(casos.suscribirZona).toBeNull();
     expect(casos.listarZonas).toBeNull();
     expect(casos.avisosPush).toBeNull();
-    expect(casos.rechazarReporte).toBeNull();
+    expect(casos.moderacion).toBeNull();
     expect(casos.crearReporte).toBeDefined();
   });
 

@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
-import { App } from './App.js';
+import { Raiz } from './Raiz.js';
 import { escucharInstalacion } from './features/instalar/instalacion.js';
 
 // El navegador ofrece instalar la app una sola vez y temprano: se escucha antes de pintar.
@@ -22,7 +22,7 @@ const consulta = new QueryClient({
 createRoot(raiz).render(
   <StrictMode>
     <QueryClientProvider client={consulta}>
-      <App />
+      <Raiz />
     </QueryClientProvider>
   </StrictMode>,
 );

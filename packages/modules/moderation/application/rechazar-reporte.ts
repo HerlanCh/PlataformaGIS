@@ -1,24 +1,17 @@
 import { crearEvento, rechazoDeModeracionV1, validarEntrada } from '@gis/contracts';
-import {
-  aErrorDeAplicacion,
-  ErrorConflicto,
-  ErrorNoEncontrado,
-  ErrorProhibido,
-  idReporte,
-  idUsuario,
-} from '@gis/shared-kernel';
+import { aErrorDeAplicacion, idReporte, idUsuario } from '@gis/shared-kernel';
 import type { GeneradorDeId, Reloj } from '@gis/shared-kernel';
 import { z } from 'zod';
 import { AccionDeModeracion } from '../domain/accion-de-moderacion.js';
 import type { IdAccionDeModeracion } from '../domain/accion-de-moderacion.js';
 import type { ConsultaDeReporte } from '../domain/ports.js';
+import { asegurarVigente, esquemaRol, exigirModerador } from './comun.js';
 import type { UnidadDeTrabajoDeModeracion } from './ports.js';
 
 const esquemaEntrada = z.object({
   idReporte: z.uuid(),
   idModerador: z.uuid(),
-  /** Rol del actor según su credencial (Fase 6). */
-  rolActor: z.enum(['CIUDADANO', 'MODERADOR']),
+  rolActor: esquemaRol,
   motivo: z.string(),
 });
 
@@ -41,19 +34,9 @@ export class RechazarReporte {
 
   async ejecutar(entrada: EntradaRechazarReporte): Promise<void> {
     const datos = validarEntrada(esquemaEntrada, entrada);
-    if (datos.rolActor !== 'MODERADOR') {
-      throw new ErrorProhibido('ROL_INSUFICIENTE', 'Solo un moderador puede rechazar reportes');
-    }
+    exigirModerador(datos.rolActor);
     const id = idReporte(datos.idReporte);
-    const estado = await this.deps.consultaDeReporte.estadoDe(id);
-    if (estado === null)
-      throw new ErrorNoEncontrado('REPORTE_NO_ENCONTRADO', 'El reporte no existe');
-    if (estado !== 'ACTIVO' && estado !== 'CONFIRMADO') {
-      throw new ErrorConflicto(
-        'REPORTE_NO_VIGENTE',
-        `Un reporte ${estado} ya no se puede rechazar`,
-      );
-    }
+    await asegurarVigente(this.deps.consultaDeReporte, id);
 
     const ahora = this.deps.reloj.ahora();
     const idModerador = idUsuario(datos.idModerador);

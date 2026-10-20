@@ -33,12 +33,28 @@ export const consultaDeAutor = (reportes: RepositorioDeReportes): ConsultaDeAuto
   },
 });
 
-/** `moderation` necesita saber si el reporte existe y sigue vigente. */
+/**
+ * `moderation` necesita saber si el reporte existe y sigue vigente y, para su cola, el detalle que
+ * ve el moderador: la descripción privada y la ubicación pública, nunca la real ni el autor.
+ */
 export const consultaParaModeracion = (
   reportes: RepositorioDeReportes,
 ): ConsultaParaModeracion => ({
   async estadoDe(id) {
     return (await reportes.buscarPorId(id))?.estado ?? null;
+  },
+  async detallesDe(ids) {
+    return (await reportes.buscarPorIds(ids)).map((reporte) => ({
+      idReporte: reporte.id,
+      codigoCategoria: reporte.codigoCategoria,
+      estado: reporte.estado,
+      descripcion: reporte.descripcion,
+      publicLocation: {
+        latitud: reporte.publicLocation.latitud,
+        longitud: reporte.publicLocation.longitud,
+      },
+      creadoEn: reporte.creadoEn,
+    }));
   },
 });
 

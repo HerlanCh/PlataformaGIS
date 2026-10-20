@@ -1385,3 +1385,184 @@ button:disabled {
   color: var(--linea-roja);
   font-weight: 700;
 }
+
+/* Enlaces con forma de botón (volver al mapa, moderación, ver en el mapa) */
+
+a.boton-texto,
+a.boton-redondo {
+  color: var(--tinta);
+  text-decoration: none;
+}
+
+/* Páginas aparte del mapa (moderación): una columna desplazable, separada con bordes */
+
+.pagina {
+  height: 100%;
+  overflow-y: auto;
+  background: var(--fondo);
+}
+
+.pagina__cabecera {
+  display: flex;
+  align-items: center;
+  gap: var(--e-3);
+  padding: calc(var(--e-3) + env(safe-area-inset-top)) var(--e-4) var(--e-3);
+  border-bottom: 1px solid var(--borde);
+}
+
+.pagina__cabecera .boton-texto {
+  margin-top: 0;
+}
+
+.pagina__titulo {
+  font-size: var(--t-5);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.pagina__cuerpo {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--e-4) var(--e-4) calc(var(--e-5) + env(safe-area-inset-bottom));
+}
+
+.pagina__ayuda {
+  color: var(--tinta-2);
+  font-size: var(--t-2);
+}
+
+.pagina__bloque {
+  display: grid;
+  gap: var(--e-3);
+  justify-items: start;
+}
+
+.pagina__codigo {
+  padding: var(--e-2) var(--e-3);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  font-size: var(--t-2);
+  overflow-wrap: anywhere;
+}
+
+.pagina__lista {
+  display: grid;
+  gap: var(--e-4);
+  margin-top: var(--e-4);
+}
+
+/* Caso de la cola de moderación (HU-12) */
+
+.caso {
+  display: grid;
+  gap: var(--e-3);
+  padding: var(--e-4);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.caso__cabecera {
+  display: flex;
+  align-items: center;
+  gap: var(--e-2);
+}
+
+.caso__titulo {
+  flex: 1;
+  font-size: var(--t-3);
+  font-weight: 700;
+}
+
+.caso__hora {
+  color: var(--tinta-2);
+  font-size: var(--t-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.caso__motivos {
+  display: grid;
+  gap: var(--e-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--t-2);
+  font-weight: 700;
+}
+
+.caso__motivos li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--e-2);
+}
+
+.caso__motivos svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.caso__descripcion {
+  margin: 0;
+  padding: var(--e-3);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  overflow-wrap: anywhere;
+}
+
+.caso__sin-descripcion {
+  color: var(--tinta-2);
+  font-size: var(--t-2);
+}
+
+.caso__mapa {
+  justify-self: start;
+  margin-top: 0;
+}
+
+.caso__acciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--e-2);
+}
+
+.caso__acciones .boton-texto {
+  justify-content: center;
+  margin-top: 0;
+  min-height: 60px;
+  border-radius: var(--radio);
+}
+
+.caso__rechazo {
+  display: grid;
+  gap: var(--e-2);
+}
+
+.caso__etiqueta {
+  font-weight: 700;
+}
+
+.caso__sugerencias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e-2);
+}
+
+.caso__sugerencias .boton-texto {
+  margin-top: 0;
+}
+
+.caso__sugerencias .boton-texto[aria-pressed='true'] {
+  background: var(--tinta);
+  color: var(--fondo);
+}
+
+.campo {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--toque);
+  padding: 0 var(--e-3);
+  border: 1.5px solid var(--tinta);
+  border-radius: var(--radio);
+  background: var(--fondo);
+  color: var(--tinta);
+  font: inherit;
+}

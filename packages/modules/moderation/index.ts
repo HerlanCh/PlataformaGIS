@@ -13,12 +13,29 @@ export const moderationModulo: DefinicionDeModulo = {
   },
 };
 
-// Interfaz pública para la raíz de composición: caso de uso, adaptador y puertos.
+// Interfaz pública para la raíz de composición: casos de uso, manejador, adaptadores y puertos.
 export { RechazarReporte } from './application/rechazar-reporte.js';
 export type {
   DependenciasRechazarReporte,
   EntradaRechazarReporte,
 } from './application/rechazar-reporte.js';
+export { MantenerReporte } from './application/mantener-reporte.js';
+export type {
+  DependenciasMantenerReporte,
+  EntradaMantenerReporte,
+} from './application/mantener-reporte.js';
+export {
+  LIMITE_DE_LA_COLA,
+  ListarColaDeModeracion,
+} from './application/listar-cola-de-moderacion.js';
+export type { ElementoDeCola, EntradaListarCola } from './application/listar-cola-de-moderacion.js';
+export { ActualizarColaDeModeracion } from './application/actualizar-cola-de-moderacion.js';
 export type { UnidadDeTrabajoDeModeracion } from './application/ports.js';
+export { RepositorioColaPg } from './adapters/repositorio-cola-pg.js';
 export { UnidadDeTrabajoModeracionPg } from './adapters/unidad-de-trabajo-moderacion.js';
-export type { ConsultaDeReporte, EstadoDeReporte } from './domain/ports.js';
+export type {
+  ConsultaDeReporte,
+  DetalleDeReporte,
+  EstadoDeReporte,
+  RepositorioDeCola,
+} from './domain/ports.js';

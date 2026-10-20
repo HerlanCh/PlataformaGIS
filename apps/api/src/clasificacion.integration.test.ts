@@ -9,7 +9,16 @@ import {
 } from '@gis/module-classifier';
 import type { Clasificador } from '@gis/module-classifier';
 import {
+  ActualizarColaDeModeracion,
+  ListarColaDeModeracion,
+  moderationModulo,
+  RechazarReporte,
+  RepositorioColaPg,
+  UnidadDeTrabajoModeracionPg,
+} from '@gis/module-moderation';
+import {
   AgregarDescripcion,
+  AplicarRechazoDeModeracion,
   CrearReporte,
   RepositorioCategoriasPg,
   RepositorioReportesPostgis,
@@ -18,7 +27,7 @@ import {
 } from '@gis/module-reports';
 import { crearDb, eventosSalida, migracionesDePlataforma, migrarTodo } from '@gis/platform';
 import type { Db } from '@gis/platform';
-import { PuntoGeo } from '@gis/shared-kernel';
+import { idReporte, PuntoGeo } from '@gis/shared-kernel';
 import {
   createTestDatabase,
   describeIntegration,
@@ -30,7 +39,7 @@ import {
 import type { TestDatabase } from '@gis/testing';
 import { asc, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, expect, it } from 'vitest';
-import { consultaParaClasificar } from './composicion/puentes.js';
+import { consultaParaClasificar, consultaParaModeracion } from './composicion/puentes.js';
 
 const usuario = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 const centro = PuntoGeo.crear(-16.5, -68.13);
@@ -41,21 +50,33 @@ const modeloCaido: Clasificador = {
 };
 
 /**
- * HU-10 de extremo a extremo con PostGIS: el reporte se crea sin esperar al clasificador, que lo
- * revisa al procesar el outbox. El clasificador principal está caído, así que deciden las reglas.
+ * HU-10 y HU-12 de extremo a extremo con PostGIS: el reporte se crea sin esperar al clasificador,
+ * que lo revisa al procesar el outbox, y lo marcado llega a la cola de moderación. El clasificador
+ * principal está caído, así que deciden las reglas.
  */
-describeIntegration('clasificación asíncrona de reportes', () => {
+describeIntegration('clasificación y moderación encadenadas por eventos', () => {
   let base: TestDatabase;
   let db: Db;
   const reloj = new RelojFijo();
   const ids = new GeneradorDeIdSecuencial('dddddddd');
   let crear: CrearReporte;
   let describir: AgregarDescripcion;
-  let clasificar: ClasificarReporte;
+  let rechazar: RechazarReporte;
+  let listarCola: ListarColaDeModeracion;
+  let reportes: RepositorioReportesPostgis;
+  const manejadores = new Map<string, ((e: EventoDeIntegracion) => Promise<unknown>)[]>();
   const fallos: unknown[] = [];
 
+  const escuchar = (
+    claves: readonly string[],
+    manejar: (e: EventoDeIntegracion) => Promise<unknown>,
+  ) => {
+    for (const clave of claves)
+      manejadores.set(clave, [...(manejadores.get(clave) ?? []), manejar]);
+  };
+
   const despachados = new Set<string>();
-  /** Entrega al clasificador cada evento nuevo del outbox, hasta que no aparezcan más. */
+  /** Entrega cada evento nuevo del outbox a sus manejadores, hasta que no aparezcan más. */
   async function despachar(): Promise<string[]> {
     const entregados: string[] = [];
     for (;;) {
@@ -66,9 +87,7 @@ describeIntegration('clasificación asíncrona de reportes', () => {
         despachados.add(fila.id);
         const evento = fila.contenido as EventoDeIntegracion;
         entregados.push(claveDeEvento(evento));
-        if ((ClasificarReporte.eventos as readonly string[]).includes(claveDeEvento(evento))) {
-          await clasificar.manejar(evento);
-        }
+        for (const manejar of manejadores.get(claveDeEvento(evento)) ?? []) await manejar(evento);
       }
     }
   }
@@ -98,8 +117,9 @@ describeIntegration('clasificación asíncrona de reportes', () => {
       migracionesDePlataforma,
       reportsModulo.migraciones!,
       classifierModulo.migraciones!,
+      moderationModulo.migraciones!,
     ]);
-    const reportes = new RepositorioReportesPostgis(db);
+    reportes = new RepositorioReportesPostgis(db);
     const unidadDeTrabajo = new UnidadDeTrabajoReportePg(db);
     crear = new CrearReporte({
       reportes,
@@ -111,7 +131,7 @@ describeIntegration('clasificación asíncrona de reportes', () => {
       ids,
     });
     describir = new AgregarDescripcion({ reportes, unidadDeTrabajo, reloj, ids });
-    clasificar = new ClasificarReporte({
+    const clasificar = new ClasificarReporte({
       consulta: consultaParaClasificar(reportes),
       clasificador: new ClasificadorConRespaldo(modeloCaido, new ClasificadorPorReglas(), {
         tiempoLimiteMs: 1000,
@@ -121,6 +141,25 @@ describeIntegration('clasificación asíncrona de reportes', () => {
       reloj,
       ids,
     });
+    const cola = new RepositorioColaPg(db);
+    const actualizarCola = new ActualizarColaDeModeracion(cola);
+    const aplicarRechazo = new AplicarRechazoDeModeracion({
+      reportes,
+      unidadDeTrabajo,
+      reloj,
+      ids,
+    });
+    escuchar(ClasificarReporte.eventos, (e) => clasificar.manejar(e));
+    escuchar(ActualizarColaDeModeracion.eventos, (e) => actualizarCola.manejar(e));
+    escuchar(['RechazoDeModeracion.v1'], (e) => aplicarRechazo.manejar(e));
+    const consultaDeReporte = consultaParaModeracion(reportes);
+    rechazar = new RechazarReporte({
+      consultaDeReporte,
+      unidadDeTrabajo: new UnidadDeTrabajoModeracionPg(db),
+      reloj,
+      ids,
+    });
+    listarCola = new ListarColaDeModeracion(cola, consultaDeReporte);
   });
 
   afterAll(async () => {
@@ -176,5 +215,43 @@ describeIntegration('clasificación asíncrona de reportes', () => {
       clasificador: 'reglas-v1',
     });
     expect((await clasificaciones(creados[2]!.reporte.id))[0]).toMatchObject({ sospechoso: false });
+  });
+
+  it('HU-10 y HU-12: un reporte con enlace aparece marcado en la cola y el moderador lo rechaza', async () => {
+    const { reporte } = await nuevo(usuario(4), desplazar(centro, -3000, 0));
+    await describir.ejecutar({
+      idReporte: reporte.id,
+      idAutor: usuario(4),
+      descripcion: 'Info en https://estafa.example',
+    });
+    await despachar();
+
+    const cola = await listarCola.ejecutar({ rolActor: 'MODERADOR' });
+    expect(cola).toContainEqual(
+      expect.objectContaining({
+        idReporte: reporte.id,
+        marcado: true,
+        motivos: ['ENLACE'],
+        descripcion: 'Info en https://estafa.example',
+      }),
+    );
+
+    await rechazar.ejecutar({
+      idReporte: reporte.id,
+      idModerador: usuario(9),
+      rolActor: 'MODERADOR',
+      motivo: 'Publicidad engañosa',
+    });
+    const entregados = await despachar();
+
+    expect(entregados).toEqual(['RechazoDeModeracion.v1', 'ReporteRechazado.v1']);
+    expect((await reportes.buscarPorId(idReporte(reporte.id)))?.estado).toBe('RECHAZADO');
+    const { rows } = await db.execute(
+      sql`select accion, motivo from acciones_moderacion where id_reporte = ${reporte.id}`,
+    );
+    expect(rows).toEqual([{ accion: 'RECHAZAR', motivo: 'Publicidad engañosa' }]);
+    expect(
+      (await listarCola.ejecutar({ rolActor: 'MODERADOR' })).map((c) => c.idReporte),
+    ).not.toContain(reporte.id);
   });
 });

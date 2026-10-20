@@ -5,6 +5,7 @@ import {
   esquemaCodigoCategoria,
   esquemaDecisionVerificacion,
   esquemaEstadoReporte,
+  esquemaMotivoDeSospecha,
   esquemaPuntoGeo,
 } from './events.js';
 
@@ -238,6 +239,35 @@ export const esquemaRechazo = conId(
   z.object({ motivo: z.string().min(1).max(500) }),
   'Rechazo',
   'Motivo del rechazo',
+);
+
+export const esquemaMantener = conId(
+  z.object({ motivo: z.string().max(500).optional() }),
+  'Mantener',
+  'Nota opcional del moderador al dejar el reporte publicado',
+);
+
+export const esquemaCasoDeModeracion = conId(
+  z.object({
+    idReporte: esquemaUuid,
+    codigoCategoria: esquemaCodigoCategoria,
+    estado: esquemaEstadoReporte,
+    /** Privada: solo esta respuesta, que exige el rol MODERADOR, la incluye. */
+    descripcion: z.string().nullable(),
+    publicLocation: esquemaPuntoGeo,
+    creadoEn: esquemaFecha,
+    negaciones: z.number().int(),
+    marcado: z.boolean(),
+    motivos: z.array(esquemaMotivoDeSospecha),
+  }),
+  'CasoDeModeracion',
+  'Reporte de la cola: su detalle, la descripción privada y por qué está en la cola',
+);
+
+export const esquemaColaDeModeracion = conId(
+  z.object({ casos: z.array(esquemaCasoDeModeracion) }),
+  'ColaDeModeracion',
+  'Hasta 50 casos: primero los marcados por el clasificador, después los más negados',
 );
 
 /** Respuesta sin cuerpo (204 y 202). */

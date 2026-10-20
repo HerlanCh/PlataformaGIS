@@ -58,6 +58,15 @@ export class RepositorioReportesPostgis implements RepositorioDeReportes {
     return this.buscar(eq(reportes.idempotencyKey, claveDeIdempotencia));
   }
 
+  async buscarPorIds(ids: readonly IdReporte[]): Promise<readonly Reporte[]> {
+    if (ids.length === 0) return [];
+    const filas = await this.db
+      .select()
+      .from(reportes)
+      .where(inArray(reportes.id, [...ids]));
+    return filas.map(aAgregado);
+  }
+
   async guardar(reporte: Reporte): Promise<void> {
     const mutables = {
       estado: reporte.estado,

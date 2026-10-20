@@ -221,6 +221,21 @@ describeIntegration('persistencia de reports', () => {
     expect((await reportes.buscarPorId(reporte.id))?.descripcion).toBe('Semáforo apagado 🚦');
   });
 
+  it('HU-12: busca varios reportes por su ID y omite los que no existen', async () => {
+    const [a, b] = [nuevoReporte(), nuevoReporte()];
+    await reportes.guardar(a);
+    await reportes.guardar(b);
+
+    const encontrados = await reportes.buscarPorIds([
+      a.id,
+      b.id,
+      idReporte('ffffffff-ffff-4fff-8fff-ffffffffffff'),
+    ]);
+
+    expect(encontrados.map((r) => r.id).sort()).toEqual([a.id, b.id].sort());
+    expect(await reportes.buscarPorIds([])).toEqual([]);
+  });
+
   it('HU-10: cuenta los reportes de un autor en un intervalo, en cualquier estado', async () => {
     const otroAutor = idUsuario('99999999-9999-4999-8999-999999999999');
     const enRafaga = [0, 10, 20].map((minutos) => {

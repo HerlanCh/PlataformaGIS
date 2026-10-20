@@ -20,4 +20,9 @@ export type {
   EntradaRegistrarDispositivo,
   SalidaRegistrarDispositivo,
 } from './application/registrar-dispositivo.js';
+export { AscenderAModerador } from './application/ascender-a-moderador.js';
+export type {
+  EntradaAscenderAModerador,
+  ResultadoAscenso,
+} from './application/ascender-a-moderador.js';
 export { RepositorioUsuariosPg } from './adapters/user-repository.js';

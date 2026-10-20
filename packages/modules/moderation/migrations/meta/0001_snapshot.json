@@ -1,0 +1,176 @@
+{
+  "id": "123d40b4-a668-4c69-b3e4-806da9c1f8e6",
+  "prevId": "5ccb6b89-7a46-4840-a64c-b3b7a44154cb",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.acciones_moderacion": {
+      "name": "acciones_moderacion",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "id_reporte": {
+          "name": "id_reporte",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id_moderador": {
+          "name": "id_moderador",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "accion": {
+          "name": "accion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "motivo": {
+          "name": "motivo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "acciones_moderacion_reporte_idx": {
+          "name": "acciones_moderacion_reporte_idx",
+          "columns": [
+            {
+              "expression": "id_reporte",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "acciones_moderacion_accion_check": {
+          "name": "acciones_moderacion_accion_check",
+          "value": "\"acciones_moderacion\".\"accion\" in ('RECHAZAR', 'MANTENER')"
+        },
+        "acciones_moderacion_motivo_check": {
+          "name": "acciones_moderacion_motivo_check",
+          "value": "\"acciones_moderacion\".\"accion\" <> 'RECHAZAR' or coalesce(length(trim(\"acciones_moderacion\".\"motivo\")), 0) > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.cola_moderacion": {
+      "name": "cola_moderacion",
+      "schema": "",
+      "columns": {
+        "id_reporte": {
+          "name": "id_reporte",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "negaciones": {
+          "name": "negaciones",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marcado": {
+          "name": "marcado",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "motivos": {
+          "name": "motivos",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resuelto_en": {
+          "name": "resuelto_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "cola_moderacion_pendientes_idx": {
+          "name": "cola_moderacion_pendientes_idx",
+          "columns": [
+            {
+              "expression": "marcado",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "negaciones",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "actualizado_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"cola_moderacion\".\"resuelto_en\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "cola_moderacion_negaciones_check": {
+          "name": "cola_moderacion_negaciones_check",
+          "value": "\"cola_moderacion\".\"negaciones\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

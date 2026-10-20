@@ -19,6 +19,7 @@ import { createTestDatabase, describeIntegration, desplazar } from '@gis/testing
 import type { TestDatabase } from '@gis/testing';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
+import { sql } from 'drizzle-orm';
 import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { construirApp } from '../app.js';
@@ -495,6 +496,55 @@ describeIntegration('API REST /v1', () => {
       expect([ciudadano.statusCode, ciudadano.json().codigo]).toEqual([403, 'ROL_INSUFICIENTE']);
       expect(conRol.statusCode).toBe(202);
     });
+
+    it('HU-10 y HU-12: la cola muestra al moderador el reporte marcado con su descripción y mantenerlo lo saca', async () => {
+      const autor = await registrar();
+      const punto = PuntoGeo.crear(-16.44, -68.28);
+      const { reporte } = (await crearReporte(autor.token, punto, 'robo')).json();
+      await pedir({
+        method: 'PATCH',
+        url: `/v1/reportes/${reporte.id}/descripcion`,
+        token: autor.token,
+        payload: { descripcion: 'promo en https://spam.example' },
+      });
+      // El manejador de la cola corre en el bus; aquí se simula su resultado.
+      await db.execute(
+        sql`insert into cola_moderacion (id_reporte, negaciones, marcado, motivos, actualizado_en)
+            values (${reporte.id}, 0, true, '{ENLACE,SPAM}', now())`,
+      );
+      const moderador = await tokens.firmar({ idUsuario: autor.idUsuario, rol: 'MODERADOR' });
+      const cola = () =>
+        pedir({ method: 'GET', url: '/v1/moderacion/cola', token: moderador.token });
+
+      const ciudadano = await pedir({
+        method: 'GET',
+        url: '/v1/moderacion/cola',
+        token: autor.token,
+      });
+      const antes = await cola();
+      const mantener = await pedir({
+        method: 'POST',
+        url: `/v1/moderacion/reportes/${reporte.id}/mantener`,
+        token: moderador.token,
+        payload: {},
+      });
+      const despues = await cola();
+
+      expect(ciudadano.statusCode).toBe(403);
+      expect(antes.statusCode).toBe(200);
+      expect(antes.json().casos).toContainEqual(
+        expect.objectContaining({
+          idReporte: reporte.id,
+          marcado: true,
+          motivos: ['ENLACE', 'SPAM'],
+          descripcion: 'promo en https://spam.example',
+        }),
+      );
+      expect(mantener.statusCode).toBe(204);
+      expect(despues.json().casos.map((c: { idReporte: string }) => c.idReporte)).not.toContain(
+        reporte.id,
+      );
+    });
   });
 
   describe('protecciones', () => {
@@ -595,7 +645,12 @@ describeIntegration('API REST /v1', () => {
       expect(respuestas.length).toBeGreaterThan(20);
       for (const { ruta, respuesta } of respuestas) {
         if (respuesta.body === '') continue;
-        const presentes = claves(respuesta.json()).filter((c) => CAMPOS_PRIVADOS.includes(c));
+        // La cola de moderación exige el rol MODERADOR y es la única que lleva la descripción.
+        const privados =
+          ruta === 'GET /v1/moderacion/cola'
+            ? CAMPOS_PRIVADOS.filter((c) => c !== 'descripcion')
+            : CAMPOS_PRIVADOS;
+        const presentes = claves(respuesta.json()).filter((c) => privados.includes(c));
         expect(presentes, ruta).toEqual([]);
       }
     });
