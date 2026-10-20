@@ -31,3 +31,8 @@ export type {
   MotivoDeSospecha,
 } from './domain/clasificacion.js';
 export { UMBRAL_DE_FRECUENCIA } from './domain/reglas-de-clasificacion.js';
+export { EvaluarClasificador } from './application/evaluar-clasificador.js';
+export type { ResultadoDeEvaluacion } from './application/evaluar-clasificador.js';
+export { aJsonl, deJsonl, ExportarConjuntoEtiquetado } from './application/exportar-conjunto.js';
+export type { DecisionModerada, FuenteDeDecisiones } from './application/exportar-conjunto.js';
+export type { Ejemplo, Etiqueta, Metricas } from './domain/evaluacion.js';

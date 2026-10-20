@@ -1,12 +1,15 @@
 // Puertos entre módulos (ADR-001): cada módulo declara lo que necesita saber de otro y la raíz de
 // composición lo conecta aquí con la interfaz pública del módulo dueño. Ningún módulo se conoce.
-import type { ConsultaParaClasificar } from '@gis/module-classifier';
+import type { ConsultaParaClasificar, FuenteDeDecisiones } from '@gis/module-classifier';
 import type { ConsultaDeReportesFinalizados } from '@gis/module-open-data';
 import type { RepositorioDeReportes } from '@gis/module-reports';
 import type { ReputacionDelAutor } from '@gis/module-reports';
 import type { ConsultaDeAutor } from '@gis/module-subscriptions';
 import type { ConsultaDeReporte as ConsultaParaVerificacion } from '@gis/module-verification';
-import type { ConsultaDeReporte as ConsultaParaModeracion } from '@gis/module-moderation';
+import type {
+  ConsultaDeReporte as ConsultaParaModeracion,
+  HistorialDeDecisiones,
+} from '@gis/module-moderation';
 import { idReporte } from '@gis/shared-kernel';
 import type { IdUsuario } from '@gis/shared-kernel';
 
@@ -111,6 +114,29 @@ export const consultaDeReportesFinalizados = (
   },
   idsFinalizados(despuesDe, limite) {
     return reportes.buscarIdsFinalizados(despuesDe === null ? null : idReporte(despuesDe), limite);
+  },
+});
+
+/**
+ * `classifier` arma su conjunto etiquetado con la última decisión de `moderation` sobre cada
+ * reporte y la descripción privada que guarda `reports`. Solo salen el texto y la decisión.
+ */
+export const fuenteDeDecisiones = (
+  historial: HistorialDeDecisiones,
+  reportes: RepositorioDeReportes,
+  lote = 500,
+): FuenteDeDecisiones => ({
+  async decisiones() {
+    const ultimas = await historial.ultimasDecisiones();
+    const descripciones = new Map<string, string | null>();
+    for (let i = 0; i < ultimas.length; i += lote) {
+      const ids = ultimas.slice(i, i + lote).map((d) => d.idReporte);
+      for (const r of await reportes.buscarPorIds(ids)) descripciones.set(r.id, r.descripcion);
+    }
+    return ultimas.map((d) => ({
+      accion: d.accion,
+      descripcion: descripciones.get(d.idReporte) ?? null,
+    }));
   },
 });
 

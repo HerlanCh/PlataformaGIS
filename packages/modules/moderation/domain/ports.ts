@@ -26,6 +26,17 @@ export interface ConsultaDeReporte {
   detallesDe(ids: readonly IdReporte[]): Promise<readonly DetalleDeReporte[]>;
 }
 
+/** La última decisión de un moderador sobre un reporte. */
+export interface UltimaDecision {
+  readonly idReporte: IdReporte;
+  readonly accion: 'RECHAZAR' | 'MANTENER';
+}
+
+/** Historial de decisiones: el conjunto etiquetado para entrenar el clasificador (HU-10). */
+export interface HistorialDeDecisiones {
+  ultimasDecisiones(): Promise<readonly UltimaDecision[]>;
+}
+
 /** La cola de moderación, que es de este módulo. */
 export interface RepositorioDeCola {
   buscar(idReporte: IdReporte): Promise<CasoDeModeracion | null>;
