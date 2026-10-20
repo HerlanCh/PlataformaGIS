@@ -1,0 +1,1 @@
+CREATE INDEX "reportes_autor_creado_en_idx" ON "reportes" USING btree ("id_autor","creado_en");

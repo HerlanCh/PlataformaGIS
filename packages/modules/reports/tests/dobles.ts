@@ -109,6 +109,14 @@ export class RepositorioReportesEnMemoria implements RepositorioDeReportes {
     );
   }
 
+  contarDelAutor(idAutor: IdUsuario, desde: Date, hasta: Date): Promise<number> {
+    return Promise.resolve(
+      this.todos().filter(
+        (r) => r.authorId === idAutor && r.creadoEn >= desde && r.creadoEn <= hasta,
+      ).length,
+    );
+  }
+
   private vigentes(): Reporte[] {
     return this.todos().filter((r) => r.estaActivo);
   }

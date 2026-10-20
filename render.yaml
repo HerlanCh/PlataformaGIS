@@ -31,3 +31,6 @@ services:
         value: 'true'
       - key: FEATURE_MODERATION
         value: 'true'
+      # Clasificación por reglas de los reportes, tras crearlos (HU-10).
+      - key: FEATURE_CLASSIFIER
+        value: 'true'

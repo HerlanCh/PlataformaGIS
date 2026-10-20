@@ -6,6 +6,8 @@ export {
   esquemaPuntoGeo,
   esquemaMotivoRechazo,
   descripcionAgregadaV1,
+  esquemaMotivoDeSospecha,
+  reporteClasificadoV1,
   rechazoDeModeracionV1,
   reporteConfirmadoV1,
   reporteCreadoV1,

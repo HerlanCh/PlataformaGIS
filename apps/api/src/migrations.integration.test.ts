@@ -52,6 +52,7 @@ describeIntegration('migraciones de toda la plataforma', () => {
       [
         ...TABLAS_IMPRESCINDIBLES,
         'acciones_moderacion',
+        'clasificaciones',
         'suscripciones_push',
         'zonas_suscritas',
       ].sort(),
@@ -77,7 +78,12 @@ describeIntegration('migraciones de toda la plataforma', () => {
     await migrar({ ...TODOS_ENCENDIDOS, FEATURE_SUBSCRIPTIONS: 'false' });
 
     expect(await tablas()).toEqual(
-      [...TABLAS_IMPRESCINDIBLES, 'acciones_moderacion', 'suscripciones_push'].sort(),
+      [
+        ...TABLAS_IMPRESCINDIBLES,
+        'acciones_moderacion',
+        'clasificaciones',
+        'suscripciones_push',
+      ].sort(),
     );
   });
 

@@ -1,7 +1,7 @@
 import type { Ejecutor } from '@gis/platform';
 import { codigoCategoria, PuntoGeo, idReporte, idUsuario } from '@gis/shared-kernel';
-import type { CajaGeografica, CodigoCategoria, IdReporte } from '@gis/shared-kernel';
-import { and, asc, desc, eq, gt, inArray, lt, sql } from 'drizzle-orm';
+import type { CajaGeografica, CodigoCategoria, IdReporte, IdUsuario } from '@gis/shared-kernel';
+import { and, asc, between, count, desc, eq, gt, inArray, lt, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import type { Categoria } from '../domain/category.js';
 import type { RepositorioDeReportes } from '../domain/ports.js';
@@ -177,6 +177,14 @@ export class RepositorioReportesPostgis implements RepositorioDeReportes {
       .orderBy(asc(reportes.caducaEn), asc(reportes.id))
       .limit(limite);
     return filas.map(aAgregado);
+  }
+
+  async contarDelAutor(idAutor: IdUsuario, desde: Date, hasta: Date): Promise<number> {
+    const [fila] = await this.db
+      .select({ total: count() })
+      .from(reportes)
+      .where(and(eq(reportes.authorId, idAutor), between(reportes.creadoEn, desde, hasta)));
+    return fila?.total ?? 0;
   }
 
   private async buscar(condicion: SQL): Promise<Reporte | null> {

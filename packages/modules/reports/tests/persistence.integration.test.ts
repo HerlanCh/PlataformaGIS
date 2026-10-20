@@ -201,6 +201,7 @@ describeIntegration('persistencia de reports', () => {
     );
 
     expect(rows.map((fila) => fila.indexname)).toEqual([
+      'reportes_autor_creado_en_idx',
       'reportes_clave_idempotencia_unique',
       'reportes_creado_en_idx',
       'reportes_pkey',
@@ -218,6 +219,30 @@ describeIntegration('persistencia de reports', () => {
     await reportes.guardar(reporte);
 
     expect((await reportes.buscarPorId(reporte.id))?.descripcion).toBe('Semáforo apagado 🚦');
+  });
+
+  it('HU-10: cuenta los reportes de un autor en un intervalo, en cualquier estado', async () => {
+    const otroAutor = idUsuario('99999999-9999-4999-8999-999999999999');
+    const enRafaga = [0, 10, 20].map((minutos) => {
+      secuencia += 1;
+      const sufijo = String(secuencia).padStart(12, '0');
+      return Reporte.crear({
+        id: idReporte(`eeeeeeee-aaaa-4aaa-8aaa-${sufijo}`),
+        categoria: categoria('accidente'),
+        authorId: otroAutor,
+        location: plazaMurillo,
+        idempotencyKey: `rafaga-${sufijo}`,
+        ahora: minutosDespues(minutos),
+      });
+    });
+    enRafaga[1]!.rechazar('MODERACION', minutosDespues(15));
+    for (const reporte of enRafaga) await reportes.guardar(reporte);
+
+    expect(await reportes.contarDelAutor(otroAutor, creado, minutosDespues(20))).toBe(3);
+    expect(await reportes.contarDelAutor(otroAutor, minutosDespues(5), minutosDespues(60))).toBe(2);
+    expect(await reportes.contarDelAutor(otroAutor, minutosDespues(21), minutosDespues(60))).toBe(
+      0,
+    );
   });
 
   it('la unidad de trabajo guarda el reporte y su evento juntos', async () => {
@@ -324,6 +349,8 @@ describeIntegration('migraciones de reports', () => {
   it('se aplican sobre una base vacía y se revierten por completo', async () => {
     await migrarTodo(db, [migracionesDePlataforma, migraciones]);
     expect(await tablas()).toEqual(['categorias', 'reportes']);
+
+    expect(await revertirUltima(db, migraciones)).toBe('0004_indice_autor');
 
     expect(await revertirUltima(db, migraciones)).toBe('0003_descripcion_reporte');
 

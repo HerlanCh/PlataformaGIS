@@ -36,6 +36,7 @@ describe('catálogo de eventos de integración', () => {
       'VotoEmitido.v1',
       'RechazoDeModeracion.v1',
       'DescripcionAgregada.v1',
+      'ReporteClasificado.v1',
     ]);
     expect(new Set(claves).size).toBe(claves.length);
   });

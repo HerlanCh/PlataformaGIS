@@ -1,5 +1,6 @@
 // Puertos entre módulos (ADR-001): cada módulo declara lo que necesita saber de otro y la raíz de
 // composición lo conecta aquí con la interfaz pública del módulo dueño. Ningún módulo se conoce.
+import type { ConsultaParaClasificar } from '@gis/module-classifier';
 import type { RepositorioDeReportes } from '@gis/module-reports';
 import type { ReputacionDelAutor } from '@gis/module-reports';
 import type { ConsultaDeAutor } from '@gis/module-subscriptions';
@@ -38,6 +39,31 @@ export const consultaParaModeracion = (
 ): ConsultaParaModeracion => ({
   async estadoDe(id) {
     return (await reportes.buscarPorId(id))?.estado ?? null;
+  },
+});
+
+/** Ventana en la que el clasificador cuenta los reportes del mismo autor (HU-10). */
+export const VENTANA_DE_FRECUENCIA_MS = 60 * 60_000;
+
+/**
+ * `classifier` necesita la descripción privada y cuántos reportes hizo el autor en la hora anterior
+ * al reporte, incluido este.
+ */
+export const consultaParaClasificar = (
+  reportes: RepositorioDeReportes,
+): ConsultaParaClasificar => ({
+  async datosDe(id) {
+    const reporte = await reportes.buscarPorId(id);
+    if (!reporte) return null;
+    const desde = new Date(reporte.creadoEn.getTime() - VENTANA_DE_FRECUENCIA_MS);
+    return {
+      descripcion: reporte.descripcion,
+      reportesRecientesDelAutor: await reportes.contarDelAutor(
+        reporte.authorId,
+        desde,
+        reporte.creadoEn,
+      ),
+    };
   },
 });
 
