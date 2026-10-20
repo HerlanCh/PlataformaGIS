@@ -1,3 +1,10 @@
+# [2.9.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.8.0...v2.9.0) (2026-10-20)
+
+
+### Features
+
+* **classifier:** clasificador por reglas de reportes sospechosos (HU-10) ([776f257](https://github.com/HerlanCh/PlataformaGIS/commit/776f25744a6e71698adb8db549da1c99a9fb7597))
+
 # [2.8.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.7.3...v2.8.0) (2026-10-20)
 
 
