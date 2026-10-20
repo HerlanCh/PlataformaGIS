@@ -121,6 +121,14 @@ export const esquemaReporteCreado = conId(
   'CREADO, o DUPLICADO / PROPIO_EXISTENTE con el reporte vigente que ya existía',
 );
 
+export const esquemaDescripcion = conId(
+  // El dominio cuenta 280 caracteres como puntos de código; aquí solo se acota el tamaño, porque
+  // `max` de Zod cuenta unidades UTF-16 y un emoji ocupa dos.
+  z.object({ descripcion: z.string().min(1).max(560) }),
+  'Descripcion',
+  'Detalle privado del reporte, de hasta 280 caracteres. Solo lo leen los moderadores.',
+);
+
 export const esquemaConsultaReportes = z.object({
   bbox: esquemaBbox,
   categorias: esquemaListaDeCategorias,

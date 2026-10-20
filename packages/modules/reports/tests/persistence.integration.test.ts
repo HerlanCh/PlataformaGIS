@@ -102,6 +102,7 @@ describeIntegration('persistencia de reports', () => {
       caducaEn: minutosDespues(360),
       extensiones: 0,
       motivoRechazo: null,
+      descripcion: null,
       idempotencyKey: reporte.idempotencyKey,
     });
     expect(recuperado.location.esIgualA(plazaMurillo)).toBe(true);
@@ -185,6 +186,11 @@ describeIntegration('persistencia de reports', () => {
       sql`update reportes set ubicacion = st_setsrid(st_makepoint(0, 0), 3857)`,
     ],
     ['una categoría con TTL de cero', sql`update categorias set ttl_minutos = 0`],
+    ['una descripción vacía', sql`update reportes set descripcion = ''`],
+    [
+      'una descripción de más de 280 caracteres',
+      sql`update reportes set descripcion = repeat('a', 281)`,
+    ],
   ])('la base de datos rechaza %s', async (_caso, sentencia) => {
     await expect(db.execute(sentencia)).rejects.toThrow();
   });
@@ -202,6 +208,16 @@ describeIntegration('persistencia de reports', () => {
       'reportes_ubicacion_publica_idx',
       'reportes_vigentes_idx',
     ]);
+  });
+
+  it('HU-10: guarda la descripción que se agrega después de crear el reporte', async () => {
+    const reporte = nuevoReporte();
+    await reportes.guardar(reporte);
+
+    reporte.agregarDescripcion('Semáforo apagado 🚦', autor, creado);
+    await reportes.guardar(reporte);
+
+    expect((await reportes.buscarPorId(reporte.id))?.descripcion).toBe('Semáforo apagado 🚦');
   });
 
   it('la unidad de trabajo guarda el reporte y su evento juntos', async () => {
@@ -308,6 +324,8 @@ describeIntegration('migraciones de reports', () => {
   it('se aplican sobre una base vacía y se revierten por completo', async () => {
     await migrarTodo(db, [migracionesDePlataforma, migraciones]);
     expect(await tablas()).toEqual(['categorias', 'reportes']);
+
+    expect(await revertirUltima(db, migraciones)).toBe('0003_descripcion_reporte');
 
     expect(await revertirUltima(db, migraciones)).toBe('0002_indices_de_consulta');
 

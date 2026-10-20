@@ -26,6 +26,7 @@ No decide si un reporte se confirma o se resuelve: eso lo decide `verification` 
 | `CaducarReportes`               | Caduca los vencidos en lotes de 200 y emite `ReporteCaducado` (HU-04). La programa una tarea periódica (Fase 7)                                                                                                                                                                                                                           |
 | `AplicarDecisionDeVerificacion` | Manejador de `VotoEmitido.v1`: confirma, extiende o resuelve                                                                                                                                                                                                                                                                              |
 | `AplicarRechazoDeModeracion`    | Manejador de `RechazoDeModeracion.v1`: rechaza con motivo `MODERACION`                                                                                                                                                                                                                                                                    |
+| `AgregarDescripcion`            | El autor describe su reporte vigente, una vez y con hasta 280 caracteres (Fase 10, HU-10). Guarda el texto y emite `DescripcionAgregada`. Al autor silenciado se le acepta sin guardar, para no delatarlo                                                                                                                                 |
 
 Los manejadores son idempotentes: si el reporte ya no admite el cambio, no hacen nada.
 
@@ -40,8 +41,9 @@ Los manejadores son idempotentes: si el reporte ya no admite el cambio, no hacen
 | `ReporteCaducado.v1`           | Pública   | Pasa a `CADUCADO`                                                 |
 | `ReporteRechazado.v1`          | Pública   | Pasa a `RECHAZADO`, con motivo `MODERACION` o `AUTOR_SILENCIADO`  |
 | `ReporteDuplicadoDetectado.v1` | Interna   | Un reporte nuevo cae en el radio de deduplicación de otro vigente |
+| `DescripcionAgregada.v1`       | Interna   | El autor describe su reporte vigente (solo lleva el ID)           |
 
-Los eventos públicos solo llevan `publicLocation`: nunca la ubicación real ni el autor.
+Los eventos públicos solo llevan `publicLocation`: nunca la ubicación real, el autor ni la descripción.
 
 ## Eventos que escucha
 

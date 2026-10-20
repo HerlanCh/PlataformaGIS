@@ -23,6 +23,11 @@ export type { EstadoReporte } from './domain/report.js';
 export type { ReportePublico } from './domain/reporte-publico.js';
 
 // Casos de uso y manejadores de eventos (Fase 5).
+export { AgregarDescripcion } from './application/agregar-descripcion.js';
+export type {
+  DependenciasAgregarDescripcion,
+  EntradaAgregarDescripcion,
+} from './application/agregar-descripcion.js';
 export { AplicarDecisionDeVerificacion } from './application/aplicar-decision-de-verificacion.js';
 export { AplicarRechazoDeModeracion } from './application/aplicar-rechazo-de-moderacion.js';
 export { CaducarReportes, LOTE_DE_CADUCIDAD } from './application/caducar-reportes.js';

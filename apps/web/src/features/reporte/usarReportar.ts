@@ -44,7 +44,9 @@ export function useEnviarCola() {
     const ultimo = resultados.at(-1);
     if (ultimo) {
       const { tono, texto } = mensajeDeResultado(ultimo.resultado);
-      avisar(tono, texto);
+      // Solo un reporte propio recién creado admite descripción (HU-10).
+      const creado = ultimo.resultado.tipo === 'CREADO' ? ultimo.resultado.idReporte : undefined;
+      avisar(tono, texto, creado);
       if (ultimo.resultado.tipo === 'PENDIENTE') await programarSincronizacion();
     }
     if (resultados.some((r) => r.resultado.tipo !== 'PENDIENTE')) {

@@ -12,6 +12,8 @@ export interface Aviso {
   readonly id: number;
   readonly tono: TonoDeAviso;
   readonly texto: string;
+  /** Reporte recién creado al que el aviso ofrece añadir un detalle. */
+  readonly idParaDescribir?: string;
 }
 
 export type Capa = 'incidentes' | 'calor';
@@ -47,13 +49,15 @@ interface EstadoApp {
   readonly instalarAbierta: boolean;
   /** Reporte al que llevar el mapa (al tocar un aviso push): se abre su detalle al cargarlo. */
   readonly destino: { readonly idReporte: string; readonly punto: Punto } | null;
+  /** Reporte propio cuya hoja de descripción está abierta. */
+  readonly describiendo: string | null;
   fijarVentana(ventana: Caja): void;
   fijarPosicion(posicion: Punto): void;
   fijarConexion(conexion: EstadoDeConexion): void;
   abrirHoja(): void;
   cerrarHoja(): void;
   fijarPendientes(pendientes: number): void;
-  avisar(tono: TonoDeAviso, texto: string): void;
+  avisar(tono: TonoDeAviso, texto: string, idParaDescribir?: string): void;
   descartarAviso(): void;
   abrirDetalle(idReporte: string): void;
   cerrarDetalle(): void;
@@ -76,6 +80,8 @@ interface EstadoApp {
   cerrarInstalar(): void;
   irAReporte(idReporte: string, punto: Punto): void;
   limpiarDestino(): void;
+  abrirDescripcion(idReporte: string): void;
+  cerrarDescripcion(): void;
 }
 
 const CLAVE_FILTROS = 'alerta-lp:filtros';
@@ -120,6 +126,7 @@ export const useEstado = create<EstadoApp>((set) => ({
   enfoque: null,
   instalarAbierta: false,
   destino: null,
+  describiendo: null,
   fijarVentana: (ventana) => set({ ventana }),
   // Con una posición nueva, un aviso viejo de «no pudimos obtener tu ubicación» ya no es cierto.
   fijarPosicion: (posicion) =>
@@ -131,7 +138,15 @@ export const useEstado = create<EstadoApp>((set) => ({
   abrirHoja: () => set({ hojaAbierta: true }),
   cerrarHoja: () => set({ hojaAbierta: false }),
   fijarPendientes: (pendientes) => set({ pendientes }),
-  avisar: (tono, texto) => set({ aviso: { id: siguienteAviso++, tono, texto } }),
+  avisar: (tono, texto, idParaDescribir) =>
+    set({
+      aviso: {
+        id: siguienteAviso++,
+        tono,
+        texto,
+        ...(idParaDescribir === undefined ? {} : { idParaDescribir }),
+      },
+    }),
   descartarAviso: () => set({ aviso: null }),
   abrirDetalle: (detalle) => set({ detalle }),
   cerrarDetalle: () => set({ detalle: null }),
@@ -174,4 +189,6 @@ export const useEstado = create<EstadoApp>((set) => ({
   cerrarInstalar: () => set({ instalarAbierta: false }),
   irAReporte: (idReporte, punto) => set({ destino: { idReporte, punto }, capa: 'incidentes' }),
   limpiarDestino: () => set({ destino: null }),
+  abrirDescripcion: (describiendo) => set({ describiendo, aviso: null }),
+  cerrarDescripcion: () => set({ describiendo: null }),
 }));

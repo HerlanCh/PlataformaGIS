@@ -50,6 +50,8 @@ export const reportes = pgTable(
       srid: 4326,
     }).notNull(),
     idempotencyKey: text('clave_idempotencia').notNull().unique(),
+    /** Texto opcional del autor. Nunca se expone en respuestas ni eventos públicos. */
+    descripcion: text('descripcion'),
   },
   (tabla) => [
     check(
@@ -60,6 +62,10 @@ export const reportes = pgTable(
     check(
       'reportes_motivo_rechazo_check',
       sql`${tabla.motivoRechazo} is null or ${tabla.motivoRechazo} in ('MODERACION', 'AUTOR_SILENCIADO')`,
+    ),
+    check(
+      'reportes_descripcion_check',
+      sql`${tabla.descripcion} is null or char_length(${tabla.descripcion}) between 1 and 280`,
     ),
     // ST_DWithin sobre geography mide en metros; solo este índice funcional lo acelera.
     index('reportes_ubicacion_geography_idx').using('gist', sql`(${tabla.location}::geography)`),

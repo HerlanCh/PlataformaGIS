@@ -1,5 +1,6 @@
 import type { TonoDeAviso } from '../../estado.js';
 import type { Resultado } from '../../services/cola.js';
+import type { ResultadoDeDescripcion } from '../../services/descripcion.js';
 
 export interface Mensaje {
   readonly tono: TonoDeAviso;
@@ -42,6 +43,24 @@ function mensajeDeRechazo(codigo: string, reintentarEnS: number | null): Mensaje
     };
   }
   return { tono: 'problema', texto: 'No se pudo enviar el reporte. Intenta de nuevo.' };
+}
+
+/** Lo que se le dice a quien describió su reporte (HU-10). */
+export function mensajeDeDescripcion(resultado: ResultadoDeDescripcion): Mensaje {
+  if (resultado.tipo === 'GUARDADA') {
+    return { tono: 'exito', texto: 'Detalle guardado. Solo lo leerá el equipo de moderación.' };
+  }
+  if (resultado.tipo === 'SIN_RED') {
+    return { tono: 'problema', texto: 'Sin señal: no se pudo guardar el detalle.' };
+  }
+  const textos: Record<string, string> = {
+    DESCRIPCION_YA_AGREGADA: 'Ese reporte ya tiene un detalle.',
+    REPORTE_NO_VIGENTE: 'El reporte ya no está vigente.',
+  };
+  return {
+    tono: 'problema',
+    texto: textos[resultado.codigo] ?? 'No se pudo guardar el detalle. Intenta de nuevo.',
+  };
 }
 
 /** Por qué no se pudo leer la posición del GPS, al reportar o al votar. */

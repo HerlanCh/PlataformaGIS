@@ -44,6 +44,7 @@ const aAgregado = (fila: Fila): Reporte =>
     extensiones: fila.extensiones,
     motivoRechazo: fila.motivoRechazo as MotivoRechazo | null,
     idempotencyKey: fila.idempotencyKey,
+    descripcion: fila.descripcion,
   });
 
 export class RepositorioReportesPostgis implements RepositorioDeReportes {
@@ -63,6 +64,7 @@ export class RepositorioReportesPostgis implements RepositorioDeReportes {
       caducaEn: reporte.caducaEn,
       extensiones: reporte.extensiones,
       motivoRechazo: reporte.motivoRechazo,
+      descripcion: reporte.descripcion,
     };
     await this.db
       .insert(reportes)
@@ -78,7 +80,8 @@ export class RepositorioReportesPostgis implements RepositorioDeReportes {
         idempotencyKey: reporte.idempotencyKey,
         ...mutables,
       })
-      // Tras la creación solo cambia el ciclo de vida; las ubicaciones y el autor son fijos.
+      // Tras la creación solo cambian el ciclo de vida y la descripción; las ubicaciones y el
+      // autor son fijos.
       .onConflictDoUpdate({ target: reportes.id, set: mutables });
   }
 

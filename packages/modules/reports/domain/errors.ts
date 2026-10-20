@@ -23,3 +23,27 @@ export class ErrorAunNoCaduca extends ErrorDeDominio {
     super('AUN_NO_CADUCA', 'El reporte todavía no alcanzó su fecha de caducidad');
   }
 }
+
+export class ErrorNoEsElAutor extends ErrorDeDominio {
+  constructor() {
+    super('NO_ES_EL_AUTOR', 'Solo el autor puede describir su reporte');
+  }
+}
+
+export class ErrorReporteNoVigente extends ErrorDeDominio {
+  constructor(estado: string) {
+    super('REPORTE_NO_VIGENTE', `Un reporte ${estado} ya no se puede describir`);
+  }
+}
+
+export class ErrorDescripcionYaAgregada extends ErrorDeDominio {
+  constructor() {
+    super('DESCRIPCION_YA_AGREGADA', 'El reporte ya tiene descripción');
+  }
+}
+
+export class ErrorDescripcionInvalida extends ErrorDeDominio {
+  constructor(maximo: number) {
+    super('DESCRIPCION_INVALIDA', `La descripción debe tener entre 1 y ${maximo} caracteres`);
+  }
+}

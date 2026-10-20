@@ -1,5 +1,6 @@
 import {
   crearEvento,
+  descripcionAgregadaV1,
   reporteCaducadoV1,
   reporteConfirmadoV1,
   reporteCreadoV1,
@@ -54,6 +55,8 @@ function traducir(
       return crearEvento(reporteCaducadoV1, { idReporte }, sobre);
     case 'ReporteRechazado':
       return crearEvento(reporteRechazadoV1, { idReporte, motivo: evento.motivo }, sobre);
+    case 'DescripcionAgregada':
+      return crearEvento(descripcionAgregadaV1, { idReporte }, sobre);
   }
 }
 

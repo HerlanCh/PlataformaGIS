@@ -31,7 +31,7 @@ export async function registrarSeguridad(
   });
   await app.register(cors, {
     origin: opciones.origenCors,
-    methods: ['GET', 'POST', 'DELETE'],
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
     allowedHeaders: ['authorization', 'content-type', 'idempotency-key', 'x-request-id'],
     exposedHeaders: ['x-request-id', 'retry-after'],
     maxAge: 600,

@@ -10,6 +10,7 @@ import {
   RepositorioSuscripcionesPushPg,
 } from '@gis/module-notifications';
 import {
+  AgregarDescripcion,
   CrearReporte,
   ListarReportesEnVentana,
   RepositorioCategoriasPg,
@@ -39,6 +40,7 @@ type Caso<C extends { ejecutar: (...args: never[]) => unknown }> = Pick<C, 'ejec
 export interface CasosDeUso {
   readonly registrarDispositivo: Caso<RegistrarDispositivo>;
   readonly crearReporte: Caso<CrearReporte>;
+  readonly agregarDescripcion: Caso<AgregarDescripcion>;
   readonly listarReportes: Caso<ListarReportesEnVentana>;
   readonly confirmarReporte: Caso<ConfirmarReporte>;
   readonly negarReporte: Caso<NegarReporte>;
@@ -90,6 +92,7 @@ export function componerCasosDeUso(infraestructura: Infraestructura): CasosDeUso
     ids,
   };
   const suscripciones = new RepositorioSuscripcionesPg(db);
+  const unidadDeReporte = new UnidadDeTrabajoReportePg(db);
 
   return {
     registrarDispositivo: new RegistrarDispositivo({
@@ -100,9 +103,15 @@ export function componerCasosDeUso(infraestructura: Infraestructura): CasosDeUso
     crearReporte: new CrearReporte({
       reportes,
       categorias: new RepositorioCategoriasPg(db),
-      unidadDeTrabajo: new UnidadDeTrabajoReportePg(db),
+      unidadDeTrabajo: unidadDeReporte,
       reputacion: reputacionDelAutor(reputaciones),
       limitador,
+      reloj,
+      ids,
+    }),
+    agregarDescripcion: new AgregarDescripcion({
+      reportes,
+      unidadDeTrabajo: unidadDeReporte,
       reloj,
       ids,
     }),
