@@ -1,3 +1,10 @@
+## [2.7.3](https://github.com/HerlanCh/PlataformaGIS/compare/v2.7.2...v2.7.3) (2026-10-20)
+
+
+### Bug Fixes
+
+* **web:** guarda en caché las teselas para ver el mapa sin conexión ([aa6b1c6](https://github.com/HerlanCh/PlataformaGIS/commit/aa6b1c688ef4ae4803bb26093b6d334e7b224800))
+
 ## [2.7.2](https://github.com/HerlanCh/PlataformaGIS/compare/v2.7.1...v2.7.2) (2026-10-20)
 
 
