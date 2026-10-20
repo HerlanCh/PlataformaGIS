@@ -18,7 +18,7 @@ import { useSeguirPosicion } from './features/votos/usarSigueAhi.js';
 import { useZonas } from './features/zonas/usarZonas.js';
 import type { Zona } from './features/zonas/usarZonas.js';
 import { pendientes } from './services/cola.js';
-import { obtenerToken } from './services/sesion.js';
+import { obtenerToken, rolActual } from './services/sesion.js';
 import { Avisos } from './ui/Avisos.js';
 import { Encabezado } from './ui/Encabezado.js';
 
@@ -68,6 +68,7 @@ function usePuestaEnMarcha() {
     const ponerAlDia = async () => {
       useEstado.getState().fijarPendientes((await pendientes()).length);
       await obtenerToken(URL_API).catch(() => undefined);
+      useEstado.getState().fijarModerador((await rolActual()) === 'MODERADOR');
       if ((await pendientes()).length > 0) await enviarCola();
     };
     void ponerAlDia();

@@ -15,6 +15,7 @@ const TODOS_LOS_CASOS = {
     [
       'registrarDispositivo',
       'crearReporte',
+      'agregarDescripcion',
       'listarReportes',
       'confirmarReporte',
       'negarReporte',
@@ -22,9 +23,9 @@ const TODOS_LOS_CASOS = {
       'suscribirZona',
       'eliminarZona',
       'listarZonas',
-      'rechazarReporte',
     ].map((nombre) => [nombre, sinUso]),
   ),
+  moderacion: { rechazar: sinUso, mantener: sinUso, listarCola: sinUso },
   avisosPush: { registrar: sinUso, eliminar: sinUso, clavePublica: 'documento' },
 } as unknown as CasosDeUso;
 

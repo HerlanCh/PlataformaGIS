@@ -1,6 +1,6 @@
 import type { ReportePublico } from '@gis/api-client';
 import { dentroDe } from './geo.js';
-import type { Caja } from './geo.js';
+import type { Caja, Punto } from './geo.js';
 
 export type { ReportePublico };
 
@@ -83,4 +83,14 @@ export function vigenciaDe(iso: string, ahora: Date = new Date()): string {
     timeZone: 'America/La_Paz',
   });
   return `${dia} ${hora}`;
+}
+
+/** Enlace que abre la app en un reporte: el mapa va a su ubicación pública y abre su detalle. */
+export function enlaceAlReporte(idReporte: string, punto: Punto): string {
+  const parametros = new URLSearchParams({
+    reporte: idReporte,
+    lat: String(punto.latitud),
+    lon: String(punto.longitud),
+  });
+  return `/?${parametros.toString()}`;
 }

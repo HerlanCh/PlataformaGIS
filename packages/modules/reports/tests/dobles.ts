@@ -63,6 +63,10 @@ export class RepositorioReportesEnMemoria implements RepositorioDeReportes {
     return Promise.resolve(fila ? copiar(fila) : null);
   }
 
+  buscarPorIds(ids: readonly IdReporte[]): Promise<readonly Reporte[]> {
+    return Promise.resolve(this.todos().filter((r) => ids.includes(r.id)));
+  }
+
   guardar(reporte: Reporte): Promise<void> {
     this.filas.set(reporte.id, copiar(reporte));
     return Promise.resolve();

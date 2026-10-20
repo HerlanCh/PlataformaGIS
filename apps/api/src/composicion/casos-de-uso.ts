@@ -3,7 +3,13 @@
 import { randomUUID } from 'node:crypto';
 import { ObtenerMapaDeCalor, ConsultaMapaCalorPg } from '@gis/module-heatmap';
 import { RegistrarDispositivo, RepositorioUsuariosPg } from '@gis/module-identity';
-import { RechazarReporte, UnidadDeTrabajoModeracionPg } from '@gis/module-moderation';
+import {
+  ListarColaDeModeracion,
+  MantenerReporte,
+  RechazarReporte,
+  RepositorioColaPg,
+  UnidadDeTrabajoModeracionPg,
+} from '@gis/module-moderation';
 import {
   EliminarSuscripcionPush,
   RegistrarSuscripcionPush,
@@ -48,9 +54,16 @@ export interface CasosDeUso {
   readonly suscribirZona: Caso<SuscribirZona> | null;
   readonly eliminarZona: Caso<EliminarZona> | null;
   readonly listarZonas: Caso<ListarZonas> | null;
-  readonly rechazarReporte: Caso<RechazarReporte> | null;
+  /** Moderación (HU-12): `null` con `moderation` apagado. */
+  readonly moderacion: Moderacion | null;
   /** Avisos Web Push (HU-08): `null` con `notifications` apagado o sin claves VAPID. */
   readonly avisosPush: AvisosPush | null;
+}
+
+export interface Moderacion {
+  readonly rechazar: Caso<RechazarReporte>;
+  readonly mantener: Caso<MantenerReporte>;
+  readonly listarCola: Caso<ListarColaDeModeracion>;
 }
 
 export interface AvisosPush {
@@ -145,15 +158,21 @@ export function componerCasosDeUso(infraestructura: Infraestructura): CasosDeUso
         };
       },
     ),
-    rechazarReporte: siActivo(
-      interruptores.estaActivo('moderation'),
-      () =>
-        new RechazarReporte({
-          consultaDeReporte: consultaParaModeracion(reportes),
-          unidadDeTrabajo: new UnidadDeTrabajoModeracionPg(db),
-          reloj,
-          ids,
-        }),
-    ),
+    moderacion: siActivo(interruptores.estaActivo('moderation'), () => {
+      const decision = {
+        consultaDeReporte: consultaParaModeracion(reportes),
+        unidadDeTrabajo: new UnidadDeTrabajoModeracionPg(db),
+        reloj,
+        ids,
+      };
+      return {
+        rechazar: new RechazarReporte(decision),
+        mantener: new MantenerReporte(decision),
+        listarCola: new ListarColaDeModeracion(
+          new RepositorioColaPg(db),
+          decision.consultaDeReporte,
+        ),
+      };
+    }),
   };
 }

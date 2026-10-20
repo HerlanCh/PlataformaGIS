@@ -1,34 +1,21 @@
-import type { EventoDeIntegracion } from '@gis/contracts';
 import { idReporte, idUsuario } from '@gis/shared-kernel';
-import type { IdReporte } from '@gis/shared-kernel';
 import { GeneradorDeIdSecuencial, RelojFijo } from '@gis/testing';
 import { describe, expect, it } from 'vitest';
-import type { UnidadDeTrabajoDeModeracion } from '../application/ports.js';
 import { RechazarReporte } from '../application/rechazar-reporte.js';
 import { AccionDeModeracion } from '../domain/accion-de-moderacion.js';
 import type { IdAccionDeModeracion } from '../domain/accion-de-moderacion.js';
 import type { EstadoDeReporte } from '../domain/ports.js';
+import { ReportesFalsos, UnidadEnMemoria } from './dobles.js';
 
 const REPORTE = idReporte('6f1c2f0e-3b7a-4d2a-9c58-0a4f5b1d2e3f');
 const MODERADOR = idUsuario('11111111-1111-4111-8111-111111111111');
 
-class UnidadEnMemoria implements UnidadDeTrabajoDeModeracion {
-  readonly acciones: AccionDeModeracion[] = [];
-  readonly eventos: EventoDeIntegracion[] = [];
-
-  registrar(accion: AccionDeModeracion, eventos: readonly EventoDeIntegracion[]): Promise<void> {
-    this.acciones.push(accion);
-    this.eventos.push(...eventos);
-    return Promise.resolve();
-  }
-}
-
 function escenario(estado: EstadoDeReporte | null = 'ACTIVO') {
-  const estados = new Map<IdReporte, EstadoDeReporte>();
-  if (estado) estados.set(REPORTE, estado);
+  const consultaDeReporte = new ReportesFalsos();
+  if (estado) consultaDeReporte.poner(REPORTE, estado);
   const unidadDeTrabajo = new UnidadEnMemoria();
   const deps = {
-    consultaDeReporte: { estadoDe: (id: IdReporte) => Promise.resolve(estados.get(id) ?? null) },
+    consultaDeReporte,
     unidadDeTrabajo,
     reloj: new RelojFijo(),
     ids: new GeneradorDeIdSecuencial(),

@@ -53,6 +53,7 @@ describeIntegration('migraciones de toda la plataforma', () => {
         ...TABLAS_IMPRESCINDIBLES,
         'acciones_moderacion',
         'clasificaciones',
+        'cola_moderacion',
         'suscripciones_push',
         'zonas_suscritas',
       ].sort(),
@@ -82,6 +83,7 @@ describeIntegration('migraciones de toda la plataforma', () => {
         ...TABLAS_IMPRESCINDIBLES,
         'acciones_moderacion',
         'clasificaciones',
+        'cola_moderacion',
         'suscripciones_push',
       ].sort(),
     );

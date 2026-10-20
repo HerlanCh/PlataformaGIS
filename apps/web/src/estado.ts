@@ -51,6 +51,8 @@ interface EstadoApp {
   readonly destino: { readonly idReporte: string; readonly punto: Punto } | null;
   /** Reporte propio cuya hoja de descripción está abierta. */
   readonly describiendo: string | null;
+  /** La credencial del dispositivo tiene el rol MODERADOR (HU-12). */
+  readonly esModerador: boolean;
   fijarVentana(ventana: Caja): void;
   fijarPosicion(posicion: Punto): void;
   fijarConexion(conexion: EstadoDeConexion): void;
@@ -81,6 +83,7 @@ interface EstadoApp {
   irAReporte(idReporte: string, punto: Punto): void;
   limpiarDestino(): void;
   abrirDescripcion(idReporte: string): void;
+  fijarModerador(esModerador: boolean): void;
   cerrarDescripcion(): void;
 }
 
@@ -127,6 +130,7 @@ export const useEstado = create<EstadoApp>((set) => ({
   instalarAbierta: false,
   destino: null,
   describiendo: null,
+  esModerador: false,
   fijarVentana: (ventana) => set({ ventana }),
   // Con una posición nueva, un aviso viejo de «no pudimos obtener tu ubicación» ya no es cierto.
   fijarPosicion: (posicion) =>
@@ -191,4 +195,5 @@ export const useEstado = create<EstadoApp>((set) => ({
   limpiarDestino: () => set({ destino: null }),
   abrirDescripcion: (describiendo) => set({ describiendo, aviso: null }),
   cerrarDescripcion: () => set({ describiendo: null }),
+  fijarModerador: (esModerador) => set({ esModerador }),
 }));

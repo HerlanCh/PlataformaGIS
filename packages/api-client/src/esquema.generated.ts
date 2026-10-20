@@ -920,6 +920,320 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/moderacion/cola': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Cola de moderación (HU-10 y HU-12, rol MODERADOR)
+     * @description Incluye la descripción privada de cada reporte: solo para moderadores.
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ColaDeModeracion'];
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/moderacion/reportes/{id}/rechazar': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Rechaza un reporte (HU-12, rol MODERADOR)
+     * @description El cambio de estado se aplica de forma asíncrona, al procesar el evento.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['RechazoInput'];
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        202: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/moderacion/reportes/{id}/mantener': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Deja publicado un reporte de la cola (HU-12, rol MODERADOR)
+     * @description Queda en la auditoría y el reporte sale de la cola hasta que reciba otra negación.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['MantenerInput'];
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/mapa-calor': {
     parameters: {
       query?: never;
@@ -1313,112 +1627,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/moderacion/reportes/{id}/rechazar': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Rechaza un reporte (HU-12, rol MODERADOR)
-     * @description El cambio de estado se aplica de forma asíncrona, al procesar el evento.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          id: string;
-        };
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['RechazoInput'];
-        };
-      };
-      responses: {
-        /** @description Default Response */
-        202: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Default Response */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['Problema'];
-          };
-        };
-        /** @description Default Response */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['Problema'];
-          };
-        };
-        /** @description Default Response */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['Problema'];
-          };
-        };
-        /** @description Default Response */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['Problema'];
-          };
-        };
-        /** @description Default Response */
-        409: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['Problema'];
-          };
-        };
-        /** @description Default Response */
-        422: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['Problema'];
-          };
-        };
-        /** @description Default Response */
-        429: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['Problema'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1548,6 +1756,39 @@ export interface components {
     RechazoInput: {
       motivo: string;
     };
+    /** @description Nota opcional del moderador al dejar el reporte publicado */
+    MantenerInput: {
+      motivo?: string;
+    };
+    /** @description Reporte de la cola: su detalle, la descripción privada y por qué está en la cola */
+    CasoDeModeracionInput: {
+      /** Format: uuid */
+      idReporte: string;
+      codigoCategoria: string;
+      /** @enum {string} */
+      estado: 'ACTIVO' | 'CONFIRMADO' | 'RESUELTO' | 'CADUCADO' | 'RECHAZADO';
+      descripcion: string | null;
+      publicLocation: {
+        latitud: number;
+        longitud: number;
+      };
+      /** Format: date-time */
+      creadoEn: string;
+      negaciones: number;
+      marcado: boolean;
+      motivos: (
+        | 'ENLACE'
+        | 'SPAM'
+        | 'DATOS_PERSONALES'
+        | 'FRECUENCIA_DEL_AUTOR'
+        | 'TEXTO_REPETITIVO'
+        | 'LONGITUD_ANORMAL'
+      )[];
+    };
+    /** @description Hasta 50 casos: primero los marcados por el clasificador, después los más negados */
+    ColaDeModeracionInput: {
+      casos: components['schemas']['CasoDeModeracionInput'][];
+    };
     /** @description Error en formato RFC 7807 */
     Problema: {
       type: string;
@@ -1672,6 +1913,39 @@ export interface components {
     /** @description Motivo del rechazo */
     Rechazo: {
       motivo: string;
+    };
+    /** @description Nota opcional del moderador al dejar el reporte publicado */
+    Mantener: {
+      motivo?: string;
+    };
+    /** @description Reporte de la cola: su detalle, la descripción privada y por qué está en la cola */
+    CasoDeModeracion: {
+      /** Format: uuid */
+      idReporte: string;
+      codigoCategoria: string;
+      /** @enum {string} */
+      estado: 'ACTIVO' | 'CONFIRMADO' | 'RESUELTO' | 'CADUCADO' | 'RECHAZADO';
+      descripcion: string | null;
+      publicLocation: {
+        latitud: number;
+        longitud: number;
+      };
+      /** Format: date-time */
+      creadoEn: string;
+      negaciones: number;
+      marcado: boolean;
+      motivos: (
+        | 'ENLACE'
+        | 'SPAM'
+        | 'DATOS_PERSONALES'
+        | 'FRECUENCIA_DEL_AUTOR'
+        | 'TEXTO_REPETITIVO'
+        | 'LONGITUD_ANORMAL'
+      )[];
+    };
+    /** @description Hasta 50 casos: primero los marcados por el clasificador, después los más negados */
+    ColaDeModeracion: {
+      casos: components['schemas']['CasoDeModeracion'][];
     };
   };
   responses: never;

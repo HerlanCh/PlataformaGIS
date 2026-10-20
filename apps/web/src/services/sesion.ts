@@ -2,7 +2,7 @@
 // el token que la API entrega al registrarlo. Vive en IndexedDB para que el service worker pueda
 // usarlo al enviar reportes pendientes.
 import { abrirAlmacen } from './almacen.js';
-import type { Sesion } from './almacen.js';
+import type { Rol, Sesion } from './almacen.js';
 
 const CLAVE = 'actual';
 /** Se renueva el token un poco antes de que venza. */
@@ -64,6 +64,7 @@ async function registrar(urlApi: string, sesion: Sesion, pedir: typeof fetch): P
   if (!respuesta.ok) throw new ErrorDeRegistro(respuesta.status);
   const credencial = (await respuesta.json()) as {
     idUsuario: string;
+    rol?: Rol;
     token: string;
     expiraEn: string;
   };
@@ -72,9 +73,15 @@ async function registrar(urlApi: string, sesion: Sesion, pedir: typeof fetch): P
     idUsuario: credencial.idUsuario,
     token: credencial.token,
     expiraEn: credencial.expiraEn,
+    rol: credencial.rol ?? 'CIUDADANO',
   };
   await (await abrirAlmacen()).put('sesion', actualizada, CLAVE);
   return credencial.token;
+}
+
+/** Rol de la credencial guardada: el de moderador llega con el próximo token (HU-12). */
+export async function rolActual(): Promise<Rol> {
+  return (await leer()).rol ?? 'CIUDADANO';
 }
 
 /** Usuario del dispositivo, si ya se registró. */

@@ -27,6 +27,7 @@ Esquema físico de la Plataforma GIS sobre PostgreSQL 18 + PostGIS 3.6. Se deriv
 | `zonas_suscritas` | `subscriptions` (opcional) | Zonas de interés de los usuarios |
 | `suscripciones_push` | `notifications` (opcional) | Dispositivos que reciben avisos Web Push |
 | `acciones_moderacion` | `moderation` (opcional) | Auditoría de las decisiones de moderación |
+| `cola_moderacion` | `moderation` (opcional) | Cola de reportes negados o marcados (HU-12) |
 | `clasificaciones` | `classifier` (opcional) | Historial de clasificaciones de reportes (HU-10) |
 
 ## `platform` (compartido)
@@ -196,7 +197,7 @@ A dónde enviar los avisos Web Push de un usuario (HU-08): una fila por disposit
 
 ### `acciones_moderacion`
 
-Auditoría: quién decidió qué sobre qué reporte y por qué. Solo se inserta. En esta fase existe solo la tabla; su dominio y su repositorio llegan con la moderación (Fase 10).
+Auditoría: quién decidió qué sobre qué reporte y por qué. Solo se inserta.
 
 | Columna | Tipo | Restricción | Descripción |
 | :--- | :--- | :--- | :--- |
@@ -208,6 +209,21 @@ Auditoría: quién decidió qué sobre qué reporte y por qué. Solo se inserta.
 | `creado_en` | `timestamptz` | NOT NULL | Momento de la decisión |
 
 **Índices:** `acciones_moderacion_reporte_idx`, B-tree sobre `id_reporte` (historial de un reporte).
+
+### `cola_moderacion`
+
+Cola de moderación (HU-12 y HU-10): un caso por reporte negado o marcado por el clasificador. La alimentan los eventos `VotoEmitido`, `ReporteClasificado` y los desenlaces del reporte; toda decisión de un moderador la resuelve en la misma transacción que su auditoría.
+
+| Columna | Tipo | Restricción | Descripción |
+| :--- | :--- | :--- | :--- |
+| `id_reporte` | `uuid` | PK. Referencia lógica a `reportes.id` | Reporte en revisión |
+| `negaciones` | `integer` | NOT NULL, `CHECK` ≥ 0 | Votos «Ya no está» recibidos |
+| `marcado` | `boolean` | NOT NULL | El clasificador lo marcó como sospechoso |
+| `motivos` | `text[]` | NOT NULL | Indicios del clasificador, sin repetir |
+| `actualizado_en` | `timestamptz` | NOT NULL | Último evento que lo cambió |
+| `resuelto_en` | `timestamptz` | Nulo | Cuándo salió de la cola; nulo si está pendiente |
+
+**Índices:** `cola_moderacion_pendientes_idx`, B-tree parcial sobre (`marcado` desc, `negaciones` desc, `actualizado_en`) donde `resuelto_en IS NULL`: el orden de revisión.
 
 ## `classifier` (opcional)
 
@@ -243,6 +259,7 @@ Historial de clasificaciones (HU-10): una fila cada vez que se clasifica un repo
 | `subscriptions` | `0000_zonas_suscritas` | `zonas_suscritas` y sus índices |
 | `notifications` | `0000_suscripciones_push` | `suscripciones_push` y su índice |
 | `moderation` | `0000_acciones_moderacion` | `acciones_moderacion` y su índice |
+| `moderation` | `0001_cola_moderacion` | `cola_moderacion` y su índice |
 | `classifier` | `0000_clasificaciones` | `clasificaciones` y su índice |
 
 Cada migración tiene su reversa escrita a mano en `<nombre>.down.sql`, porque Drizzle Kit solo genera el avance. Las pruebas de integración aplican, revierten y vuelven a aplicar cada conjunto contra PostGIS real.

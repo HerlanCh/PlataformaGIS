@@ -1,4 +1,4 @@
-import { BellRing } from 'lucide-react';
+import { BellRing, ShieldCheck } from 'lucide-react';
 import { CATEGORIAS } from '../domain/categorias.js';
 import { useEstado } from '../estado.js';
 import type { EstadoDeConexion } from '../services/tiempo-real.js';
@@ -18,6 +18,7 @@ export function Encabezado() {
   const conexion = useEstado((s) => s.conexion);
   const ocultas = useEstado((s) => s.filtros.ocultas);
   const abrirZonas = useEstado((s) => s.abrirZonas);
+  const esModerador = useEstado((s) => s.esModerador);
   return (
     <header className="encabezado">
       <div className="encabezado__fila">
@@ -38,6 +39,15 @@ export function Encabezado() {
             <BellRing aria-hidden="true" size={20} strokeWidth={TRAZO} />
             <span className="solo-lector">Mis zonas</span>
           </button>
+          {esModerador && (
+            <a
+              className="boton-redondo boton-redondo--chico boton-redondo--plano"
+              href="/moderacion"
+            >
+              <ShieldCheck aria-hidden="true" size={20} strokeWidth={TRAZO} />
+              <span className="solo-lector">Moderación</span>
+            </a>
+          )}
         </div>
       </div>
       <ul className="red" aria-label="Líneas de la red: un color por tipo de incidente">

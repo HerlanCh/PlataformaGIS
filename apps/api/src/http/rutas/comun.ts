@@ -1,4 +1,5 @@
 import { http } from '@gis/contracts';
+import type { ElementoDeCola } from '@gis/module-moderation';
 import type { ReportePublico } from '@gis/module-reports';
 import type { ZonaSuscrita } from '@gis/module-subscriptions';
 import type { z } from 'zod';
@@ -35,4 +36,17 @@ export const aZonaHttp = (zona: ZonaSuscrita): z.output<typeof http.esquemaZona>
   radioM: zona.radioM,
   categorias: [...zona.categorias],
   creadoEn: zona.creadoEn.toISOString(),
+});
+
+export const aCasoHttp = (caso: ElementoDeCola): z.output<typeof http.esquemaCasoDeModeracion> => ({
+  idReporte: caso.idReporte,
+  codigoCategoria: caso.codigoCategoria,
+  estado: caso.estado,
+  descripcion: caso.descripcion,
+  publicLocation: { latitud: caso.publicLocation.latitud, longitud: caso.publicLocation.longitud },
+  creadoEn: caso.creadoEn.toISOString(),
+  negaciones: caso.negaciones,
+  marcado: caso.marcado,
+  // La cola guarda los motivos como texto; aquí se validan contra el catálogo del contrato.
+  motivos: http.esquemaCasoDeModeracion.shape.motivos.parse(caso.motivos),
 });

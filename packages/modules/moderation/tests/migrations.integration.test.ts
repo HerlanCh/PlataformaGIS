@@ -56,7 +56,15 @@ describeIntegration('tabla acciones_moderacion', () => {
     await expect(db.execute(sentencia)).rejects.toThrow();
   });
 
+  it('HU-12: la base de datos rechaza un caso con negaciones negativas', async () => {
+    await expect(
+      db.execute(sql`insert into cola_moderacion (id_reporte, negaciones, marcado, motivos, actualizado_en)
+                     values (gen_random_uuid(), -1, false, '{}', now())`),
+    ).rejects.toThrow();
+  });
+
   it('las migraciones se revierten y se vuelven a aplicar', async () => {
+    expect(await revertirUltima(db, migraciones)).toBe('0001_cola_moderacion');
     expect(await revertirUltima(db, migraciones)).toBe('0000_acciones_moderacion');
     expect(await existeLaTabla()).toBe(false);
 

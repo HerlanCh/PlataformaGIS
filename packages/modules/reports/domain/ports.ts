@@ -12,6 +12,8 @@ import type { ReportePublico } from './reporte-publico.js';
 export interface RepositorioDeReportes {
   buscarPorId(id: IdReporte): Promise<Reporte | null>;
   buscarPorClaveDeIdempotencia(idempotencyKey: string): Promise<Reporte | null>;
+  /** Los reportes que existen entre los indicados, en cualquier orden. */
+  buscarPorIds(ids: readonly IdReporte[]): Promise<readonly Reporte[]>;
   guardar(report: Reporte): Promise<void>;
 
   /**

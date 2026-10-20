@@ -28,6 +28,10 @@ export interface EntradaRechazo {
   readonly ahora: Date;
 }
 
+export interface EntradaMantener extends Omit<EntradaRechazo, 'motivo'> {
+  readonly motivo?: string | null;
+}
+
 /** Registro de auditoría de una decisión de moderación (HU-12). Inmutable: solo se inserta. */
 export class AccionDeModeracion {
   readonly id: IdAccionDeModeracion;
@@ -57,6 +61,19 @@ export class AccionDeModeracion {
       idModerador: entrada.idModerador,
       accion: 'RECHAZAR',
       motivo,
+      creadoEn: entrada.ahora,
+    });
+  }
+
+  /** El moderador revisó el reporte y lo deja publicado. El motivo es opcional. */
+  static mantener(entrada: EntradaMantener): AccionDeModeracion {
+    const motivo = entrada.motivo?.trim() ?? '';
+    return new AccionDeModeracion({
+      id: entrada.id,
+      idReporte: entrada.idReporte,
+      idModerador: entrada.idModerador,
+      accion: 'MANTENER',
+      motivo: motivo === '' ? null : motivo,
       creadoEn: entrada.ahora,
     });
   }

@@ -1,9 +1,9 @@
 import { http } from '@gis/contracts';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import type { AvisosPush, CasosDeUso } from '../../composicion/casos-de-uso.js';
+import type { AvisosPush, CasosDeUso, Moderacion } from '../../composicion/casos-de-uso.js';
 import { exigirToken, identidadDe, SEGURIDAD_BEARER } from '../autenticacion.js';
 import type { ServicioDeTokens } from '../tokens.js';
-import { aReporteHttp, aZonaHttp, ERRORES } from './comun.js';
+import { aCasoHttp, aReporteHttp, aZonaHttp, ERRORES } from './comun.js';
 
 export interface DependenciasRutas {
   readonly casos: CasosDeUso;
@@ -136,8 +136,9 @@ export const rutasV1 =
       );
     }
 
-    const { obtenerMapaDeCalor, suscribirZona, eliminarZona, listarZonas, rechazarReporte } = casos;
+    const { obtenerMapaDeCalor, suscribirZona, eliminarZona, listarZonas } = casos;
     if (casos.avisosPush) registrarRutasDeAvisos(app, casos.avisosPush, conToken);
+    if (casos.moderacion) registrarRutasDeModeracion(app, casos.moderacion, conToken);
 
     if (obtenerMapaDeCalor) {
       app.get(
@@ -224,34 +225,6 @@ export const rutasV1 =
         },
       );
     }
-
-    if (rechazarReporte) {
-      app.post(
-        '/moderacion/reportes/:id/rechazar',
-        {
-          ...conToken,
-          schema: {
-            tags: ['moderación'],
-            summary: 'Rechaza un reporte (HU-12, rol MODERADOR)',
-            description: 'El cambio de estado se aplica de forma asíncrona, al procesar el evento.',
-            security: SEGURIDAD_BEARER,
-            params: http.esquemaParametroId,
-            body: http.esquemaRechazo,
-            response: { 202: http.esquemaSinContenido, ...ERRORES },
-          },
-        },
-        async (request, reply) => {
-          const { idUsuario, rol } = identidadDe(request);
-          await rechazarReporte.ejecutar({
-            idReporte: request.params.id,
-            idModerador: idUsuario,
-            rolActor: rol,
-            motivo: request.body.motivo,
-          });
-          return reply.code(202).send();
-        },
-      );
-    }
   };
 
 /** Avisos Web Push (HU-08): la clave pública y alta o baja de la suscripción del dispositivo. */
@@ -311,6 +284,84 @@ function registrarRutasDeAvisos(
       await avisos.eliminar.ejecutar({
         idUsuario: identidadDe(request).idUsuario,
         endpoint: request.body.endpoint,
+      });
+      return reply.code(204).send();
+    },
+  );
+}
+
+/** Moderación (HU-12): la cola y las decisiones. Exigen token; el caso de uso exige el rol. */
+function registrarRutasDeModeracion(
+  app: Parameters<FastifyPluginAsyncZod>[0],
+  moderacion: Moderacion,
+  conToken: { preHandler: ReturnType<typeof exigirToken> },
+): void {
+  app.get(
+    '/moderacion/cola',
+    {
+      ...conToken,
+      schema: {
+        tags: ['moderación'],
+        summary: 'Cola de moderación (HU-10 y HU-12, rol MODERADOR)',
+        description: 'Incluye la descripción privada de cada reporte: solo para moderadores.',
+        security: SEGURIDAD_BEARER,
+        response: { 200: http.esquemaColaDeModeracion, ...ERRORES },
+      },
+    },
+    async (request) => {
+      const casos = await moderacion.listarCola.ejecutar({ rolActor: identidadDe(request).rol });
+      return { casos: casos.map(aCasoHttp) };
+    },
+  );
+
+  app.post(
+    '/moderacion/reportes/:id/rechazar',
+    {
+      ...conToken,
+      schema: {
+        tags: ['moderación'],
+        summary: 'Rechaza un reporte (HU-12, rol MODERADOR)',
+        description: 'El cambio de estado se aplica de forma asíncrona, al procesar el evento.',
+        security: SEGURIDAD_BEARER,
+        params: http.esquemaParametroId,
+        body: http.esquemaRechazo,
+        response: { 202: http.esquemaSinContenido, ...ERRORES },
+      },
+    },
+    async (request, reply) => {
+      const { idUsuario, rol } = identidadDe(request);
+      await moderacion.rechazar.ejecutar({
+        idReporte: request.params.id,
+        idModerador: idUsuario,
+        rolActor: rol,
+        motivo: request.body.motivo,
+      });
+      return reply.code(202).send();
+    },
+  );
+
+  app.post(
+    '/moderacion/reportes/:id/mantener',
+    {
+      ...conToken,
+      schema: {
+        tags: ['moderación'],
+        summary: 'Deja publicado un reporte de la cola (HU-12, rol MODERADOR)',
+        description:
+          'Queda en la auditoría y el reporte sale de la cola hasta que reciba otra negación.',
+        security: SEGURIDAD_BEARER,
+        params: http.esquemaParametroId,
+        body: http.esquemaMantener,
+        response: { 204: http.esquemaSinContenido, ...ERRORES },
+      },
+    },
+    async (request, reply) => {
+      const { idUsuario, rol } = identidadDe(request);
+      await moderacion.mantener.ejecutar({
+        idReporte: request.params.id,
+        idModerador: idUsuario,
+        rolActor: rol,
+        motivo: request.body.motivo ?? null,
       });
       return reply.code(204).send();
     },
