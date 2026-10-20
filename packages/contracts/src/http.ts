@@ -270,5 +270,37 @@ export const esquemaColaDeModeracion = conId(
   'Hasta 50 casos: primero los marcados por el clasificador, después los más negados',
 );
 
+// --- Datos abiertos ---
+
+export const esquemaLicencia = conId(
+  z.object({ nombre: z.string(), url: z.url(), atribucion: z.string() }),
+  'Licencia',
+  'Licencia abierta de los datos (HU-11)',
+);
+
+export const esquemaResumenDatosAbiertos = conId(
+  z.object({
+    total: z.number().int(),
+    confirmados: z.number().int(),
+    porCategoria: z.array(
+      z.object({ codigoCategoria: esquemaCodigoCategoria, cantidad: z.number().int() }),
+    ),
+    porHoraDelDia: z
+      .array(z.number().int())
+      .length(24)
+      .meta({ description: 'Reportes por hora de creación, de 0 a 23 h en la hora de La Paz' }),
+    desde: esquemaFecha.nullable(),
+    hasta: esquemaFecha.nullable(),
+    licencia: esquemaLicencia,
+  }),
+  'ResumenDatosAbiertos',
+  'Agregados de los reportes terminados, para los tableros públicos (HU-11)',
+);
+
+/** CSV de los datos abiertos: una fila por reporte terminado, sin usuarios ni puntos exactos. */
+export const esquemaCsvDatosAbiertos = z.string().meta({
+  description: 'categoria,celda_latitud,celda_longitud,hora_utc,estado_final,fue_confirmado',
+});
+
 /** Respuesta sin cuerpo (204 y 202). */
 export const esquemaSinContenido = z.undefined();

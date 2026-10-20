@@ -221,6 +221,23 @@ describeIntegration('persistencia de reports', () => {
     expect((await reportes.buscarPorId(reporte.id))?.descripcion).toBe('Semáforo apagado 🚦');
   });
 
+  it('HU-11: lista por lotes los IDs de los reportes terminados', async () => {
+    const terminados = [nuevoReporte(), nuevoReporte(), nuevoReporte()];
+    terminados[0]!.marcarResuelto(creado);
+    terminados[1]!.rechazar('MODERACION', creado);
+    terminados[2]!.caducar(minutosDespues(10_000));
+    for (const reporte of terminados) await reportes.guardar(reporte);
+    const esperados = terminados.map((r) => r.id).sort();
+
+    const todos = await reportes.buscarIdsFinalizados(null, 1000);
+    const [primero] = await reportes.buscarIdsFinalizados(null, 1);
+    const siguientes = await reportes.buscarIdsFinalizados(primero!, 1000);
+
+    expect(todos.filter((id) => esperados.includes(id))).toEqual(esperados);
+    expect(siguientes).toEqual(todos.slice(1));
+    await expect(reportes.buscarIdsFinalizados(null, 0)).rejects.toThrow(RangeError);
+  });
+
   it('HU-12: busca varios reportes por su ID y omite los que no existen', async () => {
     const [a, b] = [nuevoReporte(), nuevoReporte()];
     await reportes.guardar(a);

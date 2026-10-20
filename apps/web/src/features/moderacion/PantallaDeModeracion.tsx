@@ -1,12 +1,12 @@
-import { ArrowLeft, Copy, Flag, MapPin, ThumbsDown } from 'lucide-react';
+import { Copy, Flag, MapPin, ThumbsDown } from 'lucide-react';
 import { useId, useState } from 'react';
 import type { FormEvent } from 'react';
 import { categoriaDe } from '../../domain/categorias.js';
 import { enlaceAlReporte, horaDe } from '../../domain/reportes.js';
 import type { CasoDeModeracion, Decision } from '../../services/moderacion.js';
-import { Avisos } from '../../ui/Avisos.js';
 import { Estacion } from '../../ui/Estacion.js';
 import { TRAZO } from '../../ui/iconos.js';
+import { Pagina } from '../../ui/Pagina.js';
 import { MOTIVOS_DE_RECHAZO, textoDeMotivo } from './textos.js';
 import { useAcceso, useCola, useDecidir } from './usarModeracion.js';
 
@@ -220,18 +220,8 @@ function Contenido() {
 /** `/moderacion` (HU-12): la cola de reportes negados o marcados, para el rol MODERADOR. */
 export function PantallaDeModeracion() {
   return (
-    <div className="pagina">
-      <header className="pagina__cabecera">
-        <a className="boton-texto boton-texto--chico" href="/">
-          <ArrowLeft aria-hidden="true" size={18} strokeWidth={TRAZO} />
-          Volver al mapa
-        </a>
-        <h1 className="pagina__titulo">Moderación</h1>
-      </header>
-      <main className="pagina__cuerpo">
-        <Contenido />
-      </main>
-      <Avisos />
-    </div>
+    <Pagina titulo="Moderación">
+      <Contenido />
+    </Pagina>
   );
 }

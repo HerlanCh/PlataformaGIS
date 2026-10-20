@@ -27,6 +27,7 @@
     "db:generate": "pnpm -r --if-present run db:generate",
     "seed:load": "pnpm --filter @gis/api run seed:load",
     "moderador:ascender": "pnpm --filter @gis/api run moderador:ascender",
+    "datos-abiertos:cargar": "pnpm --filter @gis/api run datos-abiertos:cargar",
     "perf:espacial": "pnpm --filter @gis/api run perf:espacial",
     "gen:api": "pnpm --filter @gis/api run gen:api && pnpm --filter @gis/api-client run gen",
     "carga:difusion": "pnpm --filter @gis/api run carga:difusion"

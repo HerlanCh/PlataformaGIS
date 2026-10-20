@@ -1,5 +1,6 @@
 import { http } from '@gis/contracts';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
+import { LICENCIA } from '@gis/module-open-data';
 import type { AvisosPush, CasosDeUso, Moderacion } from '../../composicion/casos-de-uso.js';
 import { exigirToken, identidadDe, SEGURIDAD_BEARER } from '../autenticacion.js';
 import type { ServicioDeTokens } from '../tokens.js';
@@ -139,6 +140,7 @@ export const rutasV1 =
     const { obtenerMapaDeCalor, suscribirZona, eliminarZona, listarZonas } = casos;
     if (casos.avisosPush) registrarRutasDeAvisos(app, casos.avisosPush, conToken);
     if (casos.moderacion) registrarRutasDeModeracion(app, casos.moderacion, conToken);
+    if (casos.datosAbiertos) registrarRutasDeDatosAbiertos(app, casos.datosAbiertos);
 
     if (obtenerMapaDeCalor) {
       app.get(
@@ -364,6 +366,62 @@ function registrarRutasDeModeracion(
         motivo: request.body.motivo ?? null,
       });
       return reply.code(204).send();
+    },
+  );
+}
+
+/** Datos abiertos (HU-11): públicos, sin cuenta. Declaran su licencia abierta. */
+function registrarRutasDeDatosAbiertos(
+  app: Parameters<FastifyPluginAsyncZod>[0],
+  datos: NonNullable<CasosDeUso['datosAbiertos']>,
+): void {
+  app.get(
+    '/datos-abiertos.csv',
+    {
+      schema: {
+        tags: ['datos abiertos'],
+        summary: 'Descarga los datos abiertos en CSV (HU-11)',
+        description:
+          `Una fila por reporte terminado: categoría, celda de 500 m, hora truncada, estado ` +
+          `final y si se confirmó. Sin usuarios ni puntos exactos. Licencia ${LICENCIA.nombre}.`,
+        response: {
+          200: {
+            description: 'CSV con encabezado',
+            content: { 'text/csv': { schema: http.esquemaCsvDatosAbiertos } },
+          },
+          ...ERRORES,
+        },
+      },
+    },
+    async (_request, reply) => {
+      const csv = await datos.exportarCsv();
+      return reply
+        .type('text/csv; charset=utf-8')
+        .header('content-disposition', 'attachment; filename="datos-abiertos-alerta-lp.csv"')
+        .header('link', `<${LICENCIA.url}>; rel="license"`)
+        .send(csv);
+    },
+  );
+
+  app.get(
+    '/datos-abiertos/resumen',
+    {
+      schema: {
+        tags: ['datos abiertos'],
+        summary: 'Resumen de los datos abiertos para los tableros públicos (HU-11)',
+        response: { 200: http.esquemaResumenDatosAbiertos, ...ERRORES },
+      },
+    },
+    async () => {
+      const resumen = await datos.resumir();
+      return {
+        ...resumen,
+        porCategoria: [...resumen.porCategoria],
+        porHoraDelDia: [...resumen.porHoraDelDia],
+        desde: resumen.desde?.toISOString() ?? null,
+        hasta: resumen.hasta?.toISOString() ?? null,
+        licencia: LICENCIA,
+      };
     },
   );
 }

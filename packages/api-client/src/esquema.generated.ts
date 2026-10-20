@@ -1234,6 +1234,207 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/datos-abiertos.csv': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Descarga los datos abiertos en CSV (HU-11)
+     * @description Una fila por reporte terminado: categoría, celda de 500 m, hora truncada, estado final y si se confirmó. Sin usuarios ni puntos exactos. Licencia CC BY 4.0.
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description CSV con encabezado */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'text/csv': string;
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/datos-abiertos/resumen': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Resumen de los datos abiertos para los tableros públicos (HU-11) */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ResumenDatosAbiertos'];
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/mapa-calor': {
     parameters: {
       query?: never;
@@ -1789,6 +1990,27 @@ export interface components {
     ColaDeModeracionInput: {
       casos: components['schemas']['CasoDeModeracionInput'][];
     };
+    /** @description Licencia abierta de los datos (HU-11) */
+    LicenciaInput: {
+      nombre: string;
+      /** Format: uri */
+      url: string;
+      atribucion: string;
+    };
+    /** @description Agregados de los reportes terminados, para los tableros públicos (HU-11) */
+    ResumenDatosAbiertosInput: {
+      total: number;
+      confirmados: number;
+      porCategoria: {
+        codigoCategoria: string;
+        cantidad: number;
+      }[];
+      /** @description Reportes por hora de creación, de 0 a 23 h en la hora de La Paz */
+      porHoraDelDia: number[];
+      desde: string | null;
+      hasta: string | null;
+      licencia: components['schemas']['LicenciaInput'];
+    };
     /** @description Error en formato RFC 7807 */
     Problema: {
       type: string;
@@ -1946,6 +2168,27 @@ export interface components {
     /** @description Hasta 50 casos: primero los marcados por el clasificador, después los más negados */
     ColaDeModeracion: {
       casos: components['schemas']['CasoDeModeracion'][];
+    };
+    /** @description Licencia abierta de los datos (HU-11) */
+    Licencia: {
+      nombre: string;
+      /** Format: uri */
+      url: string;
+      atribucion: string;
+    };
+    /** @description Agregados de los reportes terminados, para los tableros públicos (HU-11) */
+    ResumenDatosAbiertos: {
+      total: number;
+      confirmados: number;
+      porCategoria: {
+        codigoCategoria: string;
+        cantidad: number;
+      }[];
+      /** @description Reportes por hora de creación, de 0 a 23 h en la hora de La Paz */
+      porHoraDelDia: number[];
+      desde: string | null;
+      hasta: string | null;
+      licencia: components['schemas']['Licencia'];
     };
   };
   responses: never;

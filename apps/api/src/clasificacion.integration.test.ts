@@ -17,6 +17,11 @@ import {
   UnidadDeTrabajoModeracionPg,
 } from '@gis/module-moderation';
 import {
+  openDataModulo,
+  RegistrarDatoAbierto,
+  RepositorioDatosAbiertosPg,
+} from '@gis/module-open-data';
+import {
   AgregarDescripcion,
   AplicarRechazoDeModeracion,
   CrearReporte,
@@ -39,7 +44,11 @@ import {
 import type { TestDatabase } from '@gis/testing';
 import { asc, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, expect, it } from 'vitest';
-import { consultaParaClasificar, consultaParaModeracion } from './composicion/puentes.js';
+import {
+  consultaDeReportesFinalizados,
+  consultaParaClasificar,
+  consultaParaModeracion,
+} from './composicion/puentes.js';
 
 const usuario = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 const centro = PuntoGeo.crear(-16.5, -68.13);
@@ -118,6 +127,7 @@ describeIntegration('clasificación y moderación encadenadas por eventos', () =
       reportsModulo.migraciones!,
       classifierModulo.migraciones!,
       moderationModulo.migraciones!,
+      openDataModulo.migraciones!,
     ]);
     reportes = new RepositorioReportesPostgis(db);
     const unidadDeTrabajo = new UnidadDeTrabajoReportePg(db);
@@ -152,6 +162,11 @@ describeIntegration('clasificación y moderación encadenadas por eventos', () =
     escuchar(ClasificarReporte.eventos, (e) => clasificar.manejar(e));
     escuchar(ActualizarColaDeModeracion.eventos, (e) => actualizarCola.manejar(e));
     escuchar(['RechazoDeModeracion.v1'], (e) => aplicarRechazo.manejar(e));
+    const datosAbiertos = new RegistrarDatoAbierto(
+      consultaDeReportesFinalizados(reportes),
+      new RepositorioDatosAbiertosPg(db),
+    );
+    escuchar(RegistrarDatoAbierto.eventos, (e) => datosAbiertos.manejar(e));
     const consultaDeReporte = consultaParaModeracion(reportes);
     rechazar = new RechazarReporte({
       consultaDeReporte,
@@ -250,6 +265,11 @@ describeIntegration('clasificación y moderación encadenadas por eventos', () =
       sql`select accion, motivo from acciones_moderacion where id_reporte = ${reporte.id}`,
     );
     expect(rows).toEqual([{ accion: 'RECHAZAR', motivo: 'Publicidad engañosa' }]);
+    // HU-11: el reporte terminado pasa anonimizado a los datos abiertos.
+    const { rows: abiertos } = await db.execute(
+      sql`select codigo_categoria, estado_final from datos_abiertos_reportes`,
+    );
+    expect(abiertos).toEqual([{ codigo_categoria: 'infraestructura', estado_final: 'RECHAZADO' }]);
     expect(
       (await listarCola.ejecutar({ rolActor: 'MODERADOR' })).map((c) => c.idReporte),
     ).not.toContain(reporte.id);

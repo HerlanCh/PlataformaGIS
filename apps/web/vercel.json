@@ -4,6 +4,10 @@
     {
       "source": "/moderacion",
       "destination": "/index.html"
+    },
+    {
+      "source": "/datos-abiertos",
+      "destination": "/index.html"
     }
   ],
   "headers": [

@@ -10,6 +10,7 @@ import {
   RepositorioColaPg,
   UnidadDeTrabajoModeracionPg,
 } from '@gis/module-moderation';
+import { ConsultarDatosAbiertos, RepositorioDatosAbiertosPg } from '@gis/module-open-data';
 import {
   EliminarSuscripcionPush,
   RegistrarSuscripcionPush,
@@ -54,6 +55,8 @@ export interface CasosDeUso {
   readonly suscribirZona: Caso<SuscribirZona> | null;
   readonly eliminarZona: Caso<EliminarZona> | null;
   readonly listarZonas: Caso<ListarZonas> | null;
+  /** Datos abiertos (HU-11): `null` con `open-data` apagado. */
+  readonly datosAbiertos: Pick<ConsultarDatosAbiertos, 'exportarCsv' | 'resumir'> | null;
   /** Moderación (HU-12): `null` con `moderation` apagado. */
   readonly moderacion: Moderacion | null;
   /** Avisos Web Push (HU-08): `null` con `notifications` apagado o sin claves VAPID. */
@@ -157,6 +160,10 @@ export function componerCasosDeUso(infraestructura: Infraestructura): CasosDeUso
           clavePublica: infraestructura.clavePublicaPush!,
         };
       },
+    ),
+    datosAbiertos: siActivo(
+      interruptores.estaActivo('open-data'),
+      () => new ConsultarDatosAbiertos(new RepositorioDatosAbiertosPg(db)),
     ),
     moderacion: siActivo(interruptores.estaActivo('moderation'), () => {
       const decision = {

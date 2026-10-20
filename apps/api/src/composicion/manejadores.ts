@@ -14,6 +14,7 @@ import {
   UnidadDeTrabajoReportePg,
 } from '@gis/module-reports';
 import { ActualizarColaDeModeracion, RepositorioColaPg } from '@gis/module-moderation';
+import { RegistrarDatoAbierto, RepositorioDatosAbiertosPg } from '@gis/module-open-data';
 import {
   EmisorWebPush,
   EnviarAvisoPush,
@@ -34,7 +35,12 @@ import type { GeneradorDeId, Reloj } from '@gis/shared-kernel';
 import { suscribirPublicador } from '../tiempo-real/publicador.js';
 import type { ConfigVapid } from '../http/config-http.js';
 import type { TiempoReal } from '../tiempo-real/servidor.js';
-import { consultaDeAutor, consultaParaClasificar, consultaParaVerificacion } from './puentes.js';
+import {
+  consultaDeAutor,
+  consultaDeReportesFinalizados,
+  consultaParaClasificar,
+  consultaParaVerificacion,
+} from './puentes.js';
 
 /**
  * Avisos a suscriptores en el log: solo identificadores y la ubicación pública. Es el canal cuando
@@ -161,6 +167,17 @@ export function suscribirManejadores(deps: DependenciasManejadores): void {
     const cola = new ActualizarColaDeModeracion(new RepositorioColaPg(db));
     for (const clave of ActualizarColaDeModeracion.eventos) {
       bus.suscribir(clave, 'moderation.actualizar-cola', (e) => cola.manejar(e));
+    }
+  }
+
+  // HU-11: cada reporte que termina pasa anonimizado a los datos abiertos.
+  if (interruptores.estaActivo('open-data')) {
+    const registrar = new RegistrarDatoAbierto(
+      consultaDeReportesFinalizados(reportes),
+      new RepositorioDatosAbiertosPg(db),
+    );
+    for (const clave of RegistrarDatoAbierto.eventos) {
+      bus.suscribir(clave, 'open-data.registrar', (e) => registrar.manejar(e));
     }
   }
 

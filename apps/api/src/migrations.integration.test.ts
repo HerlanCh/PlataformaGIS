@@ -54,6 +54,7 @@ describeIntegration('migraciones de toda la plataforma', () => {
         'acciones_moderacion',
         'clasificaciones',
         'cola_moderacion',
+        'datos_abiertos_reportes',
         'suscripciones_push',
         'zonas_suscritas',
       ].sort(),
@@ -84,6 +85,7 @@ describeIntegration('migraciones de toda la plataforma', () => {
         'acciones_moderacion',
         'clasificaciones',
         'cola_moderacion',
+        'datos_abiertos_reportes',
         'suscripciones_push',
       ].sort(),
     );

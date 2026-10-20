@@ -26,6 +26,7 @@ const TODOS_LOS_CASOS = {
     ].map((nombre) => [nombre, sinUso]),
   ),
   moderacion: { rechazar: sinUso, mantener: sinUso, listarCola: sinUso },
+  datosAbiertos: { exportarCsv: sinUso.ejecutar, resumir: sinUso.ejecutar },
   avisosPush: { registrar: sinUso, eliminar: sinUso, clavePublica: 'documento' },
 } as unknown as CasosDeUso;
 

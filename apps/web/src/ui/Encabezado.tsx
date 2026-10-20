@@ -1,4 +1,4 @@
-import { BellRing, ShieldCheck } from 'lucide-react';
+import { BarChart3, BellRing, ShieldCheck } from 'lucide-react';
 import { CATEGORIAS } from '../domain/categorias.js';
 import { useEstado } from '../estado.js';
 import type { EstadoDeConexion } from '../services/tiempo-real.js';
@@ -39,6 +39,13 @@ export function Encabezado() {
             <BellRing aria-hidden="true" size={20} strokeWidth={TRAZO} />
             <span className="solo-lector">Mis zonas</span>
           </button>
+          <a
+            className="boton-redondo boton-redondo--chico boton-redondo--plano"
+            href="/datos-abiertos"
+          >
+            <BarChart3 aria-hidden="true" size={20} strokeWidth={TRAZO} />
+            <span className="solo-lector">Datos abiertos</span>
+          </a>
           {esModerador && (
             <a
               className="boton-redondo boton-redondo--chico boton-redondo--plano"
