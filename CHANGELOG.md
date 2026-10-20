@@ -1,3 +1,10 @@
+# [2.10.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.9.0...v2.10.0) (2026-10-20)
+
+
+### Features
+
+* **moderation:** cola de moderación y pantalla /moderacion (HU-12) ([df3b451](https://github.com/HerlanCh/PlataformaGIS/commit/df3b451b5f953cf16c1e2a164dabdc558c91fdd0))
+
 # [2.9.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.8.0...v2.9.0) (2026-10-20)
 
 
