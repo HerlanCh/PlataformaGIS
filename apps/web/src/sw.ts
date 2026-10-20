@@ -1,11 +1,11 @@
 /// <reference lib="webworker" />
 // Service worker de la PWA (vite-plugin-pwa, modo injectManifest).
-import { ExpirationPlugin } from 'workbox-expiration';
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
 import { avisoDeReporte } from './services/aviso.js';
 import { enviarPendientes, ETIQUETA_DE_SINCRONIZACION } from './services/cola.js';
+import { CACHE_DE_TESELAS, esTesela, pluginsDeTeselas } from './services/teselas.js';
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -13,15 +13,10 @@ declare const self: ServiceWorkerGlobalScope;
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 
-// Teselas de OpenStreetMap: solo las que la persona ya vio, con un límite, sin descargas masivas
-// (política de uso de las teselas de OSM).
+// Teselas de OpenStreetMap: las que la persona ya vio quedan disponibles sin conexión.
 registerRoute(
-  ({ url }) => url.hostname === 'tile.openstreetmap.org',
-  new CacheFirst({
-    cacheName: 'teselas-osm',
-    // Los tipos de Workbox no contemplan exactOptionalPropertyTypes; el plugin es el oficial.
-    plugins: [new ExpirationPlugin({ maxEntries: 400, maxAgeSeconds: 7 * 24 * 60 * 60 }) as never],
-  }),
+  esTesela,
+  new CacheFirst({ cacheName: CACHE_DE_TESELAS, plugins: pluginsDeTeselas() }),
 );
 
 const URL_API: string = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
