@@ -1,3 +1,10 @@
+# [2.11.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.10.0...v2.11.0) (2026-10-20)
+
+
+### Features
+
+* **open-data:** datos abiertos anonimizados y portal /datos-abiertos (HU-11) ([8ada27f](https://github.com/HerlanCh/PlataformaGIS/commit/8ada27fbefacea3584627100d35f61a976f41aa2))
+
 # [2.10.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.9.0...v2.10.0) (2026-10-20)
 
 
