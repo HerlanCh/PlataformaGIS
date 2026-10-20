@@ -580,6 +580,7 @@ Se cumplen los tres criterios de salida del roadmap: las historias del frontend 
 - **Causa:** cuando el service worker ya controla la página, intercepta las teselas de OpenStreetMap para guardarlas en caché y las pide con `fetch()`. Esas peticiones se rigen por `connect-src` de la CSP, no por `img-src`, y `apps/web/vercel.json` no incluía `https://tile.openstreetmap.org` en `connect-src`.
 - **Por qué no se vio antes:** Playwright y Lighthouse abren cada página en un contexto nuevo, donde el service worker aún no controla la página, y en desarrollo no hay CSP.
 - **Corrección:** se añadió el origen de las teselas a `connect-src`. La prueba `apps/web/src/csp.test.ts` exige ese origen en `img-src` y en `connect-src`.
+- **Hallazgo al verificar en producción:** la caché `teselas-osm` quedaba vacía. Leaflet pide las teselas con `<img>` sin CORS, el service worker recibe respuestas opacas (estado 0) y Workbox solo guarda las de estado 200. El mapa no se veía sin conexión. Se añadió `CacheableResponsePlugin` con los estados 0 y 200; la prueba está en `apps/web/src/services/teselas.test.ts`.
 
 ## [2026-10-19] — Fase 9 descartada: canal Telegram
 
