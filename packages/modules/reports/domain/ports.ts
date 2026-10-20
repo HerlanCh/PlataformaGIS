@@ -48,6 +48,12 @@ export interface RepositorioDeReportes {
    * @throws {RangeError} si el límite no es un entero positivo.
    */
   buscarCaducados(ahora: Date, limite: number): Promise<readonly Reporte[]>;
+
+  /**
+   * Reportes del autor creados entre `desde` y `hasta` (ambos incluidos), en cualquier estado.
+   * Lo usa el clasificador para detectar a quien reporta en ráfaga (HU-10).
+   */
+  contarDelAutor(authorId: IdUsuario, desde: Date, hasta: Date): Promise<number>;
 }
 
 export interface RepositorioDeCategorias {

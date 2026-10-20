@@ -19,6 +19,16 @@ export const esquemaMotivoRechazo = z.enum(['MODERACION', 'AUTOR_SILENCIADO']);
 
 export const esquemaValorVoto = z.enum(['CONFIRMACION', 'NEGACION']);
 
+/** Indicios por los que el clasificador marca un reporte para moderación (HU-10). */
+export const esquemaMotivoDeSospecha = z.enum([
+  'ENLACE',
+  'SPAM',
+  'DATOS_PERSONALES',
+  'FRECUENCIA_DEL_AUTOR',
+  'TEXTO_REPETITIVO',
+  'LONGITUD_ANORMAL',
+]);
+
 /** Lo que `verification` pide aplicar a `reports` tras un voto (SRS 3.2). */
 export const esquemaDecisionVerificacion = z.enum(['NINGUNA', 'CONFIRMAR', 'EXTENDER', 'RESOLVER']);
 
@@ -120,6 +130,22 @@ export const descripcionAgregadaV1 = definirEvento(
   z.object({ idReporte: z.uuid() }),
 );
 
+/**
+ * El clasificador revisó un reporte (HU-10). `sospechoso` lo lleva a la cola de moderación;
+ * `clasificador` dice qué implementación decidió (las reglas o el modelo).
+ */
+export const reporteClasificadoV1 = definirEvento(
+  'ReporteClasificado',
+  1,
+  'interno',
+  z.object({
+    idReporte: z.uuid(),
+    sospechoso: z.boolean(),
+    motivos: z.array(esquemaMotivoDeSospecha),
+    clasificador: z.string().min(1),
+  }),
+);
+
 /** Catálogo de eventos de integración publicados. */
 export const eventosDeIntegracion: readonly DefinicionDeEvento[] = [
   reporteCreadoV1,
@@ -132,4 +158,5 @@ export const eventosDeIntegracion: readonly DefinicionDeEvento[] = [
   votoEmitidoV1,
   rechazoDeModeracionV1,
   descripcionAgregadaV1,
+  reporteClasificadoV1,
 ];

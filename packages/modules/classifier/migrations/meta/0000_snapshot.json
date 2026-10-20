@@ -1,0 +1,95 @@
+{
+  "id": "fd3baf4d-9505-49c2-ad61-ae9519fc2c9e",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.clasificaciones": {
+      "name": "clasificaciones",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "id_reporte": {
+          "name": "id_reporte",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sospechoso": {
+          "name": "sospechoso",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "motivos": {
+          "name": "motivos",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "puntaje": {
+          "name": "puntaje",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "clasificador": {
+          "name": "clasificador",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "clasificaciones_reporte_idx": {
+          "name": "clasificaciones_reporte_idx",
+          "columns": [
+            {
+              "expression": "id_reporte",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "clasificaciones_puntaje_check": {
+          "name": "clasificaciones_puntaje_check",
+          "value": "\"clasificaciones\".\"puntaje\" between 0 and 1"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

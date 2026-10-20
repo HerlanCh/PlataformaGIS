@@ -3,6 +3,11 @@
 // entrada (`eventos_procesados`) usa para no repetir un evento ya procesado.
 import type { BusDeEventos } from '@gis/event-bus';
 import {
+  ClasificadorPorReglas,
+  ClasificarReporte,
+  UnidadDeTrabajoClasificacionPg,
+} from '@gis/module-classifier';
+import {
   AplicarDecisionDeVerificacion,
   AplicarRechazoDeModeracion,
   RepositorioReportesPostgis,
@@ -28,7 +33,7 @@ import type { GeneradorDeId, Reloj } from '@gis/shared-kernel';
 import { suscribirPublicador } from '../tiempo-real/publicador.js';
 import type { ConfigVapid } from '../http/config-http.js';
 import type { TiempoReal } from '../tiempo-real/servidor.js';
-import { consultaDeAutor, consultaParaVerificacion } from './puentes.js';
+import { consultaDeAutor, consultaParaClasificar, consultaParaVerificacion } from './puentes.js';
 
 /**
  * Avisos a suscriptores en el log: solo identificadores y la ubicación pública. Es el canal cuando
@@ -148,6 +153,20 @@ export function suscribirManejadores(deps: DependenciasManejadores): void {
     bus.suscribir('ReporteCreado.v1', 'subscriptions.notificar', async (e) => {
       await notificar.manejar(e);
     });
+  }
+
+  // HU-10: clasifica de forma asíncrona, tras el outbox; crear un reporte nunca lo espera.
+  if (interruptores.estaActivo('classifier')) {
+    const clasificar = new ClasificarReporte({
+      consulta: consultaParaClasificar(reportes),
+      clasificador: new ClasificadorPorReglas(),
+      unidadDeTrabajo: new UnidadDeTrabajoClasificacionPg(db),
+      reloj,
+      ids,
+    });
+    for (const clave of ClasificarReporte.eventos) {
+      bus.suscribir(clave, 'classifier.clasificar', (e) => clasificar.manejar(e));
+    }
   }
 
   suscribirPublicador(bus, deps.tiempoReal, async (id) => {

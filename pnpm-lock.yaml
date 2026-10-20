@@ -496,6 +496,16 @@ importers:
       '@gis/shared-kernel':
         specifier: workspace:*
         version: link:../../shared-kernel
+      drizzle-orm:
+        specifier: ^0.45.4
+        version: 0.45.4(@types/pg@8.23.1)(pg@8.23.1)
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
+    devDependencies:
+      '@gis/testing':
+        specifier: workspace:*
+        version: link:../../testing
 
   packages/modules/heatmap:
     dependencies:

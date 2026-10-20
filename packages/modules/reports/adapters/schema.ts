@@ -71,6 +71,8 @@ export const reportes = pgTable(
     index('reportes_ubicacion_geography_idx').using('gist', sql`(${tabla.location}::geography)`),
     // Los más recientes primero (ventana del mapa) y los rangos de fechas (mapa de calor).
     index('reportes_creado_en_idx').on(tabla.creadoEn),
+    // Reportes recientes de un autor: la regla de frecuencia del clasificador (HU-10).
+    index('reportes_autor_creado_en_idx').on(tabla.authorId, tabla.creadoEn),
     index('reportes_ubicacion_publica_idx').using('gist', tabla.publicLocation),
     // Solo los reportes vigentes: los que se muestran en el mapa y los que pueden caducar.
     index('reportes_vigentes_idx')
