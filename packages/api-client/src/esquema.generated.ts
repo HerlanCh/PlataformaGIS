@@ -316,6 +316,112 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/reportes/{id}/descripcion': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * El autor describe su reporte (HU-10)
+     * @description Una sola vez y con el reporte vigente. La descripción es privada: no aparece en ninguna respuesta pública y solo la revisan el clasificador y los moderadores.
+     */
+    patch: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['DescripcionInput'];
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+      };
+    };
+    trace?: never;
+  };
   '/v1/reportes/{id}/confirmar': {
     parameters: {
       query?: never;
@@ -1369,6 +1475,10 @@ export interface components {
       resultado: 'CREADO' | 'DUPLICADO' | 'PROPIO_EXISTENTE';
       reporte: components['schemas']['ReportePublicoInput'];
     };
+    /** @description Detalle privado del reporte, de hasta 280 caracteres. Solo lo leen los moderadores. */
+    DescripcionInput: {
+      descripcion: string;
+    };
     /** @description Reportes vigentes de la ventana, del más reciente al más antiguo */
     ListaDeReportesInput: {
       reportes: components['schemas']['ReportePublicoInput'][];
@@ -1489,6 +1599,10 @@ export interface components {
       /** @enum {string} */
       resultado: 'CREADO' | 'DUPLICADO' | 'PROPIO_EXISTENTE';
       reporte: components['schemas']['ReportePublico'];
+    };
+    /** @description Detalle privado del reporte, de hasta 280 caracteres. Solo lo leen los moderadores. */
+    Descripcion: {
+      descripcion: string;
     };
     /** @description Reportes vigentes de la ventana, del más reciente al más antiguo */
     ListaDeReportes: {

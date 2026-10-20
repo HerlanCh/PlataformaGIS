@@ -1,0 +1,269 @@
+{
+  "id": "e855acf6-4778-43cf-8cb4-a7ef9cba3d9a",
+  "prevId": "d620965c-2a01-4d47-810f-8821393a3002",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.categorias": {
+      "name": "categorias",
+      "schema": "",
+      "columns": {
+        "codigo": {
+          "name": "codigo",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ttl_minutos": {
+          "name": "ttl_minutos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "radio_duplicado_m": {
+          "name": "radio_duplicado_m",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "es_sensible": {
+          "name": "es_sensible",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "categorias_ttl_check": {
+          "name": "categorias_ttl_check",
+          "value": "\"categorias\".\"ttl_minutos\" > 0"
+        },
+        "categorias_radio_duplicado_check": {
+          "name": "categorias_radio_duplicado_check",
+          "value": "\"categorias\".\"radio_duplicado_m\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.reportes": {
+      "name": "reportes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "codigo_categoria": {
+          "name": "codigo_categoria",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id_autor": {
+          "name": "id_autor",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ttl_minutos": {
+          "name": "ttl_minutos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "extensiones": {
+          "name": "extensiones",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "motivo_rechazo": {
+          "name": "motivo_rechazo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "caduca_en": {
+          "name": "caduca_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ubicacion": {
+          "name": "ubicacion",
+          "type": "geometry(point)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ubicacion_publica": {
+          "name": "ubicacion_publica",
+          "type": "geometry(point)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "clave_idempotencia": {
+          "name": "clave_idempotencia",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "reportes_ubicacion_geography_idx": {
+          "name": "reportes_ubicacion_geography_idx",
+          "columns": [
+            {
+              "expression": "(\"ubicacion\"::geography)",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gist",
+          "with": {}
+        },
+        "reportes_creado_en_idx": {
+          "name": "reportes_creado_en_idx",
+          "columns": [
+            {
+              "expression": "creado_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "reportes_ubicacion_publica_idx": {
+          "name": "reportes_ubicacion_publica_idx",
+          "columns": [
+            {
+              "expression": "ubicacion_publica",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gist",
+          "with": {}
+        },
+        "reportes_vigentes_idx": {
+          "name": "reportes_vigentes_idx",
+          "columns": [
+            {
+              "expression": "estado",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "caduca_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"reportes\".\"estado\" in ('ACTIVO', 'CONFIRMADO')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "reportes_codigo_categoria_categorias_codigo_fk": {
+          "name": "reportes_codigo_categoria_categorias_codigo_fk",
+          "tableFrom": "reportes",
+          "tableTo": "categorias",
+          "columnsFrom": [
+            "codigo_categoria"
+          ],
+          "columnsTo": [
+            "codigo"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "reportes_clave_idempotencia_unique": {
+          "name": "reportes_clave_idempotencia_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "clave_idempotencia"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "reportes_estado_check": {
+          "name": "reportes_estado_check",
+          "value": "\"reportes\".\"estado\" in ('ACTIVO', 'CONFIRMADO', 'RESUELTO', 'CADUCADO', 'RECHAZADO')"
+        },
+        "reportes_extensiones_check": {
+          "name": "reportes_extensiones_check",
+          "value": "\"reportes\".\"extensiones\" between 0 and 2"
+        },
+        "reportes_motivo_rechazo_check": {
+          "name": "reportes_motivo_rechazo_check",
+          "value": "\"reportes\".\"motivo_rechazo\" is null or \"reportes\".\"motivo_rechazo\" in ('MODERACION', 'AUTOR_SILENCIADO')"
+        },
+        "reportes_descripcion_check": {
+          "name": "reportes_descripcion_check",
+          "value": "\"reportes\".\"descripcion\" is null or char_length(\"reportes\".\"descripcion\") between 1 and 280"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

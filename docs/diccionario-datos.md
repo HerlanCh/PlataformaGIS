@@ -115,6 +115,7 @@ Catálogo de categorías. La migración `0001_semilla_categorias` carga las cinc
 | `ubicacion` | `geometry(Point, 4326)` | NOT NULL | Ubicación real. **Nunca se expone** |
 | `ubicacion_publica` | `geometry(Point, 4326)` | NOT NULL | Ubicación que se muestra. La calcula `PoliticaDePrivacidad` en el dominio; el repositorio la guarda sin recalcularla |
 | `clave_idempotencia` | `text` | NOT NULL, único | Clave que genera el cliente; evita duplicados al reenviar reportes guardados sin conexión |
+| `descripcion` | `text` | Nulo, `CHECK` de 1 a 280 caracteres (`char_length`) | Detalle opcional del autor (HU-10). **Privado:** solo lo leen el clasificador y los moderadores; nunca sale en respuestas ni eventos públicos |
 
 **Índices:**
 

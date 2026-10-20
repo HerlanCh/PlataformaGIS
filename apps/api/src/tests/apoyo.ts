@@ -24,6 +24,7 @@ export const casosFalsos = (cambios: Partial<CasosDeUso> = {}): CasosDeUso =>
   ({
     registrarDispositivo: noUsado('registrarDispositivo'),
     crearReporte: noUsado('crearReporte'),
+    agregarDescripcion: noUsado('agregarDescripcion'),
     listarReportes: noUsado('listarReportes'),
     confirmarReporte: noUsado('confirmarReporte'),
     negarReporte: noUsado('negarReporte'),

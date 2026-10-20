@@ -62,7 +62,7 @@ Producto nuevo e independiente. Monolito modular hexagonal (ADR-001) con dos pun
 - Solo software libre o planes gratuitos; ningún servicio de pago (ADR-002).
 - Stack fijado en ADR-002; no cambia sin un ADR nuevo.
 - **Privacidad:** nunca se expone la `location` real ni el `author_id` en respuestas públicas; solo `public_location`.
-- **Ética:** nunca se publican fotos ni descripciones de personas.
+- **Ética:** nunca se publican fotos ni descripciones de personas. La descripción opcional de un reporte es privada (solo la leen el clasificador y los moderadores) y no se admiten fotos (Fase 10).
 - Equipo unipersonal.
 
 ### 2.4 Supuestos y Dependencias

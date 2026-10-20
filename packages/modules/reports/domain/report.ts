@@ -5,6 +5,10 @@ import {
   ErrorClaveDeIdempotenciaInvalida,
   ErrorTransicionInvalida,
   ErrorAunNoCaduca,
+  ErrorDescripcionInvalida,
+  ErrorDescripcionYaAgregada,
+  ErrorNoEsElAutor,
+  ErrorReporteNoVigente,
 } from './errors.js';
 import { PoliticaDeCaducidad, MAX_EXTENSIONES } from './expiration-policy.js';
 import { PoliticaDePrivacidad } from './privacy-policy.js';
@@ -19,6 +23,9 @@ const CLAVE_DE_IDEMPOTENCIA = /^[A-Za-z0-9_-]{8,128}$/;
 
 export const esClaveDeIdempotenciaValida = (clave: string): boolean =>
   CLAVE_DE_IDEMPOTENCIA.test(clave);
+
+/** Caracteres máximos de la descripción, contados como `char_length` de PostgreSQL. */
+export const MAX_DESCRIPCION = 280;
 
 /** Máquina de estados explícita: desde cada estado, a cuáles se puede pasar. */
 export const TRANSICIONES: Readonly<Record<EstadoReporte, readonly EstadoReporte[]>> = {
@@ -36,6 +43,7 @@ export type EventoReporte =
   | { readonly tipo: 'ReporteExtendido'; readonly ocurridoEn: Date; readonly caducaEn: Date }
   | { readonly tipo: 'ReporteResuelto'; readonly ocurridoEn: Date }
   | { readonly tipo: 'ReporteCaducado'; readonly ocurridoEn: Date }
+  | { readonly tipo: 'DescripcionAgregada'; readonly ocurridoEn: Date }
   | {
       readonly tipo: 'ReporteRechazado';
       readonly ocurridoEn: Date;
@@ -59,6 +67,8 @@ export interface PropsReporte {
   readonly motivoRechazo: MotivoRechazo | null;
   /** Clave que genera el cliente; evita duplicados al reenviar un reporte guardado sin conexión. */
   readonly idempotencyKey: string;
+  /** Texto opcional del autor. Privado: solo lo leen el clasificador y los moderadores. */
+  readonly descripcion: string | null;
 }
 
 export interface EntradaCrearReporte {
@@ -93,6 +103,7 @@ export class Reporte {
       extensiones: 0,
       motivoRechazo: null,
       idempotencyKey,
+      descripcion: null,
     });
     reporte.eventos.push({ tipo: 'ReporteCreado', ocurridoEn: ahora });
     return reporte;
@@ -151,6 +162,10 @@ export class Reporte {
     return this.props.idempotencyKey;
   }
 
+  get descripcion(): string | null {
+    return this.props.descripcion;
+  }
+
   /** Vigente: visible en el mapa y abierto a votos. */
   get estaActivo(): boolean {
     return this.props.estado === 'ACTIVO' || this.props.estado === 'CONFIRMADO';
@@ -198,6 +213,27 @@ export class Reporte {
     this.transicionarA('RECHAZADO');
     this.props = { ...this.props, motivoRechazo: motivo };
     this.eventos.push({ tipo: 'ReporteRechazado', ocurridoEn: ahora, motivo });
+  }
+
+  /**
+   * El autor describe su reporte vigente, una sola vez. Se recortan los espacios de los extremos.
+   * @throws {ErrorNoEsElAutor} si lo intenta otro usuario.
+   * @throws {ErrorReporteNoVigente} si el reporte ya no está `ACTIVO` ni `CONFIRMADO`.
+   * @throws {ErrorDescripcionYaAgregada} si ya tiene descripción.
+   * @throws {ErrorDescripcionInvalida} si queda vacía o supera `MAX_DESCRIPCION` caracteres.
+   */
+  agregarDescripcion(texto: string, idAutor: IdUsuario, ahora: Date): void {
+    if (idAutor !== this.props.authorId) throw new ErrorNoEsElAutor();
+    if (!this.estaActivo) throw new ErrorReporteNoVigente(this.props.estado);
+    if (this.props.descripcion !== null) throw new ErrorDescripcionYaAgregada();
+    const descripcion = texto.trim();
+    // Se cuentan puntos de código, como `char_length`: un emoji es un carácter.
+    const largo = [...descripcion].length;
+    if (largo === 0 || largo > MAX_DESCRIPCION) {
+      throw new ErrorDescripcionInvalida(MAX_DESCRIPCION);
+    }
+    this.props = { ...this.props, descripcion };
+    this.eventos.push({ tipo: 'DescripcionAgregada', ocurridoEn: ahora });
   }
 
   /** Entrega los eventos pendientes y vacía la lista. */

@@ -5,6 +5,7 @@ export {
   esquemaCodigoCategoria,
   esquemaPuntoGeo,
   esquemaMotivoRechazo,
+  descripcionAgregadaV1,
   rechazoDeModeracionV1,
   reporteConfirmadoV1,
   reporteCreadoV1,

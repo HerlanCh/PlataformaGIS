@@ -36,6 +36,7 @@ const copiar = (reporte: Reporte): Reporte =>
     extensiones: reporte.extensiones,
     motivoRechazo: reporte.motivoRechazo,
     idempotencyKey: reporte.idempotencyKey,
+    descripcion: reporte.descripcion,
   });
 
 const dentro = (punto: PuntoGeo, caja: CajaGeografica): boolean =>

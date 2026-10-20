@@ -31,6 +31,11 @@ const HojaDeZonas = lazy(() =>
 const HojaDeInstalar = lazy(() =>
   import('./features/instalar/HojaDeInstalar.js').then((m) => ({ default: m.HojaDeInstalar })),
 );
+const HojaDeDescripcion = lazy(() =>
+  import('./features/reporte/HojaDeDescripcion.js').then((m) => ({
+    default: m.HojaDeDescripcion,
+  })),
+);
 const EditorDeZona = lazy(() =>
   import('./features/zonas/EditorDeZona.js').then((m) => ({ default: m.EditorDeZona })),
 );
@@ -43,6 +48,7 @@ function Hojas({ reportes }: { readonly reportes: readonly ReportePublico[] }) {
   const filtros = useEstado((s) => s.filtrosAbiertos);
   const zonas = useEstado((s) => s.zonasAbiertas);
   const instalar = useEstado((s) => s.instalarAbierta);
+  const describiendo = useEstado((s) => s.describiendo);
   return (
     <Suspense fallback={null}>
       {categorias && <HojaDeCategorias alElegir={(codigo) => void reportar(codigo)} />}
@@ -50,6 +56,7 @@ function Hojas({ reportes }: { readonly reportes: readonly ReportePublico[] }) {
       {filtros && <HojaDeFiltros />}
       {zonas && <HojaDeZonas />}
       {instalar && <HojaDeInstalar />}
+      {describiendo && <HojaDeDescripcion idReporte={describiendo} />}
     </Suspense>
   );
 }

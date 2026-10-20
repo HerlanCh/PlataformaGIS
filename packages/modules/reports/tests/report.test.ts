@@ -6,8 +6,12 @@ import {
   ErrorLimiteDeExtensiones,
   ErrorTransicionInvalida,
   ErrorAunNoCaduca,
+  ErrorDescripcionInvalida,
+  ErrorDescripcionYaAgregada,
+  ErrorNoEsElAutor,
+  ErrorReporteNoVigente,
 } from '../domain/errors.js';
-import { Reporte, TRANSICIONES } from '../domain/report.js';
+import { MAX_DESCRIPCION, Reporte, TRANSICIONES } from '../domain/report.js';
 import type { EstadoReporte } from '../domain/report.js';
 
 const categoria = (codigo: string): Categoria => {
@@ -259,6 +263,7 @@ describe('Reporte: persistencia y eventos', () => {
       extensiones: original.extensiones,
       motivoRechazo: original.motivoRechazo,
       idempotencyKey: original.idempotencyKey,
+      descripcion: original.descripcion,
     });
 
     expect(restaurado).toMatchObject({ estado: 'CONFIRMADO', extensiones: 1 });
@@ -270,5 +275,61 @@ describe('Reporte: persistencia y eventos', () => {
 
     expect(reporte.extraerEventos()).toHaveLength(1);
     expect(reporte.extraerEventos()).toEqual([]);
+  });
+});
+
+describe('Reporte: descripción privada', () => {
+  const otro = idUsuario('22222222-2222-4222-8222-222222222222');
+
+  it('HU-10: el autor describe su reporte vigente y se registra DescripcionAgregada', () => {
+    const reporte = enEstado('CONFIRMADO');
+
+    reporte.agregarDescripcion('  Camión volcado en el carril derecho  ', autor, creado);
+
+    expect(reporte.descripcion).toBe('Camión volcado en el carril derecho');
+    expect(reporte.extraerEventos()).toEqual([{ tipo: 'DescripcionAgregada', ocurridoEn: creado }]);
+  });
+
+  it('HU-10: un reporte nuevo no tiene descripción', () => {
+    expect(crear().descripcion).toBeNull();
+  });
+
+  it('HU-10: solo el autor puede describirlo', () => {
+    expect(() => crear().agregarDescripcion('texto', otro, creado)).toThrow(ErrorNoEsElAutor);
+  });
+
+  it.each(['RESUELTO', 'CADUCADO', 'RECHAZADO'] as const)(
+    'HU-10: un reporte %s ya no se puede describir',
+    (estado) => {
+      expect(() => enEstado(estado).agregarDescripcion('texto', autor, creado)).toThrow(
+        ErrorReporteNoVigente,
+      );
+    },
+  );
+
+  it('HU-10: la descripción se agrega una sola vez', () => {
+    const reporte = crear();
+    reporte.agregarDescripcion('primera', autor, creado);
+
+    expect(() => reporte.agregarDescripcion('segunda', autor, creado)).toThrow(
+      ErrorDescripcionYaAgregada,
+    );
+  });
+
+  it.each([
+    ['vacía', '   '],
+    ['demasiado larga', 'a'.repeat(MAX_DESCRIPCION + 1)],
+  ])('HU-10: rechaza una descripción %s', (_caso, texto) => {
+    expect(() => crear().agregarDescripcion(texto, autor, creado)).toThrow(
+      ErrorDescripcionInvalida,
+    );
+  });
+
+  it('HU-10: cuenta los emoji como un carácter, igual que la base de datos', () => {
+    const reporte = crear();
+
+    reporte.agregarDescripcion('🚧'.repeat(MAX_DESCRIPCION), autor, creado);
+
+    expect([...reporte.descripcion!]).toHaveLength(MAX_DESCRIPCION);
   });
 });

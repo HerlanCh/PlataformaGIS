@@ -22,7 +22,7 @@ function campos(esquema: z.ZodType): string[] {
 }
 
 describe('catálogo de eventos de integración', () => {
-  it('contiene los eventos de las Fases 2 y 5 con clave única', () => {
+  it('contiene los eventos de las Fases 2, 5 y 10 con clave única', () => {
     const claves = eventosDeIntegracion.map((evento) => evento.clave);
 
     expect(claves).toEqual([
@@ -35,12 +35,20 @@ describe('catálogo de eventos de integración', () => {
       'ReporteDuplicadoDetectado.v1',
       'VotoEmitido.v1',
       'RechazoDeModeracion.v1',
+      'DescripcionAgregada.v1',
     ]);
     expect(new Set(claves).size).toBe(claves.length);
   });
 
-  it('RNF-14: ningún evento público lleva ubicación real, autor ni otro usuario', () => {
-    const prohibidos = ['location', 'authorId', 'idReportante', 'idVotante', 'ubicacionReportante'];
+  it('RNF-14: ningún evento público lleva ubicación real, autor, otro usuario ni descripción', () => {
+    const prohibidos = [
+      'location',
+      'authorId',
+      'idReportante',
+      'idVotante',
+      'ubicacionReportante',
+      'descripcion',
+    ];
     const publicos = eventosDeIntegracion.filter((evento) => evento.audiencia === 'publico');
 
     expect(publicos.length).toBeGreaterThan(0);

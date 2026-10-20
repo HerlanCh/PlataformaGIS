@@ -84,6 +84,32 @@ export const rutasV1 =
       },
     );
 
+    app.patch(
+      '/reportes/:id/descripcion',
+      {
+        ...conToken,
+        schema: {
+          tags: ['reportes'],
+          summary: 'El autor describe su reporte (HU-10)',
+          description:
+            'Una sola vez y con el reporte vigente. La descripción es privada: no aparece en ' +
+            'ninguna respuesta pública y solo la revisan el clasificador y los moderadores.',
+          security: SEGURIDAD_BEARER,
+          params: http.esquemaParametroId,
+          body: http.esquemaDescripcion,
+          response: { 204: http.esquemaSinContenido, ...ERRORES },
+        },
+      },
+      async (request, reply) => {
+        await casos.agregarDescripcion.ejecutar({
+          idReporte: request.params.id,
+          idAutor: identidadDe(request).idUsuario,
+          descripcion: request.body.descripcion,
+        });
+        return reply.code(204).send();
+      },
+    );
+
     for (const [ruta, caso, resumen] of [
       ['confirmar', casos.confirmarReporte, '¿Sigue ahí? → Sí (HU-03)'],
       ['negar', casos.negarReporte, '¿Sigue ahí? → No (HU-03)'],

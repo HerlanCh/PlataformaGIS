@@ -1,0 +1,2 @@
+ALTER TABLE "reportes" ADD COLUMN "descripcion" text;--> statement-breakpoint
+ALTER TABLE "reportes" ADD CONSTRAINT "reportes_descripcion_check" CHECK ("reportes"."descripcion" is null or char_length("reportes"."descripcion") between 1 and 280);

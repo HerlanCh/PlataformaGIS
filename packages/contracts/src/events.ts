@@ -109,6 +109,17 @@ export const rechazoDeModeracionV1 = definirEvento(
   z.object({ idReporte: z.uuid(), idModerador: z.uuid() }),
 );
 
+/**
+ * El autor describió su reporte (HU-10). Solo lleva el ID: la descripción es privada y quien la
+ * necesite la pide por un puerto.
+ */
+export const descripcionAgregadaV1 = definirEvento(
+  'DescripcionAgregada',
+  1,
+  'interno',
+  z.object({ idReporte: z.uuid() }),
+);
+
 /** Catálogo de eventos de integración publicados. */
 export const eventosDeIntegracion: readonly DefinicionDeEvento[] = [
   reporteCreadoV1,
@@ -120,4 +131,5 @@ export const eventosDeIntegracion: readonly DefinicionDeEvento[] = [
   reporteDuplicadoDetectadoV1,
   votoEmitidoV1,
   rechazoDeModeracionV1,
+  descripcionAgregadaV1,
 ];

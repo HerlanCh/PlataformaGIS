@@ -667,6 +667,25 @@ li:last-child > .diagrama__fila .diagrama__datos {
     0 6px 20px rgb(20 24 29 / 30%);
 }
 
+/* Aviso con una acción (añadir detalle): el botón recibe toques aunque el contenedor no. */
+.aviso__texto {
+  margin: 0;
+}
+
+.aviso__accion {
+  pointer-events: auto;
+  min-height: var(--toque);
+  margin-top: var(--e-2);
+  padding: 0 var(--e-4);
+  border: 2px solid var(--fondo);
+  border-radius: var(--radio);
+  background: transparent;
+  color: var(--fondo);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 @keyframes entrar {
   from {
     transform: translateY(-8px);
@@ -1336,4 +1355,33 @@ button:disabled {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* Detalle privado del reporte (HU-10) */
+
+.descripcion__campo {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--e-3);
+  border: 2px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--fondo);
+  color: var(--tinta);
+  font: inherit;
+  font-size: var(--t-3);
+  resize: vertical;
+}
+
+.descripcion__campo:focus-visible {
+  border-color: var(--tinta);
+  outline: none;
+}
+
+.descripcion__contador {
+  text-align: right;
+}
+
+.descripcion__contador[data-excedido] {
+  color: var(--linea-roja);
+  font-weight: 700;
 }

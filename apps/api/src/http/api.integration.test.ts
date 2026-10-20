@@ -32,7 +32,14 @@ const TODOS_ACTIVOS = {
   FEATURE_SUBSCRIPTIONS: 'true',
   FEATURE_MODERATION: 'true',
 };
-const CAMPOS_PRIVADOS = ['location', 'authorId', 'author_id', 'ubicacion', 'idAutor'];
+const CAMPOS_PRIVADOS = [
+  'location',
+  'authorId',
+  'author_id',
+  'ubicacion',
+  'idAutor',
+  'descripcion',
+];
 const plaza = PuntoGeo.crear(-16.4955, -68.1336);
 const bbox = (punto: PuntoGeo, delta = 0.01) =>
   [punto.longitud - delta, punto.latitud - delta, punto.longitud + delta, punto.latitud + delta]
@@ -76,7 +83,7 @@ describeIntegration('API REST /v1', () => {
 
   /** Hace la solicitud y la guarda para las pruebas de contrato y de privacidad. */
   async function pedir(opciones: {
-    method: 'GET' | 'POST' | 'DELETE';
+    method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
     url: string;
     token?: string;
     payload?: unknown;
@@ -285,6 +292,43 @@ describeIntegration('API REST /v1', () => {
       const respuesta = await pedir({ method: 'GET', url: '/v1/reportes?bbox=1,2,3' });
 
       expect(respuesta.statusCode).toBe(400);
+    });
+
+    it('HU-10: el autor describe su reporte (204) y el texto no sale en el mapa', async () => {
+      const autor = await registrar();
+      const otro = await registrar();
+      const punto = PuntoGeo.crear(-16.42, -68.24);
+      const { id } = (await crearReporte(autor.token, punto, 'accidente')).json().reporte;
+      const describir = (token: string, descripcion: string) =>
+        pedir({
+          method: 'PATCH',
+          url: `/v1/reportes/${id}/descripcion`,
+          token,
+          payload: { descripcion },
+        });
+
+      expect((await describir(otro.token, 'ajeno')).statusCode).toBe(403);
+      expect((await describir(autor.token, 'Choque de minibús, texto privado')).statusCode).toBe(
+        204,
+      );
+      expect((await describir(autor.token, 'otra')).statusCode).toBe(409);
+      const lista = await pedir({ method: 'GET', url: `/v1/reportes?bbox=${bbox(punto)}` });
+      expect(lista.body).not.toContain('texto privado');
+    });
+
+    it('HU-10: una descripción vacía es 400 y una de más de 280 caracteres es 422', async () => {
+      const { token } = await registrar();
+      const { id } = (await crearReporte(token, PuntoGeo.crear(-16.43, -68.23))).json().reporte;
+      const describir = (descripcion: string) =>
+        pedir({
+          method: 'PATCH',
+          url: `/v1/reportes/${id}/descripcion`,
+          token,
+          payload: { descripcion },
+        });
+
+      expect((await describir('')).statusCode).toBe(400);
+      expect((await describir('a'.repeat(281))).statusCode).toBe(422);
     });
   });
 
