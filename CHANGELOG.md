@@ -1,3 +1,10 @@
+# [2.8.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.7.3...v2.8.0) (2026-10-20)
+
+
+### Features
+
+* **reports:** descripción privada del reporte (HU-10) ([a7276cc](https://github.com/HerlanCh/PlataformaGIS/commit/a7276cc3e92a9c1bab030239c7acd7d45651d3e9))
+
 ## [2.7.3](https://github.com/HerlanCh/PlataformaGIS/compare/v2.7.2...v2.7.3) (2026-10-20)
 
 
