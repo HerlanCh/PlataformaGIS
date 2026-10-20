@@ -56,6 +56,14 @@ export interface RepositorioDeReportes {
    * Lo usa el clasificador para detectar a quien reporta en ráfaga (HU-10).
    */
   contarDelAutor(authorId: IdUsuario, desde: Date, hasta: Date): Promise<number>;
+
+  /**
+   * IDs de los reportes en estado final (`RESUELTO`, `CADUCADO` o `RECHAZADO`), en orden, después
+   * de `despuesDe` (`null`: desde el primero) y hasta `limite`. Lo usa la carga del histórico de
+   * los datos abiertos (HU-11).
+   * @throws {RangeError} si el límite no es un entero positivo.
+   */
+  buscarIdsFinalizados(despuesDe: IdReporte | null, limite: number): Promise<readonly IdReporte[]>;
 }
 
 export interface RepositorioDeCategorias {

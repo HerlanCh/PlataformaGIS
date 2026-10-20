@@ -34,3 +34,6 @@ services:
       # Clasificación por reglas de los reportes, tras crearlos (HU-10).
       - key: FEATURE_CLASSIFIER
         value: 'true'
+      # Datos abiertos (HU-11). Tras activarlo, cargar el histórico una vez: `pnpm datos-abiertos:cargar`.
+      - key: FEATURE_OPEN_DATA
+        value: 'true'

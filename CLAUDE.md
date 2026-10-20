@@ -71,6 +71,7 @@ Requiere Node 24 y pnpm 12. En bash de Windows, pnpm está en `%APPDATA%\npm`.
 - `pnpm depcruise` (reglas de arquitectura) · `pnpm duplication` (jscpd)
 - `pnpm build` · `pnpm audit --prod --audit-level high`
 - `pnpm moderador:ascender <idUsuario>` da el rol MODERADOR contra `DATABASE_URL`; el usuario ve su id en `/moderacion`.
+- `pnpm datos-abiertos:cargar` carga en los datos abiertos los reportes ya terminados (idempotente).
 - `pnpm gen:module <nombre>` crea un módulo y lo registra. Para eliminar uno: borrar su carpeta y
   ejecutar `node tools/modules/sync-modules.mjs && pnpm install`.
 - `apps/api/src/modules.generated.ts` y las referencias de `tsconfig.json` son generados: no editarlos a mano.

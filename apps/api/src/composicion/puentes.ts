@@ -1,11 +1,13 @@
 // Puertos entre módulos (ADR-001): cada módulo declara lo que necesita saber de otro y la raíz de
 // composición lo conecta aquí con la interfaz pública del módulo dueño. Ningún módulo se conoce.
 import type { ConsultaParaClasificar } from '@gis/module-classifier';
+import type { ConsultaDeReportesFinalizados } from '@gis/module-open-data';
 import type { RepositorioDeReportes } from '@gis/module-reports';
 import type { ReputacionDelAutor } from '@gis/module-reports';
 import type { ConsultaDeAutor } from '@gis/module-subscriptions';
 import type { ConsultaDeReporte as ConsultaParaVerificacion } from '@gis/module-verification';
 import type { ConsultaDeReporte as ConsultaParaModeracion } from '@gis/module-moderation';
+import { idReporte } from '@gis/shared-kernel';
 import type { IdUsuario } from '@gis/shared-kernel';
 
 /** `verification` necesita autor, estado, ubicación real y extensiones del reporte votado. */
@@ -80,6 +82,35 @@ export const consultaParaClasificar = (
         reporte.creadoEn,
       ),
     };
+  },
+});
+
+/**
+ * `open-data` necesita de un reporte terminado solo lo que publica anonimizado: la categoría, la
+ * ubicación pública, la fecha, el estado y si se confirmó. Nunca el autor ni la ubicación real.
+ */
+export const consultaDeReportesFinalizados = (
+  reportes: RepositorioDeReportes,
+): ConsultaDeReportesFinalizados => ({
+  async buscar(id) {
+    const reporte = await reportes.buscarPorId(idReporte(id));
+    return (
+      reporte && {
+        idReporte: reporte.id,
+        codigoCategoria: reporte.codigoCategoria,
+        estado: reporte.estado,
+        motivoRechazo: reporte.motivoRechazo,
+        publicLocation: {
+          latitud: reporte.publicLocation.latitud,
+          longitud: reporte.publicLocation.longitud,
+        },
+        creadoEn: reporte.creadoEn,
+        extensiones: reporte.extensiones,
+      }
+    );
+  },
+  idsFinalizados(despuesDe, limite) {
+    return reportes.buscarIdsFinalizados(despuesDe === null ? null : idReporte(despuesDe), limite);
   },
 });
 

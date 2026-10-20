@@ -121,6 +121,16 @@ export class RepositorioReportesEnMemoria implements RepositorioDeReportes {
     );
   }
 
+  buscarIdsFinalizados(despuesDe: IdReporte | null, limite: number): Promise<readonly IdReporte[]> {
+    return Promise.resolve(
+      this.todos()
+        .filter((r) => !r.estaActivo && (despuesDe === null || r.id > despuesDe))
+        .map((r) => r.id)
+        .sort()
+        .slice(0, limite),
+    );
+  }
+
   private vigentes(): Reporte[] {
     return this.todos().filter((r) => r.estaActivo);
   }

@@ -1,0 +1,103 @@
+{
+  "id": "1a9cae60-3b37-4f47-a677-2f308542ca23",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.datos_abiertos_reportes": {
+      "name": "datos_abiertos_reportes",
+      "schema": "",
+      "columns": {
+        "huella": {
+          "name": "huella",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "codigo_categoria": {
+          "name": "codigo_categoria",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "celda_latitud": {
+          "name": "celda_latitud",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "celda_longitud": {
+          "name": "celda_longitud",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hora": {
+          "name": "hora",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado_final": {
+          "name": "estado_final",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fue_confirmado": {
+          "name": "fue_confirmado",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "datos_abiertos_hora_idx": {
+          "name": "datos_abiertos_hora_idx",
+          "columns": [
+            {
+              "expression": "hora",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "datos_abiertos_estado_final_check": {
+          "name": "datos_abiertos_estado_final_check",
+          "value": "\"datos_abiertos_reportes\".\"estado_final\" in ('RESUELTO', 'CADUCADO', 'RECHAZADO')"
+        },
+        "datos_abiertos_hora_truncada_check": {
+          "name": "datos_abiertos_hora_truncada_check",
+          "value": "date_trunc('hour', \"datos_abiertos_reportes\".\"hora\" at time zone 'UTC') = \"datos_abiertos_reportes\".\"hora\" at time zone 'UTC'"
+        },
+        "datos_abiertos_huella_check": {
+          "name": "datos_abiertos_huella_check",
+          "value": "\"datos_abiertos_reportes\".\"huella\" ~ '^[0-9a-f]{64}$'"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

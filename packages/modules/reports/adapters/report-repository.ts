@@ -18,6 +18,7 @@ const aPunto = (punto: PuntoGeo): Punto => ({ x: punto.longitud, y: punto.latitu
 const aPuntoGeo = (punto: Punto): PuntoGeo => PuntoGeo.crear(punto.y, punto.x);
 
 const ESTADOS_VIGENTES: readonly EstadoReporte[] = ['ACTIVO', 'CONFIRMADO'];
+const ESTADOS_FINALES: readonly EstadoReporte[] = ['RESUELTO', 'CADUCADO', 'RECHAZADO'];
 
 // Punto como geography: las distancias se miden en metros sobre el elipsoide.
 const aGeography = (punto: PuntoGeo): SQL =>
@@ -194,6 +195,25 @@ export class RepositorioReportesPostgis implements RepositorioDeReportes {
       .from(reportes)
       .where(and(eq(reportes.authorId, idAutor), between(reportes.creadoEn, desde, hasta)));
     return fila?.total ?? 0;
+  }
+
+  async buscarIdsFinalizados(
+    despuesDe: IdReporte | null,
+    limite: number,
+  ): Promise<readonly IdReporte[]> {
+    validarLimite(limite);
+    const filas = await this.db
+      .select({ id: reportes.id })
+      .from(reportes)
+      .where(
+        and(
+          inArray(reportes.estado, [...ESTADOS_FINALES]),
+          despuesDe === null ? undefined : gt(reportes.id, despuesDe),
+        ),
+      )
+      .orderBy(asc(reportes.id))
+      .limit(limite);
+    return filas.map((fila) => idReporte(fila.id));
   }
 
   private async buscar(condicion: SQL): Promise<Reporte | null> {

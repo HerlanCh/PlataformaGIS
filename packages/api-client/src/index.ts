@@ -12,6 +12,7 @@ export type Credencial = components['schemas']['Credencial'];
 export type Problema = components['schemas']['Problema'];
 export type Zona = components['schemas']['Zona'];
 export type CasoDeModeracion = components['schemas']['CasoDeModeracion'];
+export type ResumenDatosAbiertos = components['schemas']['ResumenDatosAbiertos'];
 export type CeldaDeCalor = components['schemas']['MapaDeCalor']['celdas'][number];
 
 export interface OpcionesClienteApi {

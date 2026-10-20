@@ -28,6 +28,7 @@ Esquema físico de la Plataforma GIS sobre PostgreSQL 18 + PostGIS 3.6. Se deriv
 | `suscripciones_push` | `notifications` (opcional) | Dispositivos que reciben avisos Web Push |
 | `acciones_moderacion` | `moderation` (opcional) | Auditoría de las decisiones de moderación |
 | `cola_moderacion` | `moderation` (opcional) | Cola de reportes negados o marcados (HU-12) |
+| `datos_abiertos_reportes` | `open-data` (opcional) | Datos abiertos anonimizados de los reportes terminados (HU-11) |
 | `clasificaciones` | `classifier` (opcional) | Historial de clasificaciones de reportes (HU-10) |
 
 ## `platform` (compartido)
@@ -243,6 +244,24 @@ Historial de clasificaciones (HU-10): una fila cada vez que se clasifica un repo
 
 **Índices:** `clasificaciones_reporte_idx`, B-tree sobre `id_reporte` (historial de un reporte).
 
+## `open-data` (opcional)
+
+### `datos_abiertos_reportes`
+
+Una fila anonimizada por reporte terminado (HU-11, ADR-005). La llena el manejador de los desenlaces del reporte y, para el histórico, `pnpm datos-abiertos:cargar`. No tiene columnas para el autor, el punto, la descripción ni el ID: no los puede guardar.
+
+| Columna | Tipo | Restricción | Descripción |
+| :--- | :--- | :--- | :--- |
+| `huella` | `text` | PK, `CHECK` SHA-256 en hexadecimal | Huella del ID del reporte: evita duplicados. Nunca se publica |
+| `codigo_categoria` | `text` | NOT NULL | Categoría del reporte |
+| `celda_latitud` | `double precision` | NOT NULL | Latitud del centro de la celda de 500 m (ubicación pública) |
+| `celda_longitud` | `double precision` | NOT NULL | Longitud del centro de la celda |
+| `hora` | `timestamptz` | NOT NULL, `CHECK` truncada a la hora (en UTC) | Hora de creación, sin minutos |
+| `estado_final` | `text` | NOT NULL, `CHECK` en (`RESUELTO`, `CADUCADO`, `RECHAZADO`) | Desenlace |
+| `fue_confirmado` | `boolean` | NOT NULL | La comunidad lo confirmó alguna vez |
+
+**Índices:** `datos_abiertos_hora_idx`, B-tree sobre `hora` (orden del CSV y rango de fechas).
+
 ## Migraciones
 
 | Conjunto | Migración | Contenido |
@@ -261,6 +280,7 @@ Historial de clasificaciones (HU-10): una fila cada vez que se clasifica un repo
 | `moderation` | `0000_acciones_moderacion` | `acciones_moderacion` y su índice |
 | `moderation` | `0001_cola_moderacion` | `cola_moderacion` y su índice |
 | `classifier` | `0000_clasificaciones` | `clasificaciones` y su índice |
+| `open-data` | `0000_datos_abiertos` | `datos_abiertos_reportes` y su índice |
 
 Cada migración tiene su reversa escrita a mano en `<nombre>.down.sql`, porque Drizzle Kit solo genera el avance. Las pruebas de integración aplican, revierten y vuelven a aplicar cada conjunto contra PostGIS real.
 

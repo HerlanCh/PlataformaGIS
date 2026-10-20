@@ -20,7 +20,7 @@ Los nombres de casos de uso provienen del roadmap; los marcados "por definir" se
 | RF-13 | **HU-08** | Notificaciones de incidentes cercanos | `subscriptions`<br>`notifications` | `NotificarSuscriptores` | `HU-08: notifica a los suscriptores de la zona y categoría`<br>`HU-08: no notifica fuera de la zona o de la categoría`<br>`HU-08: notifica una sola vez por reporte`<br>`HU-08: no notifica al autor` | Casos de uso probados (Fase 5); envío por Web Push en la Fase 8 |
 | RF-01<br>RF-14 | **HU-09** | Bot de Telegram para consulta y reporte | `identity`<br>`reports`<br>`verification`<br>`subscriptions` | `RegistrarDispositivo`<br>`CrearReporte`<br>`ConfirmarReporte` / `NegarReporte`<br>`SuscribirZona` | `HU-09: /start vincula la cuenta de Telegram`<br>`HU-09: /reportar crea un reporte con la ubicación compartida`<br>`HU-09: /cerca lista los reportes a 1 km`<br>`HU-09: /zona crea una zona suscrita` | Descartada (ADR-004) |
 | RF-15 | **HU-10** | Clasificación automática de reportes sospechosos | `classifier`<br>`reports` | `ClasificarReporte`<br>`AgregarDescripcion` | `HU-10: marca un reporte con indicios de spam cuando el autor lo describe`<br>`HU-10: crear un reporte no depende del clasificador y se clasifica con las reglas locales`<br>`HU-10: con el servicio de IA caído clasifica con las reglas locales` | Clasificador por reglas (Fase 10) |
-| RF-16 | **HU-11** | Datos abiertos anonimizados | `open-data` | Por definir (Fase 10) | `HU-11: exporta sin usuarios ni puntos exactos`<br>`HU-11: declara la licencia de los datos` | Especificado (Fase 0) |
+| RF-16 | **HU-11** | Datos abiertos anonimizados | `open-data`<br>`reports` | `RegistrarDatoAbierto`<br>`CargarHistorico`<br>`ConsultarDatosAbiertos` | `HU-11: exporta sin usuarios ni puntos exactos, con encabezado`<br>`HU-11: la tabla no tiene columnas de usuario, punto, descripción ni ID`<br>`HU-11: descarga el CSV sin usuarios ni puntos exactos y con la licencia declarada`<br>`HU-11: muestra los tableros, la descarga del CSV y la licencia de forma visible` | Portal y exportación (Fase 10, ADR-005) |
 | RF-08<br>RF-17 | **HU-12** | Moderación y auditoría de incidentes | `moderation`<br>`verification`<br>`identity` | `RechazarReporte`<br>`MantenerReporte`<br>`ListarColaDeModeracion`<br>`ActualizarColaDeModeracion`<br>`AplicarRechazoDeModeracion`<br>`AjustarReputacionPorDesenlace`<br>`AscenderAModerador` | `HU-12: rechaza con motivo, audita y penaliza al autor`<br>`HU-12: deniega la acción sin rol MODERADOR`<br>`HU-10 y HU-12: un reporte con enlace aparece marcado en la cola y el moderador lo rechaza`<br>`HU-12: rechazar exige un motivo y ofrece el de la regla ética` | Moderación operativa (Fase 10) |
 
 ---
@@ -241,6 +241,8 @@ Adaptador HTTP en `apps/api/src/http/`. Los esquemas de cada ruta están en `pac
 | `POST /v1/moderacion/reportes/:id/rechazar` | `RechazarReporte` | HU-12 | ciudadano (403), moderador (202) |
 | `POST /v1/moderacion/reportes/:id/mantener` | `MantenerReporte` | HU-12 | moderador (204) |
 | `GET /v1/moderacion/cola` | `ListarColaDeModeracion` | HU-10, HU-12 | ciudadano (403), moderador (200) |
+| `GET /v1/datos-abiertos.csv` | `ConsultarDatosAbiertos` | HU-11 | público (200, `text/csv`) |
+| `GET /v1/datos-abiertos/resumen` | `ConsultarDatosAbiertos` | HU-11 | público (200) |
 | `PATCH /v1/reportes/:id/descripcion` | `AgregarDescripcion` | HU-10 | otro usuario (403), autor (204), repetida (409) |
 
 ### 7.2 Requisitos no funcionales

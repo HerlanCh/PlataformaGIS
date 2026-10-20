@@ -2,6 +2,7 @@ import { BusDeEventosEnMemoria } from '@gis/event-bus';
 import { heatmapModulo } from '@gis/module-heatmap';
 import { identityModulo } from '@gis/module-identity';
 import { moderationModulo } from '@gis/module-moderation';
+import { huellaDe, openDataModulo, RepositorioDatosAbiertosPg } from '@gis/module-open-data';
 import { reportsModulo } from '@gis/module-reports';
 import { subscriptionsModulo } from '@gis/module-subscriptions';
 import { verificationModulo } from '@gis/module-verification';
@@ -32,6 +33,7 @@ const TODOS_ACTIVOS = {
   FEATURE_HEATMAP: 'true',
   FEATURE_SUBSCRIPTIONS: 'true',
   FEATURE_MODERATION: 'true',
+  FEATURE_OPEN_DATA: 'true',
 };
 const CAMPOS_PRIVADOS = [
   'location',
@@ -46,6 +48,9 @@ const bbox = (punto: PuntoGeo, delta = 0.01) =>
   [punto.longitud - delta, punto.latitud - delta, punto.longitud + delta, punto.latitud + delta]
     .map((n) => n.toFixed(5))
     .join(',');
+
+const esJson = (respuesta: LightMyRequestResponse): boolean =>
+  respuesta.body !== '' && String(respuesta.headers['content-type']).includes('json');
 
 /** Nombres de todas las claves de un JSON, a cualquier profundidad. */
 function claves(valor: unknown): string[] {
@@ -136,6 +141,7 @@ describeIntegration('API REST /v1', () => {
         subscriptionsModulo,
         moderationModulo,
         heatmapModulo,
+        openDataModulo,
       ].flatMap((m) => (m.migraciones ? [m.migraciones] : [])),
     ]);
     tokens = new ServicioDeTokens(
@@ -547,6 +553,45 @@ describeIntegration('API REST /v1', () => {
     });
   });
 
+  describe('datos abiertos', () => {
+    it('HU-11: descarga el CSV sin usuarios ni puntos exactos y con la licencia declarada', async () => {
+      await new RepositorioDatosAbiertosPg(db).guardar({
+        huella: huellaDe('aaaaaaaa-0000-4000-8000-000000000001'),
+        codigoCategoria: 'bloqueo',
+        celda: { latitud: -16.49529, longitud: -68.13385 },
+        hora: new Date('2026-10-19T14:00:00.000Z'),
+        estadoFinal: 'RESUELTO',
+        fueConfirmado: true,
+      });
+
+      const csv = await pedir({ method: 'GET', url: '/v1/datos-abiertos.csv' });
+
+      expect(csv.statusCode).toBe(200);
+      expect(csv.headers['content-type']).toBe('text/csv; charset=utf-8');
+      expect(csv.headers['content-disposition']).toContain('attachment');
+      expect(csv.headers.link).toBe(
+        '<https://creativecommons.org/licenses/by/4.0/deed.es>; rel="license"',
+      );
+      expect(csv.body.split('\r\n').slice(0, 2)).toEqual([
+        'categoria,celda_latitud,celda_longitud,hora_utc,estado_final,fue_confirmado',
+        'bloqueo,-16.49529,-68.13385,2026-10-19T14:00:00.000Z,RESUELTO,true',
+      ]);
+    });
+
+    it('HU-11: el resumen trae los agregados y la licencia', async () => {
+      const respuesta = await pedir({ method: 'GET', url: '/v1/datos-abiertos/resumen' });
+
+      expect(respuesta.statusCode).toBe(200);
+      expect(respuesta.json()).toMatchObject({
+        total: 1,
+        confirmados: 1,
+        porCategoria: [{ codigoCategoria: 'bloqueo', cantidad: 1 }],
+        licencia: { nombre: 'CC BY 4.0' },
+      });
+      expect(respuesta.json().porHoraDelDia[10]).toBe(1);
+    });
+  });
+
   describe('protecciones', () => {
     it('un cuerpo de más de 16 KB es 413', async () => {
       const respuesta = await pedir({
@@ -614,7 +659,7 @@ describeIntegration('API REST /v1', () => {
       addFormats(ajv);
       ajv.addSchema(documento, 'openapi');
       const exitosas = respuestas.filter(
-        ({ respuesta }) => respuesta.statusCode < 300 && respuesta.body !== '',
+        ({ respuesta }) => respuesta.statusCode < 300 && esJson(respuesta),
       );
 
       expect(exitosas.length).toBeGreaterThan(10);
@@ -644,7 +689,7 @@ describeIntegration('API REST /v1', () => {
     it('RNF-14: ninguna respuesta contiene la ubicación real ni el autor', () => {
       expect(respuestas.length).toBeGreaterThan(20);
       for (const { ruta, respuesta } of respuestas) {
-        if (respuesta.body === '') continue;
+        if (!esJson(respuesta)) continue;
         // La cola de moderación exige el rol MODERADOR y es la única que lleva la descripción.
         const privados =
           ruta === 'GET /v1/moderacion/cola'

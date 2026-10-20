@@ -8,8 +8,17 @@ const PantallaDeModeracion = lazy(() =>
   })),
 );
 
+const PantallaDeDatosAbiertos = lazy(() =>
+  import('./features/datos-abiertos/PantallaDeDatosAbiertos.js').then((m) => ({
+    default: m.PantallaDeDatosAbiertos,
+  })),
+);
+
 /** Pantallas por ruta. Todo lo demás es el mapa. */
-export const PANTALLAS = { '/moderacion': PantallaDeModeracion } as const;
+export const PANTALLAS = {
+  '/moderacion': PantallaDeModeracion,
+  '/datos-abiertos': PantallaDeDatosAbiertos,
+} as const;
 
 export const pantallaDe = (ruta: string) =>
   PANTALLAS[ruta.replace(/\/+$/, '') as keyof typeof PANTALLAS] ?? null;
