@@ -1,6 +1,6 @@
 # Evaluación del clasificador
 
-Generado con `pnpm clasificador:evaluar` el 2026-10-20. No editar a mano.
+Generado con `pnpm clasificador:evaluar` el 2026-10-21. No editar a mano.
 
 - **Clasificador:** `reglas-v1`
 - **Conjunto:** `tools/clasificador/conjunto-sintetico.jsonl`, 200 ejemplos; se mide sobre su partición de prueba (67 ejemplos, elegidos por un hash estable del texto).
