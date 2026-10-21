@@ -1,3 +1,4 @@
+import { esBaseDeDatosNoDisponible } from '@gis/platform';
 import { ErrorDeAplicacion, ErrorDeDominio, ErrorLimiteExcedido } from '@gis/shared-kernel';
 import type { TipoDeErrorDeAplicacion } from '@gis/shared-kernel';
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
@@ -45,7 +46,11 @@ const TITULOS: Record<number, string> = {
   422: 'Regla de negocio incumplida',
   429: 'Demasiadas solicitudes',
   500: 'Error interno',
+  503: 'Servicio no disponible',
 };
+
+/** Segundos que se sugiere esperar cuando la base de datos no responde. */
+const REINTENTO_BASE_CAIDA_S = 5;
 
 interface Clasificado {
   readonly status: number;
@@ -64,6 +69,11 @@ function clasificar(error: unknown): Clasificado {
   if (error instanceof ErrorDeDominio) {
     return { status: 422, codigo: error.codigo, detail: error.message };
   }
+  return clasificarDeInfraestructura(error);
+}
+
+/** Errores que no son propios: validación de Fastify, base de datos caída o inesperados. */
+function clasificarDeInfraestructura(error: unknown): Clasificado {
   if (hasZodFastifySchemaValidationErrors(error)) {
     return { status: 400, codigo: 'ENTRADA_INVALIDA', detail: error.message };
   }
@@ -74,6 +84,14 @@ function clasificar(error: unknown): Clasificado {
       status,
       codigo: deFastify.code ?? 'SOLICITUD_INVALIDA',
       detail: deFastify.message ?? '',
+    };
+  }
+  // Una base caída es temporal: 503 para que el cliente reintente, sin revelar la conexión.
+  if (esBaseDeDatosNoDisponible(error)) {
+    return {
+      status: 503,
+      codigo: 'BASE_DE_DATOS_NO_DISPONIBLE',
+      detail: 'El servicio no está disponible por un momento; vuelve a intentarlo',
     };
   }
   // Nunca se exponen los detalles de un error inesperado.
@@ -103,10 +121,12 @@ function responder(reply: FastifyReply, cuerpo: Problema): FastifyReply {
 export function registrarErrores(app: FastifyInstance): void {
   app.setErrorHandler((error, request: FastifyRequest, reply) => {
     const cuerpo = aProblema(error, request.id);
-    if (cuerpo.status >= 500) request.log.error({ err: error }, 'error no controlado');
+    if (cuerpo.status === 503) request.log.warn({ err: error }, 'base de datos no disponible');
+    else if (cuerpo.status >= 500) request.log.error({ err: error }, 'error no controlado');
     if (error instanceof ErrorLimiteExcedido) {
       reply.header('retry-after', String(error.reintentarEnSegundos));
     }
+    if (cuerpo.status === 503) reply.header('retry-after', String(REINTENTO_BASE_CAIDA_S));
     return responder(reply, cuerpo);
   });
 

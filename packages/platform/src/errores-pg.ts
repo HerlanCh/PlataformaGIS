@@ -19,3 +19,30 @@ export function esClaveDuplicada(error: unknown, restriccion?: string): boolean 
     );
   });
 }
+
+const CODIGOS_DE_CONEXION = new Set(['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND']);
+// SQLSTATE: clase 08 (excepción de conexión), 57P01 a 57P03 (apagado o arranque del servidor)
+// y 53300 (demasiadas conexiones).
+const SQLSTATE_DE_CONEXION = /^(08|57P0[1-3]|53300)/;
+// Errores del pool de `pg` que no traen código.
+const MENSAJES_DE_CONEXION = /timeout exceeded when trying to connect|connection terminated/i;
+
+function esDeConexion(error: Error & ErrorPg): boolean {
+  const codigo = typeof error.code === 'string' ? error.code : '';
+  return (
+    CODIGOS_DE_CONEXION.has(codigo) ||
+    SQLSTATE_DE_CONEXION.test(codigo) ||
+    MENSAJES_DE_CONEXION.test(error.message)
+  );
+}
+
+/**
+ * `true` si el error, o alguna de sus causas, indica que la base de datos no responde: un estado
+ * temporal, no un defecto.
+ */
+export function esBaseDeDatosNoDisponible(error: unknown): boolean {
+  for (let actual = error; actual instanceof Error; actual = actual.cause) {
+    if (esDeConexion(actual)) return true;
+  }
+  return false;
+}

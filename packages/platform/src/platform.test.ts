@@ -7,6 +7,7 @@ import {
   variableDeInterruptor,
   cargarConfig,
   cargarInterruptores,
+  esBaseDeDatosNoDisponible,
   esClaveDuplicada,
 } from './index.js';
 
@@ -28,6 +29,28 @@ describe('esClaveDuplicada', () => {
     expect(esClaveDuplicada(dePg('23503'))).toBe(false);
     expect(esClaveDuplicada('texto')).toBe(false);
     expect(esClaveDuplicada(undefined)).toBe(false);
+  });
+});
+
+describe('esBaseDeDatosNoDisponible', () => {
+  const conCodigo = (code: string) => Object.assign(new Error('pg'), { code });
+
+  it('reconoce la caída de la base en el error o en su causa', () => {
+    expect(esBaseDeDatosNoDisponible(conCodigo('ECONNREFUSED'))).toBe(true);
+    expect(esBaseDeDatosNoDisponible(conCodigo('57P01'))).toBe(true);
+    expect(esBaseDeDatosNoDisponible(conCodigo('08006'))).toBe(true);
+    expect(esBaseDeDatosNoDisponible(new Error('timeout exceeded when trying to connect'))).toBe(
+      true,
+    );
+    expect(esBaseDeDatosNoDisponible(new Error('drizzle', { cause: conCodigo('ETIMEDOUT') }))).toBe(
+      true,
+    );
+  });
+
+  it('no confunde otros errores', () => {
+    expect(esBaseDeDatosNoDisponible(conCodigo('23505'))).toBe(false);
+    expect(esBaseDeDatosNoDisponible(new Error('otro'))).toBe(false);
+    expect(esBaseDeDatosNoDisponible('texto')).toBe(false);
   });
 });
 
