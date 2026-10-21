@@ -81,6 +81,42 @@ describe('aProblema', () => {
     expect(JSON.stringify(problema)).not.toContain('secreta');
   });
 
+  it.each([
+    [
+      'conexión rechazada',
+      Object.assign(new Error('connect ECONNREFUSED'), { code: 'ECONNREFUSED' }),
+    ],
+    ['tiempo de conexión agotado', new Error('timeout exceeded when trying to connect')],
+    ['conexión cortada', new Error('Connection terminated unexpectedly')],
+    ['apagado del servidor', Object.assign(new Error('terminating connection'), { code: '57P01' })],
+    [
+      'servidor arrancando',
+      Object.assign(new Error('the database system is starting up'), { code: '57P03' }),
+    ],
+    ['excepción de conexión', Object.assign(new Error('connection failure'), { code: '08006' })],
+    [
+      'error de Drizzle que envuelve la causa',
+      Object.assign(new Error('Failed query: select 1'), {
+        cause: Object.assign(new Error('connect ECONNREFUSED'), { code: 'ECONNREFUSED' }),
+      }),
+    ],
+  ])('base de datos no disponible (%s) → 503 sin revelar el detalle', (_caso, error) => {
+    const problema = aProblema(error, 'req-3');
+
+    expect(problema).toMatchObject({
+      status: 503,
+      title: 'Servicio no disponible',
+      codigo: 'BASE_DE_DATOS_NO_DISPONIBLE',
+    });
+    expect(problema.detail).not.toMatch(/ECONNREFUSED|timeout|terminat|select/i);
+  });
+
+  it('un error de SQL que no es de conexión sigue siendo 500', () => {
+    const sintaxis = Object.assign(new Error('syntax error'), { code: '42601' });
+
+    expect(aProblema(sintaxis, 'r')).toMatchObject({ status: 500, codigo: 'ERROR_INTERNO' });
+  });
+
   it('el tipo del problema se deriva del código', () => {
     expect(aProblema(new ErrorConflicto('YA_VOTO', 'm'), 'r').type).toBe(
       'https://plataforma-gis.bo/problemas/ya-voto',

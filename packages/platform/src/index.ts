@@ -23,7 +23,7 @@ export {
 } from './migrations.js';
 export type { ConjuntoDeMigraciones } from './migrations.js';
 export type { DefinicionDeModulo } from './module.js';
-export { esClaveDuplicada } from './errores-pg.js';
+export { esBaseDeDatosNoDisponible, esClaveDuplicada } from './errores-pg.js';
 export { agregarASalida } from './outbox.js';
 export { BusDeEventosConSalida, DespachadorDeSalida, esperaDeReintentoS } from './despachador.js';
 export type { OpcionesDelDespachador } from './despachador.js';
