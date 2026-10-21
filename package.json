@@ -32,7 +32,8 @@
     "clasificador:evaluar": "pnpm --filter @gis/api run clasificador:evaluar",
     "perf:espacial": "pnpm --filter @gis/api run perf:espacial",
     "gen:api": "pnpm --filter @gis/api run gen:api && pnpm --filter @gis/api-client run gen",
-    "carga:difusion": "pnpm --filter @gis/api run carga:difusion"
+    "carga:difusion": "pnpm --filter @gis/api run carga:difusion",
+    "fiabilidad:reinicio": "pnpm --filter @gis/api run fiabilidad:reinicio"
   },
   "lint-staged": {
     "*.{ts,tsx,js,cjs,mjs}": [

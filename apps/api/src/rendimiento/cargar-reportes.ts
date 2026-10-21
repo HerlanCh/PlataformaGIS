@@ -10,24 +10,13 @@ import {
   reporteSintetico,
   zonaSintetica,
 } from './datos-sinteticos.js';
+import { urlDeBaseLocal } from './base-local.js';
 
 const REPORTES_POR_DEFECTO = 100_000;
 const ZONAS = 5_000;
 const AUTORES = 2_000;
 const LOTE = 5_000;
 const SEMILLA = 20261012;
-const ANFITRIONES_LOCALES = new Set(['localhost', '127.0.0.1', '::1']);
-
-function urlLocal(): string {
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error('Falta DATABASE_URL');
-  const { hostname } = new URL(url);
-  if (!ANFITRIONES_LOCALES.has(hostname)) {
-    throw new Error(`La carga sintética solo corre en una base local, no en "${hostname}"`);
-  }
-  return url;
-}
-
 async function borrarCargaAnterior(pool: Pool): Promise<void> {
   await pool.query(`delete from reportes where id::text like 'ffffffff-%'`);
   await pool.query(`delete from zonas_suscritas where id::text like 'eeeeeeee-%'`);
@@ -106,7 +95,7 @@ if (!Number.isInteger(cantidad) || cantidad < 1) {
   throw new Error('La cantidad de reportes debe ser un entero positivo');
 }
 
-const pool = crearPool(urlLocal());
+const pool = crearPool(urlDeBaseLocal(process.env.DATABASE_URL, 'La carga sintética'));
 try {
   // Se migran `reports` y `subscriptions` aunque su interruptor esté apagado: la medición los necesita.
   await migrarTodo(crearDb(pool), [
