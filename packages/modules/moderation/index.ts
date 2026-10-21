@@ -32,10 +32,13 @@ export type { ElementoDeCola, EntradaListarCola } from './application/listar-col
 export { ActualizarColaDeModeracion } from './application/actualizar-cola-de-moderacion.js';
 export type { UnidadDeTrabajoDeModeracion } from './application/ports.js';
 export { RepositorioColaPg } from './adapters/repositorio-cola-pg.js';
+export { HistorialDeDecisionesPg } from './adapters/historial-de-decisiones-pg.js';
 export { UnidadDeTrabajoModeracionPg } from './adapters/unidad-de-trabajo-moderacion.js';
 export type {
   ConsultaDeReporte,
   DetalleDeReporte,
   EstadoDeReporte,
+  HistorialDeDecisiones,
   RepositorioDeCola,
+  UltimaDecision,
 } from './domain/ports.js';

@@ -36,6 +36,15 @@ Indicios y pesos:
 | `ClasificadorConRespaldo`        | Usa el principal (el modelo de IA de la Fase 13) y, si falla o tarda más que el límite, las reglas |
 | `UnidadDeTrabajoClasificacionPg` | Guarda la clasificación y su evento en una transacción                                             |
 
+## Evaluación (roadmap 10, IA)
+
+| Comando                                      | Qué hace                                                                                                                                                                                                                              |
+| :------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pnpm clasificador:evaluar [conjunto.jsonl]` | `EvaluarClasificador` mide precisión y exhaustividad sobre la partición de prueba (30 %, por un hash estable del texto) y regenera `docs/clasificador/evaluacion.md`. Sin argumento usa `tools/clasificador/conjunto-sintetico.jsonl` |
+| `pnpm clasificador:exportar <archivo.jsonl>` | `ExportarConjuntoEtiquetado` escribe la última decisión de moderación de cada reporte descrito: `RECHAZAR` → `SOSPECHOSO`, `MANTENER` → `NORMAL`. Solo texto y etiqueta                                                               |
+
+El modelo de IA de la Fase 13 reemplaza a las reglas solo si las supera en esta misma medición.
+
 ## Eventos que emite
 
 | Evento                  | Audiencia | Cuándo                                                                 |

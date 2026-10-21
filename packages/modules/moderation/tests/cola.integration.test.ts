@@ -4,6 +4,7 @@ import { idReporte, idUsuario } from '@gis/shared-kernel';
 import { createTestDatabase, describeIntegration } from '@gis/testing';
 import type { TestDatabase } from '@gis/testing';
 import { afterAll, beforeAll, expect, it } from 'vitest';
+import { HistorialDeDecisionesPg } from '../adapters/historial-de-decisiones-pg.js';
 import { RepositorioColaPg } from '../adapters/repositorio-cola-pg.js';
 import { UnidadDeTrabajoModeracionPg } from '../adapters/unidad-de-trabajo-moderacion.js';
 import { AccionDeModeracion } from '../domain/accion-de-moderacion.js';
@@ -73,5 +74,34 @@ describeIntegration('cola de moderación en PostGIS', () => {
     );
 
     expect(await cola.buscar(reporte(10))).toMatchObject({ resueltoEn: minuto(20) });
+  });
+
+  it('HU-10: el historial da la última decisión de cada reporte moderado', async () => {
+    const unidad = new UnidadDeTrabajoModeracionPg(db);
+    const moderador = idUsuario('11111111-1111-4111-8111-111111111111');
+    const accion = (n: number, minutos: number, tipo: 'MANTENER' | 'RECHAZAR') =>
+      tipo === 'MANTENER'
+        ? AccionDeModeracion.mantener({
+            id: `00000000-0000-4000-8000-0000000002${String(minutos).padStart(2, '0')}` as IdAccionDeModeracion,
+            idReporte: reporte(n),
+            idModerador: moderador,
+            ahora: minuto(minutos),
+          })
+        : AccionDeModeracion.rechazo({
+            id: `00000000-0000-4000-8000-0000000002${String(minutos).padStart(2, '0')}` as IdAccionDeModeracion,
+            idReporte: reporte(n),
+            idModerador: moderador,
+            motivo: 'Falso',
+            ahora: minuto(minutos),
+          });
+    await unidad.registrar(accion(20, 1, 'MANTENER'), []);
+    await unidad.registrar(accion(20, 2, 'RECHAZAR'), []);
+    await unidad.registrar(accion(21, 3, 'MANTENER'), []);
+
+    const decisiones = await new HistorialDeDecisionesPg(db).ultimasDecisiones();
+
+    expect(decisiones).toContainEqual({ idReporte: reporte(20), accion: 'RECHAZAR' });
+    expect(decisiones).toContainEqual({ idReporte: reporte(21), accion: 'MANTENER' });
+    expect(decisiones.filter((d) => d.idReporte === reporte(20))).toHaveLength(1);
   });
 });

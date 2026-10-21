@@ -1,0 +1,200 @@
+{"texto": "Perros sueltos cerca del colegio, 3 cuadras abajo", "etiqueta": "NORMAL"}
+{"texto": "Marcha de gremiales en la avenida Juan Pablo II, desvíen por otra ruta", "etiqueta": "NORMAL"}
+{"texto": "Robaron en la tienda que tenía oferta de pollo, hay policías", "etiqueta": "NORMAL"}
+{"texto": "Tráfico detenido en la Max Paredes por obras de la alcaldía", "etiqueta": "NORMAL"}
+{"texto": "Jauría de perros agresivos en la autopista a El Alto, mordieron a un niño", "etiqueta": "NORMAL"}
+{"texto": "Robo de autopartes en Miraflores, frente al estadio, ya van varios autos", "etiqueta": "NORMAL"}
+{"texto": "Asalto a un transeúnte en la avenida 6 de Agosto hace 10 minutos", "etiqueta": "NORMAL"}
+{"texto": "Semáforo apagado en la avenida 6 de Agosto, mucho tráfico", "etiqueta": "NORMAL"}
+{"texto": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", "etiqueta": "SOSPECHOSO"}
+{"texto": "Este reporte es falso, nada que ver", "etiqueta": "SOSPECHOSO"}
+{"texto": "Bache enorme en el puente de las Américas, ya se cayó un motociclista", "etiqueta": "NORMAL"}
+{"texto": "Jauría de perros agresivos en el cruce de Villa Fátima, mordieron a un niño", "etiqueta": "NORMAL"}
+{"texto": "Mi número es 69876543, escríbeme", "etiqueta": "SOSPECHOSO"}
+{"texto": "Cortaron el paso en la autopista a El Alto por una protesta de vecinos", "etiqueta": "NORMAL"}
+{"texto": "Choque entre un minibús y un auto en Miraflores, frente al estadio, hay heridos leves", "etiqueta": "NORMAL"}
+{"texto": "Cortaron el paso en el puente de las Américas por una protesta de vecinos", "etiqueta": "NORMAL"}
+{"texto": "Semáforo apagado en el cruce de Villa Fátima, mucho tráfico", "etiqueta": "NORMAL"}
+{"texto": "Accidente en la autopista a El Alto, la policía ya está en el lugar", "etiqueta": "NORMAL"}
+{"texto": "El conductor tiene CI 4567890, búsquenlo", "etiqueta": "SOSPECHOSO"}
+{"texto": "Robaron un celular a una señora en la avenida 6 de Agosto, tengan cuidado", "etiqueta": "NORMAL"}
+{"texto": "Poste de luz caído sobre la acera en la avenida 6 de Agosto", "etiqueta": "NORMAL"}
+{"texto": "Gana dinero desde casa, escribe al WhatsApp", "etiqueta": "SOSPECHOSO"}
+{"texto": "Asalto a un transeúnte en el cruce de Villa Fátima hace 10 minutos", "etiqueta": "NORMAL"}
+{"texto": "Choque leve, ya movieron los autos", "etiqueta": "NORMAL"}
+{"texto": "Fuga de agua en el puente de las Américas, la calle está inundada", "etiqueta": "NORMAL"}
+{"texto": "Marcha de gremiales en la zona Sur, cerca del puente, desvíen por otra ruta", "etiqueta": "NORMAL"}
+{"texto": "Tráfico detenido en el puente de las Américas por obras de la alcaldía", "etiqueta": "NORMAL"}
+{"texto": "Hay un hundimiento en la calzada de 2 metros", "etiqueta": "NORMAL"}
+{"texto": "Robaron un celular a una señora en el cruce de Villa Fátima, tengan cuidado", "etiqueta": "NORMAL"}
+{"texto": "Choque entre un minibús y un auto en la plaza Murillo, hay heridos leves", "etiqueta": "NORMAL"}
+{"texto": "Poste de luz caído sobre la acera en la calle 21 de Calacoto", "etiqueta": "NORMAL"}
+{"texto": "Bache enorme en San Pedro, ya se cayó un motociclista", "etiqueta": "NORMAL"}
+{"texto": "Tráfico detenido en Obrajes, calle 15 por obras de la alcaldía", "etiqueta": "NORMAL"}
+{"texto": "Robo de autopartes en el cruce de Villa Fátima, ya van varios autos", "etiqueta": "NORMAL"}
+{"texto": "Fuga de agua en el mercado Rodríguez, la calle está inundada", "etiqueta": "NORMAL"}
+{"texto": "Jauría de perros agresivos en San Pedro, mordieron a un niño", "etiqueta": "NORMAL"}
+{"texto": "Poste de luz caído sobre la acera en el cruce de Villa Fátima", "etiqueta": "NORMAL"}
+{"texto": "Semáforo apagado en la Pérez Velasco, mucho tráfico", "etiqueta": "NORMAL"}
+{"texto": "Click aquí para ver el video del choque: http://video.example", "etiqueta": "SOSPECHOSO"}
+{"texto": "Semáforo apagado en la zona Sur, cerca del puente, mucho tráfico", "etiqueta": "NORMAL"}
+{"texto": "Marcha de gremiales en Villa Adela, desvíen por otra ruta", "etiqueta": "NORMAL"}
+{"texto": "Incendio pequeño en un puesto de la autopista a El Alto, llegaron los bomberos", "etiqueta": "NORMAL"}
+{"texto": "Accidente en la Ceja de El Alto, la policía ya está en el lugar", "etiqueta": "NORMAL"}
+{"texto": "Derrumbe parcial en la zona Sur, cerca del puente, solo pasa un carril", "etiqueta": "NORMAL"}
+{"texto": "Accidente en la avenida Buenos Aires, la policía ya está en el lugar", "etiqueta": "NORMAL"}
+{"texto": "hola", "etiqueta": "SOSPECHOSO"}
+{"texto": "Accidente en la calle 21 de Calacoto, la policía ya está en el lugar", "etiqueta": "NORMAL"}
+{"texto": "Robo de autopartes en la Max Paredes, ya van varios autos", "etiqueta": "NORMAL"}
+{"texto": "Vecinos bloquean exigiendo seguridad tras varios robos", "etiqueta": "NORMAL"}
+{"texto": "Oferta especial de pollos, delivery gratis", "etiqueta": "SOSPECHOSO"}
+{"texto": "Bache enorme en la plaza Murillo, ya se cayó un motociclista", "etiqueta": "NORMAL"}
+{"texto": "Fuga de gas en un edificio, evacuaron a 20 familias", "etiqueta": "NORMAL"}
+{"texto": "Perros callejeros persiguiendo a los peatones en la zona Sur, cerca del puente", "etiqueta": "NORMAL"}
+{"texto": "El que chocó es Juan Pérez, su celular es 71234567", "etiqueta": "SOSPECHOSO"}
+{"texto": "Bloqueo a 500 mts de la plaza, ya van 2 hrs", "etiqueta": "NORMAL"}
+{"texto": "Accidente en el mercado Rodríguez, la policía ya está en el lugar", "etiqueta": "NORMAL"}
+{"texto": "Robaron un celular a una señora en el puente de las Américas, tengan cuidado", "etiqueta": "NORMAL"}
+{"texto": "Vendo autopartes baratas, info en bit.ly/autopartes", "etiqueta": "SOSPECHOSO"}
+{"texto": "GRATIS recargas en www.recargas-gratis.example", "etiqueta": "SOSPECHOSO"}
+{"texto": "Robo de autopartes en la calle 21 de Calacoto, ya van varios autos", "etiqueta": "NORMAL"}
+{"texto": "Jauría de perros agresivos en la calle 21 de Calacoto, mordieron a un niño", "etiqueta": "NORMAL"}
+{"texto": "Cortaron el paso en Obrajes, calle 15 por una protesta de vecinos", "etiqueta": "NORMAL"}
+{"texto": "La señora que robó vive al lado, llamen al 76543210", "etiqueta": "SOSPECHOSO"}
+{"texto": "prueba", "etiqueta": "SOSPECHOSO"}
+{"texto": "Choque múltiple, 4 autos involucrados", "etiqueta": "NORMAL"}
+{"texto": "Fuga de agua en la calle 21 de Calacoto, la calle está inundada", "etiqueta": "NORMAL"}
+{"texto": "Tráfico detenido en la avenida Arce por obras de la alcaldía", "etiqueta": "NORMAL"}
+{"texto": "Marcha de gremiales en el cruce de Villa Fátima, desvíen por otra ruta", "etiqueta": "NORMAL"}
+{"texto": "Choque entre un minibús y un auto en la Garita de Lima, hay heridos leves", "etiqueta": "NORMAL"}
+{"texto": "Asaltaron un minibús cerca de la terminal, los ladrones huyeron", "etiqueta": "NORMAL"}
+{"texto": "Préstamos a sola firma, interés bajo", "etiqueta": "SOSPECHOSO"}
+{"texto": "Poste de luz caído sobre la acera en el puente de las Américas", "etiqueta": "NORMAL"}
+{"texto": "Vía dañada en la Max Paredes después de la lluvia", "etiqueta": "NORMAL"}
+{"texto": "Accidente en el km 7 de la carretera a Oruro", "etiqueta": "NORMAL"}
+{"texto": "Semáforo apagado en Miraflores, frente al estadio, mucho tráfico", "etiqueta": "NORMAL"}
+{"texto": "Vía dañada en el cruce de Villa Fátima después de la lluvia", "etiqueta": "NORMAL"}
+{"texto": "Tráfico detenido en la avenida Juan Pablo II por obras de la alcaldía", "etiqueta": "NORMAL"}
+{"texto": "Jauría de perros agresivos en la Max Paredes, mordieron a un niño", "etiqueta": "NORMAL"}
+{"texto": "Incendio pequeño en un puesto de la calle 21 de Calacoto, llegaron los bomberos", "etiqueta": "NORMAL"}
+{"texto": "Bloqueo de transportistas por el precio del pasaje", "etiqueta": "NORMAL"}
+{"texto": "Jauría de perros agresivos en la avenida 6 de Agosto, mordieron a un niño", "etiqueta": "NORMAL"}
+{"texto": "ok", "etiqueta": "SOSPECHOSO"}
+{"texto": "Bloqueo total de Miraflores, frente al estadio, no pasan los minibuses", "etiqueta": "NORMAL"}
+{"texto": "Jauría de perros agresivos en la Ceja de El Alto, mordieron a un niño", "etiqueta": "NORMAL"}
+{"texto": "Huecos grandes en toda la avenida, cuidado de noche", "etiqueta": "NORMAL"}
+{"texto": "Robaron un celular a una señora en San Pedro, tengan cuidado", "etiqueta": "NORMAL"}
+{"texto": "Derrumbe parcial en la terminal de buses, solo pasa un carril", "etiqueta": "NORMAL"}
+{"texto": "Semáforo apagado en la Garita de Lima, mucho tráfico", "etiqueta": "NORMAL"}
+{"texto": "Sorteo de una moto, suscríbete a mi canal", "etiqueta": "SOSPECHOSO"}
+{"texto": "Jauría de perros agresivos en la avenida Buenos Aires, mordieron a un niño", "etiqueta": "NORMAL"}
+{"texto": "Marcha de gremiales en la calle 21 de Calacoto, desvíen por otra ruta", "etiqueta": "NORMAL"}
+{"texto": "Vía dañada en la Garita de Lima después de la lluvia", "etiqueta": "NORMAL"}
+{"texto": "Promoción de pasajes a Santa Cruz, consulta precios", "etiqueta": "SOSPECHOSO"}
+{"texto": "Fuga de agua en la zona Sur, cerca del puente, la calle está inundada", "etiqueta": "NORMAL"}
+{"texto": "Marcha de gremiales en la avenida Arce, desvíen por otra ruta", "etiqueta": "NORMAL"}
+{"texto": "Accidente en Miraflores, frente al estadio, la policía ya está en el lugar", "etiqueta": "NORMAL"}
+{"texto": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "etiqueta": "SOSPECHOSO"}
+{"texto": "Préstamo rápido sin garantía, llama ya", "etiqueta": "SOSPECHOSO"}
+{"texto": "Cortaron el paso en la avenida Juan Pablo II por una protesta de vecinos", "etiqueta": "NORMAL"}
+{"texto": "Promo de celulares al 50 % de descuento, compra ya", "etiqueta": "SOSPECHOSO"}
+{"texto": "Perros callejeros persiguiendo a los peatones en la avenida Buenos Aires", "etiqueta": "NORMAL"}
+{"texto": "bloqueo bloqueo bloqueo bloqueo bloqueo bloqueo bloqueo bloqueo", "etiqueta": "SOSPECHOSO"}
+{"texto": "Asalto a un transeúnte en la plaza Murillo hace 10 minutos", "etiqueta": "NORMAL"}
+{"texto": "Asalto a un transeúnte en la autopista a El Alto hace 10 minutos", "etiqueta": "NORMAL"}
+{"texto": "xd", "etiqueta": "SOSPECHOSO"}
+{"texto": "Venta de entradas para el concierto, consulta al privado", "etiqueta": "SOSPECHOSO"}
+{"texto": "Bloqueo inventado para probar la app jaja", "etiqueta": "SOSPECHOSO"}
+{"texto": "Choque entre un minibús y un auto en la terminal de buses, hay heridos leves", "etiqueta": "NORMAL"}
+{"texto": "El dueño del perro es don Pedro, el de la tienda", "etiqueta": "SOSPECHOSO"}
+{"texto": "Robo de autopartes en el mercado Rodríguez, ya van varios autos", "etiqueta": "NORMAL"}
+{"texto": "Perros callejeros persiguiendo a los peatones en Obrajes, calle 15", "etiqueta": "NORMAL"}
+{"texto": "Mordida de perro a un ciclista en el parque", "etiqueta": "NORMAL"}
+{"texto": "Vía dañada en San Pedro después de la lluvia", "etiqueta": "NORMAL"}
+{"texto": "Bloqueo total de la Max Paredes, no pasan los minibuses", "etiqueta": "NORMAL"}
+{"texto": "Síguenos en tiktok.com/@noticiaslp", "etiqueta": "SOSPECHOSO"}
+{"texto": "Robaron un celular a una señora en la Ceja de El Alto, tengan cuidado", "etiqueta": "NORMAL"}
+{"texto": "Bache enorme en Obrajes, calle 15, ya se cayó un motociclista", "etiqueta": "NORMAL"}
+{"texto": "Accidente en el puente de las Américas, la policía ya está en el lugar", "etiqueta": "NORMAL"}
+{"texto": "Casino en línea, bono de bienvenida gratis", "etiqueta": "SOSPECHOSO"}
+{"texto": "Vía dañada en la Ceja de El Alto después de la lluvia", "etiqueta": "NORMAL"}
+{"texto": "Llamen al +591 71122334 para comprar", "etiqueta": "SOSPECHOSO"}
+{"texto": "Únete a nuestro grupo, link en mi perfil", "etiqueta": "SOSPECHOSO"}
+{"texto": "Semáforo apagado en la Ceja de El Alto, mucho tráfico", "etiqueta": "NORMAL"}
+{"texto": "Cortaron el paso en la avenida 6 de Agosto por una protesta de vecinos", "etiqueta": "NORMAL"}
+{"texto": "asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf", "etiqueta": "SOSPECHOSO"}
+{"texto": "Poste de luz caído sobre la acera en Obrajes, calle 15", "etiqueta": "NORMAL"}
+{"texto": "Carlos Mamani de la tienda de la esquina es el que roba", "etiqueta": "SOSPECHOSO"}
+{"texto": "Aquí no pasó nada, solo quería ver si funciona", "etiqueta": "SOSPECHOSO"}
+{"texto": "Bloqueo total de la avenida Arce, no pasan los minibuses", "etiqueta": "NORMAL"}
+{"texto": "Asalto a un transeúnte en la Pérez Velasco hace 10 minutos", "etiqueta": "NORMAL"}
+{"texto": "Desde las 17:30 no hay paso en la autopista", "etiqueta": "NORMAL"}
+{"texto": "Reporten al chofer de la línea 2, su nombre es Luis Quispe", "etiqueta": "SOSPECHOSO"}
+{"texto": "Incendio pequeño en un puesto de la Max Paredes, llegaron los bomberos", "etiqueta": "NORMAL"}
+{"texto": "Derrumbe parcial en la autopista a El Alto, solo pasa un carril", "etiqueta": "NORMAL"}
+{"texto": "Poste de luz caído sobre la acera en la zona Sur, cerca del puente", "etiqueta": "NORMAL"}
+{"texto": "Semáforo apagado en San Pedro, mucho tráfico", "etiqueta": "NORMAL"}
+{"texto": "Visiten mi página para más noticias de La Paz", "etiqueta": "SOSPECHOSO"}
+{"texto": "Gran tráfico por la feria de la 16 de Julio", "etiqueta": "NORMAL"}
+{"texto": "Vía dañada en el mercado Rodríguez después de la lluvia", "etiqueta": "NORMAL"}
+{"texto": "El auto con placa 2345-ABC atropelló a un perro", "etiqueta": "SOSPECHOSO"}
+{"texto": "Perros callejeros persiguiendo a los peatones en el cruce de Villa Fátima", "etiqueta": "NORMAL"}
+{"texto": "Marcha de gremiales en Miraflores, frente al estadio, desvíen por otra ruta", "etiqueta": "NORMAL"}
+{"texto": "Robo de autopartes en la autopista a El Alto, ya van varios autos", "etiqueta": "NORMAL"}
+{"texto": "El ladrón es el hijo del vecino de la casa azul", "etiqueta": "SOSPECHOSO"}
+{"texto": "Se cortó la luz en todo el barrio y los semáforos no funcionan", "etiqueta": "NORMAL"}
+{"texto": "Tráfico detenido en la Garita de Lima por obras de la alcaldía", "etiqueta": "NORMAL"}
+{"texto": "Descuento del 30 % en llantas solo hoy", "etiqueta": "SOSPECHOSO"}
+{"texto": "Derrumbe parcial en la Garita de Lima, solo pasa un carril", "etiqueta": "NORMAL"}
+{"texto": "Perros callejeros persiguiendo a los peatones en la autopista a El Alto", "etiqueta": "NORMAL"}
+{"texto": "Cortaron el paso en la avenida Buenos Aires por una protesta de vecinos", "etiqueta": "NORMAL"}
+{"texto": "Asalto a un transeúnte en el mercado Rodríguez hace 10 minutos", "etiqueta": "NORMAL"}
+{"texto": "Poste de luz caído sobre la acera en la Pérez Velasco", "etiqueta": "NORMAL"}
+{"texto": "Derrumbe parcial en Obrajes, calle 15, solo pasa un carril", "etiqueta": "NORMAL"}
+{"texto": "Rifa de un televisor, compra tu número", "etiqueta": "SOSPECHOSO"}
+{"texto": "Perros callejeros persiguiendo a los peatones en la avenida Arce", "etiqueta": "NORMAL"}
+{"texto": "Cortaron el paso en Miraflores, frente al estadio por una protesta de vecinos", "etiqueta": "NORMAL"}
+{"texto": "Asalto a un transeúnte en la Max Paredes hace 10 minutos", "etiqueta": "NORMAL"}
+{"texto": "Incendio pequeño en un puesto de la Garita de Lima, llegaron los bomberos", "etiqueta": "NORMAL"}
+{"texto": "Derrumbe parcial en Miraflores, frente al estadio, solo pasa un carril", "etiqueta": "NORMAL"}
+{"texto": "Choque entre un minibús y un auto en la Pérez Velasco, hay heridos leves", "etiqueta": "NORMAL"}
+{"texto": "Asalto a un transeúnte en la avenida Juan Pablo II hace 10 minutos", "etiqueta": "NORMAL"}
+{"texto": "Robo de autopartes en la Ceja de El Alto, ya van varios autos", "etiqueta": "NORMAL"}
+{"texto": "Accidente en la plaza Murillo, la policía ya está en el lugar", "etiqueta": "NORMAL"}
+{"texto": "Cortaron el paso en la Max Paredes por una protesta de vecinos", "etiqueta": "NORMAL"}
+{"texto": "Visita https://ofertas-lapaz.example y gana premios", "etiqueta": "SOSPECHOSO"}
+{"texto": "Asalto a un transeúnte en la terminal de buses hace 10 minutos", "etiqueta": "NORMAL"}
+{"texto": "Marcha de gremiales en la Max Paredes, desvíen por otra ruta", "etiqueta": "NORMAL"}
+{"texto": "jajajajajajajajajajajajajajajajajajajajajajajaja", "etiqueta": "SOSPECHOSO"}
+{"texto": "Choque entre un minibús y un auto en la avenida Buenos Aires, hay heridos leves", "etiqueta": "NORMAL"}
+{"texto": "Accidente en el cruce de Villa Fátima, la policía ya está en el lugar", "etiqueta": "NORMAL"}
+{"texto": "Compre su terreno en El Alto, precios bajos", "etiqueta": "SOSPECHOSO"}
+{"texto": "Tráfico detenido en la avenida Buenos Aires por obras de la alcaldía", "etiqueta": "NORMAL"}
+{"texto": "Semáforo apagado en Villa Adela, mucho tráfico", "etiqueta": "NORMAL"}
+{"texto": "Poste de luz caído sobre la acera en la Ceja de El Alto", "etiqueta": "NORMAL"}
+{"texto": "Escriban a denuncia.vecino@correo.example para más datos del ladrón", "etiqueta": "SOSPECHOSO"}
+{"texto": "El policía de la placa 456 pidió coima, se llama Mario", "etiqueta": "SOSPECHOSO"}
+{"texto": "El minibús de la línea 273 chocó con un taxi", "etiqueta": "NORMAL"}
+{"texto": "Inversión segura en cripto, gana el doble", "etiqueta": "SOSPECHOSO"}
+{"texto": "Curso de inglés gratis, inscríbete en www.cursos.example", "etiqueta": "SOSPECHOSO"}
+{"texto": "Se cayó un árbol sobre dos autos estacionados", "etiqueta": "NORMAL"}
+{"texto": "Poste de luz caído sobre la acera en la avenida Juan Pablo II", "etiqueta": "NORMAL"}
+{"texto": "Ganaste un premio, reclama en premios.example", "etiqueta": "SOSPECHOSO"}
+{"texto": "Vía dañada en la terminal de buses después de la lluvia", "etiqueta": "NORMAL"}
+{"texto": "Cortaron el paso en la avenida Arce por una protesta de vecinos", "etiqueta": "NORMAL"}
+{"texto": "El minibús 1234XYZ no respetó el semáforo", "etiqueta": "SOSPECHOSO"}
+{"texto": "Vía dañada en la avenida Arce después de la lluvia", "etiqueta": "NORMAL"}
+{"texto": "Cortaron el paso en el mercado Rodríguez por una protesta de vecinos", "etiqueta": "NORMAL"}
+{"texto": "Jauría de perros agresivos en Miraflores, frente al estadio, mordieron a un niño", "etiqueta": "NORMAL"}
+{"texto": "Gana bitcoin sin invertir nada", "etiqueta": "SOSPECHOSO"}
+{"texto": "Fuga de agua en la Garita de Lima, la calle está inundada", "etiqueta": "NORMAL"}
+{"texto": "Te vendo saldo barato, consultas por whatsapp", "etiqueta": "SOSPECHOSO"}
+{"texto": "Incendio pequeño en un puesto de la avenida Buenos Aires, llegaron los bomberos", "etiqueta": "NORMAL"}
+{"texto": "La que manejaba se llama Ana, tiene carnet 6543210", "etiqueta": "SOSPECHOSO"}
+{"texto": "Robaron un celular a una señora en Miraflores, frente al estadio, tengan cuidado", "etiqueta": "NORMAL"}
+{"texto": "Incendio pequeño en un puesto de Villa Adela, llegaron los bomberos", "etiqueta": "NORMAL"}
+{"texto": "Tráfico lento por un camión averiado en la subida", "etiqueta": "NORMAL"}
+{"texto": "Fuga de agua en la Pérez Velasco, la calle está inundada", "etiqueta": "NORMAL"}
+{"texto": "Marcha por la promoción de bachilleres, calle cerrada", "etiqueta": "NORMAL"}
+{"texto": "Accidente en la Garita de Lima, la policía ya está en el lugar", "etiqueta": "NORMAL"}
+{"texto": "Robo de autopartes en San Pedro, ya van varios autos", "etiqueta": "NORMAL"}

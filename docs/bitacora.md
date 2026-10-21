@@ -598,3 +598,46 @@ Se cumplen los tres criterios de salida del roadmap: las historias del frontend 
 
 ### Siguiente
 - Fase 10: moderación, datos abiertos e IA.
+
+## [2026-10-20] — Fase 10: moderación, datos abiertos e IA
+
+### Qué se hizo
+La fase se entregó en cinco PR, cada uno con su release:
+
+| PR | Versión | Contenido |
+| :-- | :-- | :-- |
+| #36 | v2.8.0 | Descripción privada del reporte (`PATCH /v1/reportes/:id/descripcion`) y el paso «Añadir detalle» en la PWA |
+| #37 | v2.9.0 | Módulo `classifier`: reglas (enlaces, spam, datos personales, frecuencia del autor, texto repetitivo y longitud anormal), clasificación asíncrona tras el outbox y `ClasificadorConRespaldo` |
+| #38 | v2.10.0 | Cola de moderación, «mantener», pantalla `/moderacion` y `pnpm moderador:ascender` |
+| #39 | v2.11.0 | Módulo `open-data`, portal `/datos-abiertos`, CSV con licencia CC BY 4.0 y `pnpm datos-abiertos:cargar` |
+| Este | — | Exportación del conjunto etiquetado, evaluación del clasificador y cierre de la fase |
+
+### Decisiones
+- **Descripción en lugar de fotos:** los reportes no tenían texto y el clasificador lo necesita. La descripción es opcional y privada: solo la leen el clasificador y los moderadores, y las pruebas RNF-14 la tratan como campo prohibido en toda respuesta pública. No se admiten fotos, por la regla ética.
+- **ADR-005:** los datos abiertos van en una tabla propia, alimentada por eventos y anonimizada al escribir, con portal en la PWA. Reemplaza la vista materializada y Metabase, que no cabe en el plan gratuito; el ADR-003 tampoco admitía otra lectura de `reportes`.
+- **El rol de moderador se asigna por script** (`pnpm moderador:ascender`), sin ruta HTTP. La PWA renueva el token al abrir `/moderacion` para tomar el rol nuevo.
+- **La evaluación no ajusta las reglas a la partición de prueba**, para no sesgar la comparación con el modelo de la Fase 13.
+
+### Evaluación del clasificador
+Con el conjunto sintético de 200 ejemplos, sobre la partición de prueba de 67:
+- precisión del 100 %;
+- exhaustividad del 73,7 %.
+
+Los falsos negativos muestran lo que las reglas no ven:
+- plurales («Préstamos»);
+- texto sin sentido que no se repite;
+- nombres de personas.
+
+Ese es el caso para el modelo de IA de la Fase 13, que se adopta solo si supera esta medición con datos reales del piloto. Informe completo en `docs/clasificador/evaluacion.md`.
+
+### Verificación
+- Cada PR pasó la CI: compuertas de calidad, SonarCloud y Vercel. Las compuertas incluyen pruebas con PostGIS, cobertura, lint, typecheck, dependency-cruiser y duplicación (menor al 1,2 %).
+- Se probó a mano en local, con navegador y servidor reales:
+  - un reporte con «GRATIS», un enlace y un celular quedó marcado en la cola y el rechazo dejó el reporte `RECHAZADO` y su auditoría;
+  - la carga del histórico de 3000 reportes sintéticos dio 2496 filas y 0 al repetirla.
+- En producción (Render y Vercel) responden `/moderacion`, `/datos-abiertos`, `GET /v1/moderacion/cola` (401 sin token) y `GET /v1/datos-abiertos/resumen`.
+
+### Pendiente
+- Ejecutar una vez `pnpm datos-abiertos:cargar` contra Neon para publicar el histórico de staging. Hasta entonces, el portal solo muestra los reportes que terminen desde la v2.11.0.
+- Dar el rol a la primera persona moderadora con `pnpm moderador:ascender <idUsuario>` contra Neon.
+- Fase 13: modelo de IA (FastAPI y `HttpClassifier`) entrenado con `pnpm clasificador:exportar`, y evaluado con `pnpm clasificador:evaluar` sobre la misma partición.

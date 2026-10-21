@@ -479,6 +479,10 @@ Resultado: un segundo adaptador de entrada sobre los mismos casos de uso; demues
 
 Resultado: las funciones Deseables. Cada bloque se conecta por un puerto ya existente, sin modificar el dominio.
 
+> **Cambios al ejecutarla (2026-10-20):**
+> - Se agregó una **descripción privada** opcional al reporte: el clasificador necesitaba texto. No hay fotos.
+> - **Datos abiertos:** el **ADR-005** reemplaza la vista materializada y Metabase por una **tabla propia alimentada por eventos** y un **portal en la PWA** (`/datos-abiertos`). Metabase no cabe en el plan gratuito y el ADR-003 no admite otra lectura de `reportes`. Los puntos 1 a 3 del bloque y la prueba 2 se cumplen con ese diseño; el endpoint queda en `GET /v1/datos-abiertos.csv`.
+
 **Moderación**
 
 1. Vista `/moderacion` en la PWA, visible solo con rol `MODERADOR`: cola de reportes con más negaciones o marcados por el clasificador.
@@ -508,9 +512,9 @@ Resultado: las funciones Deseables. Cada bloque se conecta por un puerto ya exis
 
 **Criterio de salida**
 
-- [ ] Moderación operativa con auditoría
-- [ ] Tableros públicos de datos abiertos funcionando
-- [ ] Clasificador por reglas en producción; modelo de IA solo si supera al de reglas en la evaluación
+- [x] Moderación operativa con auditoría
+- [x] Tableros públicos de datos abiertos funcionando (portal `/datos-abiertos`, ADR-005)
+- [x] Clasificador por reglas en producción; modelo de IA solo si supera al de reglas en la evaluación (se evalúa en la Fase 13 sobre `docs/clasificador/evaluacion.md`)
 
 ## Fase 11: Verificación integral de calidad
 
