@@ -1,3 +1,15 @@
+# [2.12.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.11.0...v2.12.0) (2026-10-21)
+
+
+### Bug Fixes
+
+* **api:** limita las rutas de los scripts del clasificador al repositorio ([a0b1eaf](https://github.com/HerlanCh/PlataformaGIS/commit/a0b1eaff036a5e989c303e281601395578bb8d22))
+
+
+### Features
+
+* **classifier:** evaluación del clasificador y cierre de la Fase 10 ([229df1b](https://github.com/HerlanCh/PlataformaGIS/commit/229df1bd4c3bafac1deae6d06d2326cdd874b80f))
+
 # [2.11.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.10.0...v2.11.0) (2026-10-20)
 
 
