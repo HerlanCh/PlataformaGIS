@@ -9,6 +9,9 @@ import {
   zonaSintetica,
 } from './datos-sinteticos.js';
 import { leerPlan, percentil } from './estadisticas.js';
+import { evaluarReinicio } from './fiabilidad.js';
+import type { EstadoEnBase, Envio } from './fiabilidad.js';
+import { urlDeBaseLocal } from './base-local.js';
 
 const ahora = new Date('2026-10-12T12:00:00.000Z');
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-8[0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -135,5 +138,90 @@ describe('datos sintéticos', () => {
     expect(idSintetico('f', 1)).toMatch(UUID);
     expect(idSintetico('e', 99_999)).toMatch(UUID);
     expect(idSintetico('f', 1)).not.toBe(idSintetico('f', 2));
+  });
+});
+
+describe('urlDeBaseLocal', () => {
+  it('acepta una base en la máquina local', () => {
+    const url = 'postgres://gis:gis@localhost:5433/gis';
+
+    expect(urlDeBaseLocal(url, 'La prueba')).toBe(url);
+    expect(urlDeBaseLocal('postgres://g@127.0.0.1/gis', 'La prueba')).toContain('127.0.0.1');
+  });
+
+  it('rechaza una base remota o ausente', () => {
+    expect(() => urlDeBaseLocal('postgres://g@ep-1.neon.tech/gis', 'La prueba')).toThrow(
+      'La prueba solo corre en una base local, no en "ep-1.neon.tech"',
+    );
+    expect(() => urlDeBaseLocal(undefined, 'La prueba')).toThrow('Falta DATABASE_URL');
+  });
+});
+
+describe('evaluarReinicio', () => {
+  const creado = (clave: string, reintentado = false): Envio => ({
+    clave,
+    resultado: 'CREADO',
+    idReporte: `id-${clave}`,
+    reintentado,
+    reenvioCoincide: true,
+  });
+  const sano: EstadoEnBase = { filas: 1, eventos: 1, publicados: 1 };
+
+  it('cumple si cada reporte creado está una vez y su evento quedó publicado', () => {
+    const envios = [creado('a'), creado('b', true), creado('c', true)];
+    const enBase = new Map([
+      ['a', sano],
+      ['b', sano],
+      ['c', sano],
+    ]);
+
+    expect(evaluarReinicio(envios, enBase, new Set(['b']))).toEqual({
+      envios: 3,
+      reintentados: 2,
+      guardadosSinRespuesta: 1,
+      creados: 3,
+      reportesPerdidos: 0,
+      reportesDuplicados: 0,
+      eventosPerdidos: 0,
+      eventosDuplicados: 0,
+      reenviosInconsistentes: 0,
+      cumple: true,
+    });
+  });
+
+  it('un duplicado espacial no exige fila propia', () => {
+    const duplicado: Envio = {
+      clave: 'd',
+      resultado: 'DUPLICADO',
+      idReporte: 'x',
+      reintentado: false,
+      reenvioCoincide: true,
+    };
+
+    expect(evaluarReinicio([duplicado], new Map(), new Set()).cumple).toBe(true);
+  });
+
+  it('detecta reportes y eventos perdidos o duplicados', () => {
+    const sinRespuesta: Envio = {
+      clave: 'z',
+      resultado: null,
+      idReporte: null,
+      reintentado: true,
+      reenvioCoincide: false,
+    };
+    const envios = [creado('a'), creado('b'), creado('c'), sinRespuesta];
+    const enBase = new Map<string, EstadoEnBase>([
+      ['b', { filas: 2, eventos: 1, publicados: 1 }],
+      ['c', { filas: 1, eventos: 2, publicados: 0 }],
+    ]);
+
+    expect(evaluarReinicio(envios, enBase, new Set())).toMatchObject({
+      reportesPerdidos: 2,
+      reportesDuplicados: 1,
+      eventosPerdidos: 2,
+      eventosDuplicados: 1,
+      reenviosInconsistentes: 1,
+      cumple: false,
+    });
   });
 });

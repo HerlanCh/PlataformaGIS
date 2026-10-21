@@ -82,6 +82,49 @@ test('HU-05: sin conexión, 3 reportes quedan pendientes y al volver la señal l
   await contexto.close();
 });
 
+test('HU-05: si la red se corta durante el envío, el reporte llega una sola vez', async ({
+  browser,
+}) => {
+  const punto = puntoAlAzar();
+  const inicio = new Date(Date.now() - 60_000);
+  const { contexto, pagina } = await dispositivo(browser, punto);
+  await abrir(pagina);
+
+  // El primer envío llega a la API y se guarda, pero la respuesta nunca vuelve al teléfono.
+  type Respuesta = { resultado: string; reporte: { id: string } };
+  const respuestas: Respuesta[] = [];
+  const claves: string[] = [];
+  await pagina.route('**/v1/reportes', async (ruta) => {
+    if (ruta.request().method() !== 'POST') return ruta.continue();
+    claves.push(ruta.request().headers()['idempotency-key'] ?? '');
+    const respuesta = await ruta.fetch();
+    respuestas.push((await respuesta.json()) as Respuesta);
+    if (respuestas.length === 1) return ruta.abort('connectionreset');
+    return ruta.fulfill({ response: respuesta });
+  });
+
+  await reportar(pagina, /Bloqueo o protesta vial/);
+  await expect(pagina.getByText(/Sin señal: tu reporte se enviará/)).toBeVisible();
+  await expect(pagina.getByText('1 reporte pendiente de envío')).toBeVisible();
+  expect(respuestas[0]?.resultado).toBe('CREADO');
+
+  // Vuelve la señal: la cola reenvía con la misma clave y la API repite su respuesta, sin crear
+  // otro reporte. Un reenvío sin la clave daría PROPIO_EXISTENTE.
+  await contexto.setOffline(true);
+  await contexto.setOffline(false);
+
+  await expect(pagina.getByText(/reportes? pendientes? de envío/)).toBeHidden();
+  expect(new Set(claves).size).toBe(1);
+  expect(respuestas[1]).toEqual(respuestas[0]);
+  await expect
+    .poll(async () => (await reportesDesde(punto, inicio)).map((r) => r.codigoCategoria))
+    .toEqual(['bloqueo']);
+  // Se espera un poco más: un duplicado tardío también haría fallar la prueba.
+  await pagina.waitForTimeout(2000);
+  expect((await reportesDesde(punto, inicio)).length).toBe(1);
+  await contexto.close();
+});
+
 test('HU-06: el historial muestra el mapa de calor y explica el umbral', async ({ browser }) => {
   const { contexto, pagina } = await dispositivo(browser, puntoAlAzar());
   await abrir(pagina);
