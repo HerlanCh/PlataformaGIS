@@ -1,0 +1,132 @@
+name: Respaldo
+
+# Respaldo diario de la base de staging (Neon) y restauración de prueba (roadmap 11, RNF-07).
+# 1. `pg_dump` en formato personalizado, cifrado con AES-256 y guardado como artefacto 30 días.
+# 2. Se restaura en un PostGIS vacío y se comparan los conteos de filas por tabla con el origen.
+# Corre a diario, después de cada versión publicada (una restauración probada por versión) y a pedido.
+# El repositorio es público: el artefacto solo lleva el respaldo cifrado y los conteos.
+on:
+  schedule:
+    - cron: '0 8 * * *' # 04:00 en Bolivia
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: respaldo
+  cancel-in-progress: false
+
+env:
+  PG_VERSION: '18'
+
+jobs:
+  respaldo:
+    name: Respaldo cifrado de staging
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Cliente de PostgreSQL ${{ env.PG_VERSION }}
+        run: &cliente |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+            https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq "postgresql-client-${PG_VERSION}"
+          echo "/usr/lib/postgresql/${PG_VERSION}/bin" >> "$GITHUB_PATH"
+
+      - name: Volcado y conteo de filas
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: |
+          test -n "$DATABASE_URL" || { echo "::error::falta el secreto STAGING_DATABASE_URL"; exit 1; }
+          pg_dump --version
+          # En una sola transacción de solo lectura el volcado es una foto coherente; los conteos se
+          # toman justo después y pueden adelantarse si staging recibe escrituras entre ambos.
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -At -f tools/respaldo/conteos.sql > conteos-antes.json
+          pg_dump "$DATABASE_URL" --format=custom --no-owner --no-acl --file=respaldo.dump
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -At -f tools/respaldo/conteos.sql > conteos.json
+          if ! diff <(jq -S . conteos-antes.json) <(jq -S . conteos.json); then
+            echo "::error::staging cambió durante el volcado; se reintentará en la próxima ejecución"
+            exit 1
+          fi
+          jq . conteos.json
+          ls -lh respaldo.dump
+
+      - name: Cifrado (AES-256)
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          test -n "$BACKUP_PASSPHRASE" || { echo "::error::falta el secreto BACKUP_PASSPHRASE"; exit 1; }
+          printf '%s' "$BACKUP_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-fd 0 --symmetric --cipher-algo AES256 --output respaldo.dump.gpg respaldo.dump
+          rm respaldo.dump
+          sha256sum respaldo.dump.gpg | tee respaldo.dump.gpg.sha256
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: respaldo-staging-${{ github.run_id }}
+          path: |
+            respaldo.dump.gpg
+            respaldo.dump.gpg.sha256
+            conteos.json
+          retention-days: 30
+          if-no-files-found: error
+
+  restauracion:
+    name: Restauración de prueba
+    needs: respaldo
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgis:
+        # La misma imagen que docker-compose.yml y las pruebas de integración.
+        image: postgis/postgis:18-3.6
+        env:
+          POSTGRES_PASSWORD: restauracion
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s
+          --health-retries 20
+    env:
+      SERVIDOR: postgres://postgres:restauracion@localhost:5432/postgres
+      DESTINO: postgres://postgres:restauracion@localhost:5432/restaurada
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Cliente de PostgreSQL ${{ env.PG_VERSION }}
+        run: *cliente
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: respaldo-staging-${{ github.run_id }}
+
+      - name: Descifrado
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          sha256sum --check respaldo.dump.gpg.sha256
+          printf '%s' "$BACKUP_PASSPHRASE" | gpg --batch --pinentry-mode loopback \
+            --passphrase-fd 0 --decrypt --output respaldo.dump respaldo.dump.gpg
+
+      - name: Restauración en una base vacía
+        run: |
+          # Desde template0: sin las extensiones que la imagen instala en sus bases.
+          psql "$SERVIDOR" -v ON_ERROR_STOP=1 -c 'create database restaurada template template0'
+          pg_restore --list respaldo.dump | grep -E 'EXTENSION|SCHEMA' || true
+          pg_restore --dbname="$DESTINO" --no-owner --no-acl --exit-on-error respaldo.dump
+
+      - name: Compuerta — mismos conteos de filas que el origen
+        run: |
+          psql "$DESTINO" -v ON_ERROR_STOP=1 -At -f tools/respaldo/conteos.sql > conteos-restaurada.json
+          echo "Tablas: $(jq length conteos.json) · filas: $(jq '[.[]] | add // 0' conteos.json)"
+          diff <(jq -S . conteos.json) <(jq -S . conteos-restaurada.json)
+          echo "Restauración verificada: los conteos coinciden"
