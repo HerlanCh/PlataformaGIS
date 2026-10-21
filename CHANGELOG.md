@@ -1,3 +1,10 @@
+## [2.12.1](https://github.com/HerlanCh/PlataformaGIS/compare/v2.12.0...v2.12.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **api:** responde 503 con problem+json cuando la base de datos no está disponible ([f80c455](https://github.com/HerlanCh/PlataformaGIS/commit/f80c45542ec1ce486a21749cc2466e74a9dca819))
+
 # [2.12.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.11.0...v2.12.0) (2026-10-21)
 
 
