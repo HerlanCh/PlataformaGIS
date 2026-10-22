@@ -520,6 +520,14 @@ Resultado: las funciones Deseables. Cada bloque se conecta por un puerto ya exis
 
 Resultado: evidencia medida de que el producto cumple cada RNF de ISO/IEC 25010 antes de pasar a producción. Se congela el alcance: solo se corrigen defectos.
 
+> **Cambios al ejecutarla (2026-10-22):** informe en `docs/informe-calidad.md`.
+> - **Prueba 1:** el escenario k6 con 100.000 reportes corre en local; staging se mide con sus datos reales. Cargar
+>   datos sintéticos en staging ensuciaría el mapa público.
+> - **Prueba 6:** ZAP completo usa `action-api-scan` (escaneo activo desde el contrato OpenAPI), también contra la API
+>   local, porque el firewall de Render filtra parte de los ataques.
+> - **RNF-05:** se mide durante el piloto (Fase 13).
+> - **Defectos corregidos:** `503` con la base caída (v2.12.1) y SSRF en el endpoint de Web Push (v2.12.2).
+
 **Pruebas**
 
 1. **Eficiencia:** escenario k6 completo en staging (registro, carga de viewport, crear reporte, votar, heatmap) con la base de 100.000 reportes. Registrar p95 por ruta.
@@ -541,9 +549,9 @@ Resultado: evidencia medida de que el producto cumple cada RNF de ISO/IEC 25010 
 
 **Criterio de salida**
 
-- [ ] Todos los RNF en "cumple", o con desviación aceptada y justificada por escrito
-- [ ] 0 defectos críticos o altos abiertos
-- [ ] Informe de calidad y trazabilidad completos
+- [x] Todos los RNF en "cumple", o con desviación aceptada y justificada por escrito
+- [x] 0 defectos críticos o altos abiertos
+- [ ] Informe de calidad y trazabilidad completos (falta la prueba de usabilidad con 5 personas)
 
 ## Fase 12: Transición a producción
 
