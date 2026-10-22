@@ -18,3 +18,4 @@ apps/web/.impeccable/config.local.json
 apps/web/playwright-report/
 apps/web/test-results/
 .lighthouseci/
+tools/carga/resultado-completo.json
