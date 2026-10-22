@@ -1,3 +1,10 @@
+## [2.12.2](https://github.com/HerlanCh/PlataformaGIS/compare/v2.12.1...v2.12.2) (2026-10-22)
+
+
+### Bug Fixes
+
+* **notifications:** solo acepta endpoints de servicios push reales (SSRF) ([dbddae3](https://github.com/HerlanCh/PlataformaGIS/commit/dbddae36efc670ba7744c043668761c35e26604e))
+
 ## [2.12.1](https://github.com/HerlanCh/PlataformaGIS/compare/v2.12.0...v2.12.1) (2026-10-21)
 
 
