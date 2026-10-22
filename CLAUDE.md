@@ -85,6 +85,9 @@ Requiere Node 24 y pnpm 12. En bash de Windows, pnpm está en `%APPDATA%\npm`.
 - `pnpm fiabilidad:reinicio` mata la API compilada (base **local**) en plena ráfaga de reportes, la reinicia y exige
   0 reportes o eventos perdidos o duplicados. Requiere `pnpm --filter @gis/api build`.
 - Carga básica con k6 (Docker): `docker run --rm -v "$PWD/tools/carga:/carga" -e BASE_URL=<url> grafana/k6:2.3.0 run /carga/api-basica.js`.
+  El escenario completo (todas las rutas públicas) es `escenario-completo.js` (`VUS`, `PAUSA_S`, `DURACION`, `SALIDA`); contra la
+  API local conviene k6 instalado en la máquina: el reenvío de puertos de Docker Desktop pierde conexiones. Ver
+  `docs/rendimiento/verificacion-fase-11.md`.
 - Las pruebas de integración (`*.integration.test.ts`) usan PostGIS real con Testcontainers: necesitan Docker.
   Sin Docker se omiten en local; en la CI son obligatorias.
 - TypeScript está fijado en la serie 6: typescript-eslint aún no admite la 7.

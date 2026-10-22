@@ -12,8 +12,10 @@ const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
 const CLIENTES = Number(process.env.CLIENTES ?? 500);
 const REPORTES = Number(process.env.REPORTES ?? 20);
 const ZONAS = 10;
-// Diez usuarios con 5 reportes cada uno caben en el límite por usuario y en el de IP.
-const USUARIOS = 10;
+const INTENTOS_POR_REPORTE = 5;
+// Cada intento usa otro usuario: con la ciudad densa (la carga de 100.000 reportes) muchos puntos
+// caen como duplicados, y ningún usuario debe pasar de su límite de 5 reportes cada 10 minutos.
+const USUARIOS = Math.max(10, Math.ceil((REPORTES * INTENTOS_POR_REPORTE) / 5));
 const PAUSA_ENTRE_REPORTES_MS = 3000;
 const ESPERA_FINAL_MS = 5000;
 
@@ -93,8 +95,9 @@ console.log(`clientes conectados: ${oyentes.length}`);
  * Crea un reporte en un punto al azar de la zona (dentro de la ventana de sus clientes). Si cae
  * junto a otro vigente, la API lo toma como duplicado y no emite ReporteCreado: se prueba otro punto.
  */
-async function crearReporte(zona: number, token: string, r: number) {
-  for (let intento = 0; intento < 5; intento += 1) {
+async function crearReporte(zona: number, r: number) {
+  for (let intento = 0; intento < INTENTOS_POR_REPORTE; intento += 1) {
+    const token = tokens[(r * INTENTOS_POR_REPORTE + intento) % USUARIOS]!;
     const centro = zonas[zona]!;
     const punto = {
       latitud: centro.latitud + desvio(),
@@ -115,7 +118,7 @@ async function crearReporte(zona: number, token: string, r: number) {
 const enviados: { id: string; zona: number; en: number }[] = [];
 for (let r = 0; r < REPORTES; r += 1) {
   const zona = r % ZONAS;
-  const envio = await crearReporte(zona, tokens[r % USUARIOS]!, r);
+  const envio = await crearReporte(zona, r);
   if (envio) enviados.push({ ...envio, zona });
   await dormir(PAUSA_ENTRE_REPORTES_MS);
 }
