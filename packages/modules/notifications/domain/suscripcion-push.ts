@@ -26,10 +26,25 @@ export interface PropsSuscripcionPush {
   readonly creadoEn: Date;
 }
 
+/**
+ * Servicios push de los navegadores: Chrome (FCM), Firefox, Edge (WNS) y Safari. El servidor envía
+ * un POST al endpoint, así que aceptar cualquier URL permitiría usarlo contra la red interna (SSRF).
+ */
+const SERVICIOS_PUSH = [
+  'fcm.googleapis.com',
+  'push.services.mozilla.com',
+  'notify.windows.com',
+  'push.apple.com',
+];
+
+const esServicioPush = (host: string): boolean =>
+  SERVICIOS_PUSH.some((servicio) => host === servicio || host.endsWith(`.${servicio}`));
+
 function endpointValido(endpoint: string): boolean {
   if (endpoint.length > LARGO_MAXIMO_ENDPOINT) return false;
   try {
-    return new URL(endpoint).protocol === 'https:';
+    const url = new URL(endpoint);
+    return url.protocol === 'https:' && url.port === '' && esServicioPush(url.hostname);
   } catch {
     return false;
   }
@@ -58,8 +73,8 @@ export class SuscripcionPush {
   }
 
   /**
-   * @throws {ErrorSuscripcionPushInvalida} si el endpoint no es una URL https o las claves no
-   * están en base64 de URL.
+   * @throws {ErrorSuscripcionPushInvalida} si el endpoint no es una URL https de un servicio push o
+   * las claves no están en base64 de URL.
    */
   static crear(props: PropsSuscripcionPush): SuscripcionPush {
     const clavesValidas = [props.p256dh, props.auth].every(

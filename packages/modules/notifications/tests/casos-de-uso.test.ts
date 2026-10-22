@@ -83,8 +83,32 @@ describe('RegistrarSuscripcionPush', () => {
   });
 
   it.each([
+    ['Chrome', 'https://fcm.googleapis.com/fcm/send/abc'],
+    ['Firefox', 'https://updates.push.services.mozilla.com/wpush/v2/abc'],
+    ['Edge', 'https://wns2-by3p.notify.windows.com/w/?token=abc'],
+    ['Safari', 'https://web.push.apple.com/abc'],
+  ])('HU-08: acepta el servicio push de %s', async (_navegador, endpoint) => {
+    const suscripciones = new SuscripcionesEnMemoria();
+
+    await registrar(suscripciones).ejecutar({ idUsuario: ana, endpoint, ...CLAVES });
+
+    expect([...suscripciones.filas.keys()]).toEqual([endpoint]);
+  });
+
+  it.each([
     ['un endpoint que no es https', { endpoint: 'http://push.test/x' }],
     ['un endpoint que no es URL', { endpoint: 'no-es-url' }],
+    // SSRF: el servidor envía un POST al endpoint, así que solo se admiten servicios push reales.
+    ['un endpoint en la máquina local', { endpoint: 'https://localhost:5432/x' }],
+    ['un endpoint en una IP privada', { endpoint: 'https://10.0.0.5/x' }],
+    [
+      'un dominio que imita a un servicio push',
+      { endpoint: 'https://fcm.googleapis.com.ataque.io/x' },
+    ],
+    [
+      'un servicio push con otro puerto',
+      { endpoint: 'https://fcm.googleapis.com:8443/fcm/send/x' },
+    ],
     ['una clave fuera de base64 de URL', { auth: 'con espacios' }],
     ['una clave vacía', { p256dh: '' }],
   ])('rechaza %s', async (_caso, cambio) => {

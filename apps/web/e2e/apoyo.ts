@@ -107,7 +107,8 @@ export async function infracciones(pagina: Page): Promise<string[]> {
 export const SERVICIO_PUSH_SIMULADO = () => {
   let actual: PushSubscription | null = null;
   const crear = (): PushSubscription => {
-    const endpoint = `https://push.example.org/${crypto.randomUUID()}`;
+    // Un endpoint con la forma de FCM: la API solo acepta servicios push reales.
+    const endpoint = `https://fcm.googleapis.com/fcm/send/${crypto.randomUUID()}`;
     const json = {
       endpoint,
       keys: {
