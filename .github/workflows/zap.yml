@@ -1,7 +1,7 @@
 name: ZAP
 
-# Escaneo OWASP ZAP en modo baseline (pasivo) contra la API de staging (roadmap 6, RNF-13).
-# Corre después de cada versión publicada, cuando Render ya desplegó `main`, y a pedido.
+# Escaneo OWASP ZAP contra la API de staging (RNF-13): baseline (pasivo, roadmap 6) tras cada versión
+# y completo (activo, roadmap 11) solo a pedido.
 on:
   workflow_run:
     workflows: [Release]
@@ -50,5 +50,54 @@ jobs:
         run: |
           altos=$(jq '[.site[].alerts[] | select(.riskcode == "3")] | length' report_json.json)
           jq -r '.site[].alerts[] | "\(.riskdesc)\t\(.alert)"' report_json.json | sort | uniq
+          echo "Hallazgos altos: ${altos}"
+          test "$altos" -eq 0
+
+  zap-completo:
+    name: OWASP ZAP completo (escaneo activo de la API)
+    # Roadmap 11, prueba 6: ataca cada ruta del contrato OpenAPI. Solo a pedido: envía ataques
+    # reales y deja datos de prueba en staging.
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Esperar a que staging responda
+        run: |
+          for intento in $(seq 1 30); do
+            curl -fsS "$STAGING/health" && exit 0
+            sleep 20
+          done
+          echo "::error::staging no respondió"
+          exit 1
+
+      - name: Token de un dispositivo de prueba
+        id: token
+        run: |
+          token=$(curl -fsS -X POST "$STAGING/v1/dispositivos" -H 'content-type: application/json' \
+            -d "{\"hashDispositivo\":\"zap-${GITHUB_RUN_ID}\"}" | jq -r .token)
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+
+      - name: Escaneo activo desde el contrato OpenAPI
+        uses: zaproxy/action-api-scan@v0.10.0
+        env:
+          # ZAP agrega la cabecera a cada solicitud: así también ataca las rutas autenticadas.
+          ZAP_AUTH_HEADER: authorization
+          ZAP_AUTH_HEADER_VALUE: Bearer ${{ steps.token.outputs.token }}
+          ZAP_AUTH_HEADER_SITE: plataforma-gis-api.onrender.com
+        with:
+          target: ${{ env.STAGING }}/docs/json
+          format: openapi
+          fail_action: false
+          allow_issue_writing: false
+          artifact_name: informe-zap-completo
+          # Un hilo y 300 ms entre solicitudes: bajo el límite de 300 por minuto por IP de la API.
+          cmd_options: >-
+            -a -j -z "-config scanner.threadPerHost=1 -config scanner.delayInMs=300"
+
+      - name: Compuerta — 0 hallazgos altos
+        run: |
+          altos=$(jq '[.site[].alerts[] | select(.riskcode == "3")] | length' report_json.json)
+          jq -r '.site[].alerts[] | "\(.riskdesc)\t\(.alert)\t\(.count) casos"' report_json.json | sort | uniq
           echo "Hallazgos altos: ${altos}"
           test "$altos" -eq 0

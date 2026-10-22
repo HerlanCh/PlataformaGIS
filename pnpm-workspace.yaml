@@ -9,3 +9,9 @@ allowBuilds:
   cpu-features: false
   protobufjs: false
   ssh2: false
+
+# Parches de seguridad en dependencias de desarrollo (Fase 11, RNF-13; ver docs/seguridad/owasp-top-10.md).
+# Las usa Lighthouse CI (@lhci/cli), que solo corre en la CI y nunca llega a producción.
+overrides:
+  tmp@<0.2.6: ^0.2.6
+  basic-ftp@<6.2.1: ^6.2.1
