@@ -1,13 +1,18 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { infracciones } from '../pruebas/axe.js';
-import { pantallaDe } from '../Raiz.js';
+import { pantallaDe, Raiz } from '../Raiz.js';
 import { PantallaDePrivacidad, PantallaDeTerminos } from './legal/PantallasLegales.js';
 
 describe('Privacidad y términos (roadmap 12)', () => {
-  it('las rutas /privacidad y /terminos abren sus pantallas', () => {
-    expect(pantallaDe('/privacidad')).not.toBeNull();
+  it('las rutas /privacidad y /terminos abren sus pantallas', async () => {
     expect(pantallaDe('/terminos/')).not.toBeNull();
+
+    render(<Raiz ruta="/privacidad" />);
+    expect(await screen.findByRole('heading', { level: 1, name: 'Privacidad' })).toBeTruthy();
+    cleanup();
+    render(<Raiz ruta="/terminos" />);
+    expect(await screen.findByRole('heading', { level: 1, name: 'Términos de uso' })).toBeTruthy();
   });
 
   it.each([
