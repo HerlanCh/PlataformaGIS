@@ -16,6 +16,7 @@ export default defineConfig({
       'packages/modules/*',
       'apps/*',
       { test: { name: 'arquitectura', include: ['tools/architecture/*.test.ts'] } },
+      { test: { name: 'herramientas', include: ['tools/{migraciones,despliegue}/*.test.ts'] } },
     ],
     coverage: {
       provider: 'v8',

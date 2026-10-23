@@ -37,3 +37,50 @@ services:
       # Datos abiertos (HU-11). Tras activarlo, cargar el histórico una vez: `pnpm datos-abiertos:cargar`.
       - key: FEATURE_OPEN_DATA
         value: 'true'
+
+  # Producción (roadmap 12). No se despliega al empujar a main: el workflow `Produccion` aplica las
+  # migraciones y luego pide a Render este commit exacto, solo con una versión `vX.Y.Z` aprobada.
+  # Por eso el arranque no migra: la versión anterior debe seguir funcionando sobre el esquema nuevo.
+  - type: web
+    name: plataforma-gis-api-produccion
+    runtime: node
+    plan: free
+    region: virginia
+    autoDeploy: false
+    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm --filter @gis/api build
+    startCommand: APP_VERSION=${RENDER_GIT_COMMIT:-desconocida} node apps/api/dist/main.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      # Cadena del pooler de Neon del proyecto de producción, distinta de la de staging.
+      - key: DATABASE_URL
+        sync: false
+      # Origen de la web de producción en Vercel.
+      - key: CORS_ORIGIN
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      # Claves VAPID propias de producción (`npx web-push generate-vapid-keys`), nunca las de staging.
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        sync: false
+      - key: FEATURE_HEATMAP
+        value: 'true'
+      - key: FEATURE_SUBSCRIPTIONS
+        value: 'true'
+      - key: FEATURE_NOTIFICATIONS
+        value: 'true'
+      - key: FEATURE_MODERATION
+        value: 'true'
+      - key: FEATURE_CLASSIFIER
+        value: 'true'
+      - key: FEATURE_OPEN_DATA
+        value: 'true'

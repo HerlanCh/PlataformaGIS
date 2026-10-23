@@ -39,6 +39,9 @@ jobs:
       - name: Reglas de arquitectura (RNF-01)
         if: ${{ !cancelled() }}
         run: pnpm depcruise
+      - name: Migraciones compatibles hacia atrás (roadmap 12)
+        if: ${{ !cancelled() }}
+        run: node tools/migraciones/verificar-compatibles.mjs
       - name: Duplicación (RNF-03)
         if: ${{ !cancelled() }}
         run: pnpm duplication
