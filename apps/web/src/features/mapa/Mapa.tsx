@@ -107,7 +107,8 @@ export function Mapa({ reportes, calor, zonas, children }: PropsMapa) {
     L.control
       .zoom({ position: 'topright', zoomInTitle: 'Acercar', zoomOutTitle: 'Alejar' })
       .addTo(mapa);
-    mapa.attributionControl.setPrefix('Leaflet');
+    // La cabecera no tiene lugar en el teléfono: privacidad y términos van con los créditos del mapa.
+    mapa.attributionControl.setPrefix('<a href="/privacidad">Privacidad y términos</a> | Leaflet');
     const grupo = L.markerClusterGroup({
       iconCreateFunction: iconoDeGrupo,
       showCoverageOnHover: false,

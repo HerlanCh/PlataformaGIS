@@ -136,6 +136,14 @@ describe('PWA: mapa en vivo y reporte en dos toques', () => {
     expect(await screen.findByText(/Todo tranquilo/)).toBeTruthy();
   });
 
+  it('los créditos del mapa llevan a privacidad y términos (roadmap 12)', () => {
+    montar();
+
+    expect(screen.getByRole('link', { name: 'Privacidad y términos' }).getAttribute('href')).toBe(
+      '/privacidad',
+    );
+  });
+
   it('HU-01: dos toques envían el reporte con la ubicación del GPS', async () => {
     montar();
 

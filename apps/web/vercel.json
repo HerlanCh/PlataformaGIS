@@ -8,6 +8,14 @@
     {
       "source": "/datos-abiertos",
       "destination": "/index.html"
+    },
+    {
+      "source": "/privacidad",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/terminos",
+      "destination": "/index.html"
     }
   ],
   "headers": [
