@@ -1,3 +1,10 @@
+# [2.13.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.12.2...v2.13.0) (2026-10-23)
+
+
+### Features
+
+* **api:** prueba de humo tras cada despliegue con usuario de humo excluido ([f6a9307](https://github.com/HerlanCh/PlataformaGIS/commit/f6a9307a0f62d73befbd366b88e63d9bd204cd81))
+
 ## [2.12.2](https://github.com/HerlanCh/PlataformaGIS/compare/v2.12.1...v2.12.2) (2026-10-22)
 
 
