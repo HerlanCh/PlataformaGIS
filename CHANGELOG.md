@@ -1,3 +1,10 @@
+# [2.14.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.13.1...v2.14.0) (2026-10-23)
+
+
+### Features
+
+* **web:** privacidad y términos de uso en la PWA, y runbook de producción ([c8bf64d](https://github.com/HerlanCh/PlataformaGIS/commit/c8bf64d80defb80c62f8ca619b9617a9d02daf39))
+
 ## [2.13.1](https://github.com/HerlanCh/PlataformaGIS/compare/v2.13.0...v2.13.1) (2026-10-23)
 
 
