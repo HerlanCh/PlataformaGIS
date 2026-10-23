@@ -2,7 +2,8 @@
 
 Fase 11, prueba 7. Método en [`guion.md`](guion.md); datos crudos en las planillas (sin datos personales).
 
-> **Estado:** pendiente. Se completa con las 5 sesiones.
+> **Estado:** desviación aceptada en la Fase 11. Las sesiones se harán con personas reales durante el piloto
+> (Fase 13); esta plantilla se completa entonces. No contiene datos todavía.
 
 ## Participantes
 

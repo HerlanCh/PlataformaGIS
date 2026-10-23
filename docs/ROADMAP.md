@@ -526,6 +526,8 @@ Resultado: evidencia medida de que el producto cumple cada RNF de ISO/IEC 25010 
 > - **Prueba 6:** ZAP completo usa `action-api-scan` (escaneo activo desde el contrato OpenAPI), también contra la API
 >   local, porque el firewall de Render filtra parte de los ataques.
 > - **RNF-05:** se mide durante el piloto (Fase 13).
+> - **Prueba 7 (usabilidad):** desviación aceptada. Se hará con personas reales en el piloto (Fase 13), con el guion de
+>   `docs/usabilidad/`.
 > - **Defectos corregidos:** `503` con la base caída (v2.12.1) y SSRF en el endpoint de Web Push (v2.12.2).
 
 **Pruebas**
@@ -551,7 +553,7 @@ Resultado: evidencia medida de que el producto cumple cada RNF de ISO/IEC 25010 
 
 - [x] Todos los RNF en "cumple", o con desviación aceptada y justificada por escrito
 - [x] 0 defectos críticos o altos abiertos
-- [ ] Informe de calidad y trazabilidad completos (falta la prueba de usabilidad con 5 personas)
+- [x] Informe de calidad y trazabilidad completos (la prueba de usabilidad queda como desviación aceptada para el piloto)
 
 ## Fase 12: Transición a producción
 
@@ -596,9 +598,11 @@ Resultado: evidencia de que la plataforma resuelve el problema planteado (valida
 **Ejecución**
 
 1. Incorporar a los usuarios del piloto con una guía de instalación de la PWA y del bot.
-2. Recolectar en paralelo los datos de la plataforma y los del grupo de comparación.
-3. Al cierre, aplicar la encuesta SUS y la encuesta de impacto (indicador del Fin de la matriz de marco lógico).
-4. Exportar el conjunto etiquetado de moderación y ejecutar el paso 3 del bloque de IA de la Fase 10; desplegar el modelo solo si supera al clasificador por reglas.
+2. Al inicio, aplicar la prueba de usabilidad con tareas guiadas a 5 participantes (`docs/usabilidad/guion.md`;
+   pendiente de la Fase 11). Corregir los bloqueos y validar las hipótesis anotadas en `docs/informe-calidad.md`.
+3. Recolectar en paralelo los datos de la plataforma y los del grupo de comparación.
+4. Al cierre, aplicar la encuesta SUS y la encuesta de impacto (indicador del Fin de la matriz de marco lógico).
+5. Exportar el conjunto etiquetado de moderación y ejecutar el paso 3 del bloque de IA de la Fase 10; desplegar el modelo solo si supera al clasificador por reglas.
 
 **Análisis**
 

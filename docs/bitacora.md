@@ -641,3 +641,48 @@ Ese es el caso para el modelo de IA de la Fase 13, que se adopta solo si supera 
 - Ejecutar una vez `pnpm datos-abiertos:cargar` contra Neon para publicar el histórico de staging. Hasta entonces, el portal solo muestra los reportes que terminen desde la v2.11.0.
 - Dar el rol a la primera persona moderadora con `pnpm moderador:ascender <idUsuario>` contra Neon.
 - Fase 13: modelo de IA (FastAPI y `HttpClassifier`) entrenado con `pnpm clasificador:exportar`, y evaluado con `pnpm clasificador:evaluar` sobre la misma partición.
+
+## [2026-10-23] — Fase 11: verificación integral de calidad
+
+### Qué se hizo
+Se midió cada RNF de ISO/IEC 25010 sobre el sistema completo y se corrigieron los defectos encontrados. El alcance
+estuvo congelado: solo correcciones. La fase se entregó en seis PR:
+
+| PR | Versión | Contenido |
+| :-- | :-- | :-- |
+| #41 | v2.12.1 | `503` en `problem+json` con la base caída (prueba 3.1) |
+| #42 | — | `pnpm fiabilidad:reinicio` y prueba Playwright de corte de red durante el envío (pruebas 3.2 y 3.3) |
+| #43 | — | Respaldo diario cifrado de staging con restauración de prueba (prueba 4, RNF-07) |
+| #44 | — | Escenario k6 completo, curva de capacidad, difusión con 500 clientes y consultas con 100.000 reportes (pruebas 1 y 2) |
+| #45 | v2.12.2 | SSRF en el endpoint de Web Push, ZAP completo, `pnpm audit` y revisión del OWASP Top 10 (prueba 6) |
+| #46 y este | — | Informe de calidad, trazabilidad, materiales de usabilidad y cierre |
+
+### Resultados
+- **13 de 14 RNF cumplen.** RNF-05 (disponibilidad) se mide durante el piloto.
+- Valores destacados:
+  - API: p95 de 19 ms en local con 100.000 reportes y 261 ms en staging;
+  - difusión con 500 clientes: p95 de 708 ms en staging;
+  - consulta espacial más lenta: p95 de 42 ms;
+  - JS inicial de la PWA: 152 KB;
+  - cobertura: 100 / 99,3 / 95,9 %;
+  - 0 vulnerabilidades en dependencias de producción y 0 hallazgos altos en ZAP.
+- **Defectos encontrados y corregidos, con prueba primero:**
+  1. `500` en lugar de `503` con la base caída;
+  2. SSRF ciego por el `endpoint` de Web Push;
+  3. dos dependencias de desarrollo con vulnerabilidades altas.
+- **Defectos críticos o altos abiertos:** 0.
+- Informe completo en `docs/informe-calidad.md`.
+
+### Decisiones
+- **100.000 reportes en local, no en staging:** cargar datos sintéticos en staging ensuciaría el mapa público y los
+  datos abiertos. Staging se mide con sus datos reales.
+- **ZAP completo también contra la API local:** en staging, el firewall de Render bloquea con HTML 403 parte de los
+  ataques de inyección antes de que lleguen a la API.
+- **Límite de capacidad documentado:** con unas 170 solicitudes/s el proceso se satura por el pool de 5 conexiones
+  (RSK-02), sin errores. Con unas 100 solicitudes/s el p95 es de 39 ms.
+- **Usabilidad como desviación aceptada:** no hubo sesiones con personas reales en esta fase. La prueba se hará en el
+  piloto (Fase 13) con el guion de `docs/usabilidad/`. No se registraron datos que no se midieron.
+
+### Pendiente
+- Prueba de usabilidad con 5 personas reales al inicio del piloto (Fase 13).
+- Siguiente: Fase 12, transición a producción.
