@@ -1,0 +1,146 @@
+name: Produccion
+
+# Despliegue a producción (roadmap 12). Nada llega a producción a mano:
+# - Cada versión `vX.Y.Z` que publica `Release` se despliega tras la aprobación manual del
+#   environment `produccion` (revisor obligatorio).
+# - Para revertir, se ejecuta a pedido con la versión anterior: `gh workflow run Produccion -f version=vX.Y.Z`.
+# Orden: migraciones → API (Render, commit exacto) → web (Vercel). Las migraciones son solo de avance y
+# compatibles hacia atrás (tools/migraciones), así que revertir la API no exige revertir la base.
+on:
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versión a desplegar (etiqueta vX.Y.Z)'
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: produccion
+  cancel-in-progress: false
+
+jobs:
+  version:
+    name: Versión a desplegar
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      etiqueta: ${{ steps.resolver.outputs.etiqueta }}
+      commit: ${{ steps.resolver.outputs.commit }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: resolver
+        env:
+          PEDIDA: ${{ inputs.version }}
+          # Commit de main que validó la CI; semantic-release etiqueta a su hijo (el del CHANGELOG).
+          VALIDADO: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ -n "$PEDIDA" ]; then
+            [[ "$PEDIDA" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::'$PEDIDA' no es vX.Y.Z"; exit 1; }
+            etiqueta="$PEDIDA"
+          else
+            etiqueta=""
+            for candidata in $(git tag --contains "$VALIDADO" --list 'v*.*.*' --sort=creatordate); do
+              if [ "$(git rev-parse "$candidata^{commit}^")" = "$VALIDADO" ]; then etiqueta="$candidata"; break; fi
+            done
+          fi
+          if [ -z "$etiqueta" ]; then
+            echo "Release no publicó una versión para $VALIDADO: no hay nada que desplegar."
+          else
+            commit=$(git rev-parse "$etiqueta^{commit}")
+            echo "Se desplegará $etiqueta ($commit)"
+            echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          fi
+          echo "etiqueta=$etiqueta" >> "$GITHUB_OUTPUT"
+
+  desplegar:
+    name: Desplegar ${{ needs.version.outputs.etiqueta }}
+    needs: version
+    if: needs.version.outputs.etiqueta != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    # Pide la aprobación manual. Los secretos de producción solo existen en este environment.
+    environment:
+      name: produccion
+      url: ${{ vars.WEB_URL }}
+    env:
+      ETIQUETA: ${{ needs.version.outputs.etiqueta }}
+      COMMIT: ${{ needs.version.outputs.commit }}
+      API_URL: ${{ vars.API_URL }}
+      WEB_URL: ${{ vars.WEB_URL }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.version.outputs.etiqueta }}
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Instalar
+        run: pnpm install --frozen-lockfile
+
+      - name: Migraciones
+        env:
+          # Cadena directa de Neon (sin `-pooler`), la misma que usa el respaldo.
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # Solo se migran los módulos activos: los mismos interruptores que el servicio de
+          # producción en render.yaml.
+          FEATURE_HEATMAP: 'true'
+          FEATURE_SUBSCRIPTIONS: 'true'
+          FEATURE_NOTIFICATIONS: 'true'
+          FEATURE_MODERATION: 'true'
+          FEATURE_CLASSIFIER: 'true'
+          FEATURE_OPEN_DATA: 'true'
+        run: |
+          test -n "$DATABASE_URL" || { echo "::error::falta el secreto DATABASE_URL"; exit 1; }
+          pnpm db:migrate
+
+      - name: API en Render
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ vars.RENDER_SERVICE_ID }}
+        run: |
+          respuesta=$(curl -fsS -X POST "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys" \
+            -H "Authorization: Bearer $RENDER_API_KEY" -H 'Content-Type: application/json' \
+            -d "{\"commitId\": \"$COMMIT\", \"clearCache\": \"do_not_clear\"}")
+          echo "Despliegue de Render: $(jq -r '.id' <<< "$respuesta")"
+          # Render cambia de versión cuando la nueva pasa su verificación de /health.
+          for intento in $(seq 1 60); do
+            version=$(curl -fsS "$API_URL/health" | jq -r '.version' || true)
+            if [ "$version" = "$COMMIT" ]; then echo "La API sirve $ETIQUETA"; exit 0; fi
+            echo "La API sirve '${version}', se espera ${COMMIT} (intento ${intento})"
+            sleep 20
+          done
+          echo "::error::Render no desplegó $COMMIT a tiempo"
+          exit 1
+
+      - name: Web en Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VITE_API_URL: ${{ vars.API_URL }}
+        run: |
+          node tools/despliegue/csp.mjs apps/web/vercel.json
+          vercel() { pnpm dlx vercel@63.1.0 "$@" --token="$VERCEL_TOKEN"; }
+          vercel pull --yes --environment=production
+          vercel build --prod
+          url=$(vercel deploy --prebuilt --prod)
+          echo "Web desplegada en $url"
+          curl -fsS -o /dev/null "$WEB_URL/manifest.webmanifest"
+
+      - name: Resumen
+        run: |
+          {
+            echo "### Producción en $ETIQUETA"
+            echo "- Commit: \`$COMMIT\`"
+            echo "- API: $API_URL/health"
+            echo "- Web: $WEB_URL"
+          } >> "$GITHUB_STEP_SUMMARY"
