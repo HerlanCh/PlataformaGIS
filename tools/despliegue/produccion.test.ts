@@ -40,6 +40,13 @@ describe('Pipeline de producción (roadmap 12)', () => {
     expect(flujo.jobs.desplegar.environment.name).toBe('produccion');
   });
 
+  it('RNF-07: el paso de migraciones lleva las variables obligatorias de la configuración', () => {
+    // `cargarConfig` (packages/platform) no tiene valor por defecto para estas dos.
+    expect(Object.keys(migraciones.env ?? {})).toEqual(
+      expect.arrayContaining(['DATABASE_URL', 'CORS_ORIGIN']),
+    );
+  });
+
   it('RNF-07: el pipeline migra los mismos módulos que activa el servicio de producción', () => {
     const delServicio = interruptores(produccion.envVars.map((v) => [v.key, v.value]));
     const delPipeline = interruptores(Object.entries(migraciones.env ?? {}));
