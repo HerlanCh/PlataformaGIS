@@ -37,6 +37,9 @@ services:
       # Datos abiertos (HU-11). Tras activarlo, cargar el histórico una vez: `pnpm datos-abiertos:cargar`.
       - key: FEATURE_OPEN_DATA
         value: 'true'
+      # Usuario de la prueba de humo (docs/runbook.md): su id lo da el workflow Administracion.
+      - key: HUMO_ID_USUARIO
+        sync: false
 
   # Producción (roadmap 12). No se despliega al empujar a main: el workflow `Produccion` aplica las
   # migraciones y luego pide a Render este commit exacto, solo con una versión `vX.Y.Z` aprobada.
@@ -84,3 +87,6 @@ services:
         value: 'true'
       - key: FEATURE_OPEN_DATA
         value: 'true'
+      # Usuario de la prueba de humo (docs/runbook.md): su id lo da el workflow Administracion.
+      - key: HUMO_ID_USUARIO
+        sync: false

@@ -1696,3 +1696,51 @@ a.boton-redondo {
   color: var(--tinta);
   font-weight: 700;
 }
+
+/* Privacidad y términos (roadmap 12): texto corrido en tinta. El aviso de emergencias es una nota en
+   superficie, sin color de línea (la regla de la tinta de línea). */
+
+.legal__emergencia {
+  margin-bottom: var(--e-4);
+  padding: var(--e-3) var(--e-4);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  font-size: var(--t-2);
+}
+
+.legal {
+  display: grid;
+  gap: var(--e-2);
+  padding: var(--e-4) 0;
+  border-top: 1px solid var(--borde);
+}
+
+.legal h2 {
+  font-size: var(--t-3);
+  font-weight: 800;
+}
+
+.legal p,
+.legal li {
+  color: var(--tinta-2);
+  font-size: var(--t-2);
+  line-height: 1.5;
+}
+
+.legal ul {
+  display: grid;
+  gap: var(--e-2);
+  margin: 0;
+  padding-left: var(--e-4);
+}
+
+.legal a,
+.legal__otra a {
+  color: var(--tinta);
+  font-weight: 700;
+}
+
+.legal__otra {
+  padding-top: var(--e-4);
+  border-top: 1px solid var(--borde);
+}

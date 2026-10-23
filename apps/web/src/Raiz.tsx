@@ -14,10 +14,24 @@ const PantallaDeDatosAbiertos = lazy(() =>
   })),
 );
 
+const PantallaDePrivacidad = lazy(() =>
+  import('./features/legal/PantallasLegales.js').then((m) => ({
+    default: m.PantallaDePrivacidad,
+  })),
+);
+
+const PantallaDeTerminos = lazy(() =>
+  import('./features/legal/PantallasLegales.js').then((m) => ({
+    default: m.PantallaDeTerminos,
+  })),
+);
+
 /** Pantallas por ruta. Todo lo demás es el mapa. */
 export const PANTALLAS = {
   '/moderacion': PantallaDeModeracion,
   '/datos-abiertos': PantallaDeDatosAbiertos,
+  '/privacidad': PantallaDePrivacidad,
+  '/terminos': PantallaDeTerminos,
 } as const;
 
 export const pantallaDe = (ruta: string) =>
