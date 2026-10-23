@@ -63,6 +63,7 @@ suscribirManejadores({
   reloj: relojDelSistema,
   ids: generadorUuid,
   vapid: configHttp.vapid,
+  idUsuarioDeHumo: configHttp.idUsuarioDeHumo,
 });
 const despachador = new DespachadorDeSalida(db, bus, {
   registro,

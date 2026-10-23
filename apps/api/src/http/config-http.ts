@@ -32,6 +32,11 @@ const esquema = z
     VAPID_PUBLIC_KEY: opcional,
     VAPID_PRIVATE_KEY: opcional,
     VAPID_SUBJECT: opcional,
+    /** Usuario de la prueba de humo (roadmap 12): sus reportes no tienen efectos fuera del mapa. */
+    HUMO_ID_USUARIO: z.preprocess(
+      (valor) => (valor === '' ? undefined : valor),
+      z.uuid().optional(),
+    ),
   })
   .refine((env) => env.NODE_ENV !== 'production' || env.JWT_SECRET !== undefined, {
     message: 'es obligatorio en producción',
@@ -62,6 +67,8 @@ export interface ConfigHttp {
   readonly caducidadIntervaloS: number;
   /** `null` si faltan las claves: no se envían avisos push. */
   readonly vapid: ConfigVapid | null;
+  /** `null` si no hay prueba de humo en este entorno. */
+  readonly idUsuarioDeHumo: string | null;
 }
 
 /** Contacto por defecto de VAPID si no se configura otro. */
@@ -89,5 +96,6 @@ export function cargarConfigHttp(env: Entorno = process.env): ConfigHttp {
             contacto: datos.VAPID_SUBJECT ?? CONTACTO_VAPID,
           }
         : null,
+    idUsuarioDeHumo: datos.HUMO_ID_USUARIO ?? null,
   };
 }

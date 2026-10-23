@@ -136,6 +136,13 @@ jobs:
           echo "Web desplegada en $url"
           curl -fsS -o /dev/null "$WEB_URL/manifest.webmanifest"
 
+      - name: Prueba de humo
+        env:
+          BASE_URL: ${{ vars.API_URL }}
+          HUMO_HASH_DISPOSITIVO: ${{ secrets.HUMO_HASH_DISPOSITIVO }}
+          VERSION_ESPERADA: ${{ needs.version.outputs.commit }}
+        run: pnpm humo
+
       - name: Resumen
         run: |
           {

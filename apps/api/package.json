@@ -16,7 +16,8 @@
     "perf:espacial": "tsx --env-file-if-exists=../../.env src/rendimiento/medir-consultas.ts",
     "gen:api": "tsx src/openapi/generar.ts",
     "carga:difusion": "tsx --env-file-if-exists=../../.env src/rendimiento/difusion.ts",
-    "fiabilidad:reinicio": "tsx --env-file-if-exists=../../.env src/rendimiento/fiabilidad-reinicio.ts"
+    "fiabilidad:reinicio": "tsx --env-file-if-exists=../../.env src/rendimiento/fiabilidad-reinicio.ts",
+    "humo": "tsx --env-file-if-exists=../../.env src/operacion/humo.ts"
   },
   "dependencies": {
     "@fastify/cors": "11.3.0",

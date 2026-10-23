@@ -91,26 +91,27 @@ export const consultaParaClasificar = (
 /**
  * `open-data` necesita de un reporte terminado solo lo que publica anonimizado: la categoría, la
  * ubicación pública, la fecha, el estado y si se confirmó. Nunca el autor ni la ubicación real.
+ * Los reportes del usuario de humo (roadmap 12) no existen para `open-data`.
  */
 export const consultaDeReportesFinalizados = (
   reportes: RepositorioDeReportes,
+  idUsuarioDeHumo: string | null = null,
 ): ConsultaDeReportesFinalizados => ({
   async buscar(id) {
     const reporte = await reportes.buscarPorId(idReporte(id));
-    return (
-      reporte && {
-        idReporte: reporte.id,
-        codigoCategoria: reporte.codigoCategoria,
-        estado: reporte.estado,
-        motivoRechazo: reporte.motivoRechazo,
-        publicLocation: {
-          latitud: reporte.publicLocation.latitud,
-          longitud: reporte.publicLocation.longitud,
-        },
-        creadoEn: reporte.creadoEn,
-        extensiones: reporte.extensiones,
-      }
-    );
+    if (!reporte || reporte.authorId === idUsuarioDeHumo) return null;
+    return {
+      idReporte: reporte.id,
+      codigoCategoria: reporte.codigoCategoria,
+      estado: reporte.estado,
+      motivoRechazo: reporte.motivoRechazo,
+      publicLocation: {
+        latitud: reporte.publicLocation.latitud,
+        longitud: reporte.publicLocation.longitud,
+      },
+      creadoEn: reporte.creadoEn,
+      extensiones: reporte.extensiones,
+    };
   },
   idsFinalizados(despuesDe, limite) {
     return reportes.buscarIdsFinalizados(despuesDe === null ? null : idReporte(despuesDe), limite);

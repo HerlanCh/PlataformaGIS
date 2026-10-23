@@ -35,6 +35,7 @@ import type { GeneradorDeId, Reloj } from '@gis/shared-kernel';
 import { suscribirPublicador } from '../tiempo-real/publicador.js';
 import type { ConfigVapid } from '../http/config-http.js';
 import type { TiempoReal } from '../tiempo-real/servidor.js';
+import { reportesDeHumo, salvoHumo } from './humo.js';
 import {
   consultaDeAutor,
   consultaDeReportesFinalizados,
@@ -120,11 +121,15 @@ export interface DependenciasManejadores {
   readonly reloj: Reloj;
   readonly ids: GeneradorDeId;
   readonly vapid?: ConfigVapid | null;
+  /** Usuario de la prueba de humo: sus reportes no tienen efectos fuera del mapa (roadmap 12). */
+  readonly idUsuarioDeHumo?: string | null;
 }
 
 export function suscribirManejadores(deps: DependenciasManejadores): void {
   const { bus, db, interruptores, reloj, ids } = deps;
   const reportes = new RepositorioReportesPostgis(db);
+  const { idUsuarioDeHumo } = deps;
+  const esDeHumo = reportesDeHumo(reportes, idUsuarioDeHumo);
   const transicion = { reportes, unidadDeTrabajo: new UnidadDeTrabajoReportePg(db), reloj, ids };
   const voto = {
     consultaDeReporte: consultaParaVerificacion(reportes),
@@ -148,7 +153,11 @@ export function suscribirManejadores(deps: DependenciasManejadores): void {
 
   const reputacion = new AjustarReputacionPorDesenlace(voto);
   for (const clave of AjustarReputacionPorDesenlace.eventos) {
-    bus.suscribir(clave, 'verification.ajustar-reputacion', (e) => reputacion.manejar(e));
+    bus.suscribir(
+      clave,
+      'verification.ajustar-reputacion',
+      salvoHumo(esDeHumo, (e) => reputacion.manejar(e)),
+    );
   }
 
   if (interruptores.estaActivo('subscriptions')) {
@@ -157,9 +166,11 @@ export function suscribirManejadores(deps: DependenciasManejadores): void {
       consultaDeAutor: consultaDeAutor(reportes),
       enviador: enviadorDeAvisos(db, interruptores, deps.registro, deps.vapid ?? null),
     });
-    bus.suscribir('ReporteCreado.v1', 'subscriptions.notificar', async (e) => {
-      await notificar.manejar(e);
-    });
+    bus.suscribir(
+      'ReporteCreado.v1',
+      'subscriptions.notificar',
+      salvoHumo(esDeHumo, (e) => notificar.manejar(e)),
+    );
   }
 
   // HU-12 y HU-10: la cola de moderación se alimenta de votos, clasificaciones y desenlaces.
@@ -173,7 +184,7 @@ export function suscribirManejadores(deps: DependenciasManejadores): void {
   // HU-11: cada reporte que termina pasa anonimizado a los datos abiertos.
   if (interruptores.estaActivo('open-data')) {
     const registrar = new RegistrarDatoAbierto(
-      consultaDeReportesFinalizados(reportes),
+      consultaDeReportesFinalizados(reportes, idUsuarioDeHumo),
       new RepositorioDatosAbiertosPg(db),
     );
     for (const clave of RegistrarDatoAbierto.eventos) {

@@ -22,6 +22,8 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    # Sin revisores: solo aporta los secretos de staging (el usuario de humo).
+    environment: staging
     steps:
       - uses: actions/checkout@v7
         with:
@@ -47,6 +49,17 @@ jobs:
           done
           test "$version" = "$esperado" || { echo "::error::staging no desplegó ${esperado} a tiempo"; exit 1; }
           curl -fsS -o /dev/null "$BASE_URL/manifest.webmanifest"
+
+      - name: Prueba de humo (roadmap 12)
+        env:
+          BASE_URL: ${{ env.API_URL }}
+          HUMO_HASH_DISPOSITIVO: ${{ secrets.HUMO_HASH_DISPOSITIVO }}
+        run: |
+          if [ -z "$HUMO_HASH_DISPOSITIVO" ]; then
+            echo "::warning::sin HUMO_HASH_DISPOSITIVO en el environment staging: se omite la prueba de humo"
+            exit 0
+          fi
+          VERSION_ESPERADA=$(git rev-parse HEAD) pnpm humo
 
       - name: Playwright
         run: pnpm --filter @gis/web e2e

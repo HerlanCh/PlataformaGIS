@@ -132,6 +132,7 @@ describe('cargarConfigHttp', () => {
       despachoIntervaloMs: 250,
       caducidadIntervaloS: 60,
       vapid: null,
+      idUsuarioDeHumo: null,
     });
   });
 
@@ -153,6 +154,7 @@ describe('cargarConfigHttp', () => {
       despachoIntervaloMs: 250,
       caducidadIntervaloS: 60,
       vapid: null,
+      idUsuarioDeHumo: null,
     });
   });
 
