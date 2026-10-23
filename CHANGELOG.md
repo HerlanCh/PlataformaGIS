@@ -1,3 +1,10 @@
+## [2.13.1](https://github.com/HerlanCh/PlataformaGIS/compare/v2.13.0...v2.13.1) (2026-10-23)
+
+
+### Bug Fixes
+
+* **ci:** CORS_ORIGIN en el paso de migraciones de producción ([b95262f](https://github.com/HerlanCh/PlataformaGIS/commit/b95262f9281827b9a1ab9eefb40ce6457e044458))
+
 # [2.13.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.12.2...v2.13.0) (2026-10-23)
 
 
