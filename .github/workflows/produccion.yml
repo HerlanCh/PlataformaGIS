@@ -90,6 +90,9 @@ jobs:
         env:
           # Cadena directa de Neon (sin `-pooler`), la misma que usa el respaldo.
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # `db:migrate` valida la configuración completa de la API, que exige este origen aunque migrar
+          # no lo use.
+          CORS_ORIGIN: ${{ vars.WEB_URL }}
           # Solo se migran los módulos activos: los mismos interruptores que el servicio de
           # producción en render.yaml.
           FEATURE_HEATMAP: 'true'
