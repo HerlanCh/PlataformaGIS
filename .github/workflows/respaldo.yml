@@ -1,6 +1,10 @@
 name: Respaldo
 
-# Respaldo diario de la base de staging (Neon) y restauración de prueba (roadmap 11, RNF-07).
+# Respaldo diario de las bases de staging y producción (Neon) y restauración de prueba (roadmap 11 y
+# 12, RNF-07). Cada entorno tiene su environment, con su base y su propia frase de cifrado:
+# - staging: los secretos del repositorio STAGING_DATABASE_URL y BACKUP_PASSPHRASE;
+# - produccion-respaldo: DATABASE_URL (directa) y BACKUP_PASSPHRASE de producción. No tiene revisor,
+#   para que el respaldo diario no espere una aprobación como el despliegue (environment produccion).
 # 1. `pg_dump` en formato personalizado, cifrado con AES-256 y guardado como artefacto 30 días.
 # 2. Se restaura en un PostGIS vacío y se comparan los conteos de filas por tabla con el origen.
 # Corre a diario, después de cada versión publicada (una restauración probada por versión) y a pedido.
@@ -25,8 +29,17 @@ env:
 
 jobs:
   respaldo:
-    name: Respaldo cifrado de staging
+    name: Respaldo cifrado de ${{ matrix.entorno }}
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    strategy:
+      fail-fast: false
+      matrix: &entornos
+        include:
+          - entorno: staging
+            environment: staging
+          - entorno: produccion
+            environment: produccion-respaldo
+    environment: ${{ matrix.environment }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -45,17 +58,18 @@ jobs:
 
       - name: Volcado y conteo de filas
         env:
-          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          # Staging usa el secreto del repositorio; producción, el de su environment.
+          DATABASE_URL: ${{ secrets.DATABASE_URL || secrets.STAGING_DATABASE_URL }}
         run: |
-          test -n "$DATABASE_URL" || { echo "::error::falta el secreto STAGING_DATABASE_URL"; exit 1; }
+          test -n "$DATABASE_URL" || { echo "::error::falta la cadena de la base de ${{ matrix.entorno }}"; exit 1; }
           pg_dump --version
           # En una sola transacción de solo lectura el volcado es una foto coherente; los conteos se
-          # toman justo después y pueden adelantarse si staging recibe escrituras entre ambos.
+          # toman justo después y pueden adelantarse si la base recibe escrituras entre ambos.
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -At -f tools/respaldo/conteos.sql > conteos-antes.json
           pg_dump "$DATABASE_URL" --format=custom --no-owner --no-acl --file=respaldo.dump
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -At -f tools/respaldo/conteos.sql > conteos.json
           if ! diff <(jq -S . conteos-antes.json) <(jq -S . conteos.json); then
-            echo "::error::staging cambió durante el volcado; se reintentará en la próxima ejecución"
+            echo "::error::${{ matrix.entorno }} cambió durante el volcado; se reintentará en la próxima ejecución"
             exit 1
           fi
           jq . conteos.json
@@ -73,7 +87,7 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
-          name: respaldo-staging-${{ github.run_id }}
+          name: respaldo-${{ matrix.entorno }}-${{ github.run_id }}
           path: |
             respaldo.dump.gpg
             respaldo.dump.gpg.sha256
@@ -82,8 +96,12 @@ jobs:
           if-no-files-found: error
 
   restauracion:
-    name: Restauración de prueba
+    name: Restauración de prueba de ${{ matrix.entorno }}
     needs: respaldo
+    strategy:
+      fail-fast: false
+      matrix: *entornos
+    environment: ${{ matrix.environment }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
@@ -107,7 +125,7 @@ jobs:
 
       - uses: actions/download-artifact@v7
         with:
-          name: respaldo-staging-${{ github.run_id }}
+          name: respaldo-${{ matrix.entorno }}-${{ github.run_id }}
 
       - name: Descifrado
         env:
