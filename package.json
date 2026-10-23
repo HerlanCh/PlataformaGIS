@@ -33,7 +33,8 @@
     "perf:espacial": "pnpm --filter @gis/api run perf:espacial",
     "gen:api": "pnpm --filter @gis/api run gen:api && pnpm --filter @gis/api-client run gen",
     "carga:difusion": "pnpm --filter @gis/api run carga:difusion",
-    "fiabilidad:reinicio": "pnpm --filter @gis/api run fiabilidad:reinicio"
+    "fiabilidad:reinicio": "pnpm --filter @gis/api run fiabilidad:reinicio",
+    "humo": "pnpm --filter @gis/api run humo"
   },
   "lint-staged": {
     "*.{ts,tsx,js,cjs,mjs}": [

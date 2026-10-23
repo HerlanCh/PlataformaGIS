@@ -1,0 +1,65 @@
+name: Administracion
+
+# Tareas de administración sobre la base de un entorno, sin copiar su cadena de conexión a ninguna
+# máquina (roadmap 12, semilla de producción). En `produccion` piden la aprobación del environment.
+# - ascender-moderador: da el rol MODERADOR a `id_usuario` (el usuario lo ve en /moderacion).
+# - preparar-usuario-de-humo: registra el dispositivo de HUMO_HASH_DISPOSITIVO, lo asciende y muestra
+#   su id, que se configura como HUMO_ID_USUARIO en la API del entorno.
+# Las categorías no hacen falta: las siembra la migración `0001_semilla_categorias`.
+on:
+  workflow_dispatch:
+    inputs:
+      entorno:
+        description: 'Entorno'
+        type: choice
+        options: [staging, produccion]
+        required: true
+      accion:
+        description: 'Acción'
+        type: choice
+        options: [ascender-moderador, preparar-usuario-de-humo]
+        required: true
+      id_usuario:
+        description: 'Id del usuario (solo para ascender-moderador)'
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  administrar:
+    name: ${{ inputs.accion }} en ${{ inputs.entorno }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ inputs.entorno }}
+    env:
+      # Producción guarda la suya en el environment; staging usa el secreto del repositorio.
+      DATABASE_URL: ${{ secrets.DATABASE_URL || secrets.STAGING_DATABASE_URL }}
+      API_URL: ${{ vars.API_URL }}
+      HUMO_HASH_DISPOSITIVO: ${{ secrets.HUMO_HASH_DISPOSITIVO }}
+      ID_USUARIO: ${{ inputs.id_usuario }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Ascender a moderador
+        if: inputs.accion == 'ascender-moderador'
+        run: |
+          [[ "$ID_USUARIO" =~ ^[0-9a-f-]{36}$ ]] || { echo "::error::id_usuario no es un UUID"; exit 1; }
+          pnpm moderador:ascender "$ID_USUARIO"
+
+      - name: Preparar el usuario de humo
+        if: inputs.accion == 'preparar-usuario-de-humo'
+        run: |
+          test -n "$HUMO_HASH_DISPOSITIVO" || { echo "::error::falta el secreto HUMO_HASH_DISPOSITIVO"; exit 1; }
+          test -n "$API_URL" || { echo "::error::falta la variable API_URL"; exit 1; }
+          id=$(curl -fsS -X POST "$API_URL/v1/dispositivos" -H 'content-type: application/json' \
+            -d "{\"hashDispositivo\": \"$HUMO_HASH_DISPOSITIVO\"}" | jq -r '.idUsuario')
+          pnpm moderador:ascender "$id"
+          echo "### Usuario de humo de ${{ inputs.entorno }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Configura \`HUMO_ID_USUARIO=$id\` en la API de Render de este entorno." >> "$GITHUB_STEP_SUMMARY"

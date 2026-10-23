@@ -18,7 +18,11 @@ if (!url) {
 const pool = crearPool(url);
 try {
   const db = crearDb(pool);
-  const reportes = consultaDeReportesFinalizados(new RepositorioReportesPostgis(db));
+  // Los reportes de la prueba de humo (roadmap 12) tampoco entran por la carga del histórico.
+  const reportes = consultaDeReportesFinalizados(
+    new RepositorioReportesPostgis(db),
+    process.env.HUMO_ID_USUARIO || null,
+  );
   const registrar = new RegistrarDatoAbierto(reportes, new RepositorioDatosAbiertosPg(db));
   const nuevas = await new CargarHistorico(reportes, registrar).ejecutar();
   console.log(`datos abiertos: ${nuevas} filas nuevas`);
