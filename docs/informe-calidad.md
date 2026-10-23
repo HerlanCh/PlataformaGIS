@@ -13,7 +13,8 @@ con enlace a la evidencia.
 
 ## Resumen
 
-**13 de 14 RNF cumplen. RNF-05 queda con desviación aceptada:** solo se puede medir durante el piloto. No hay
+**13 de 14 RNF cumplen. RNF-05 queda con desviación aceptada:** solo se puede medir durante el piloto. La prueba de
+usabilidad también pasa al piloto (ver [Usabilidad](#usabilidad)). No hay
 defectos críticos ni altos abiertos.
 
 | ID | Característica | Métrica | Umbral | Valor medido | Resultado | Evidencia |
@@ -106,10 +107,14 @@ Es un límite documentado, muy por encima del tráfico esperado del piloto.
 
 ## Usabilidad
 
-Prueba con 5 personas que siguen tareas guiadas: crear un reporte, confirmar y suscribirse. Guion, planilla y
-cuestionario SUS en [`usabilidad/`](usabilidad/guion.md); resultados en [`resultados.md`](usabilidad/resultados.md).
+**Desviación aceptada:** la prueba con 5 personas (prueba 7) no se realizó en esta fase y se hará con personas reales
+durante el piloto de la Fase 13. No hay datos de sesiones ni puntaje SUS medido. El método está listo:
+- guion, planilla y cuestionario SUS en [`usabilidad/`](usabilidad/guion.md);
+- plantilla de resultados en [`resultados.md`](usabilidad/resultados.md).
 
-> **Pendiente:** las sesiones con las 5 personas. Los bloqueos que aparezcan se corrigen antes de cerrar la fase.
+Hipótesis a validar en el piloto, a partir de la revisión de la interfaz y no de sesiones:
+- el editor de zonas obliga a ubicar el domicilio arrastrando el mapa, sin buscador ni botón «Usar mi ubicación»;
+- las etiquetas de las categorías pueden ser pequeñas para personas mayores.
 
 Lighthouse CI exige Accesibilidad ≥ 90 en cada CI, y la prueba e2e de accesibilidad (axe-core) no encuentra
 infracciones en la pantalla principal ni en las hojas.
@@ -124,5 +129,6 @@ ejecución `39705521274` del flujo `E2E`, sobre `v2.12.2`. Corre automáticament
 | Requisito o prueba | Desviación | Justificación |
 | :-- | :-- | :-- |
 | RNF-05 Disponibilidad | Se mide en la Fase 13 | Es una métrica del periodo piloto; UptimeRobot ya registra `/health` cada 5 minutos |
+| Prueba 7: usabilidad con 5 personas | Se realiza con personas reales en el piloto (Fase 13) | No hubo sesiones reales en esta fase; no se registran datos que no se hayan medido. La accesibilidad sí está verificada en cada versión: Lighthouse ≥ 90 y 0 infracciones de axe-core |
 | Prueba 1: k6 en staging con 100.000 reportes | Los 100.000 reportes se cargan en local; staging se mide con sus datos reales | Cargar datos sintéticos en staging ensuciaría el mapa público y los datos abiertos; `seed:load` solo admite una base local |
 | RNF-13 en dependencias de desarrollo | 3 avisos altos sin parche publicado | Solo corren en la CI con entradas del propio repositorio; nunca llegan a la API ni a la PWA |
