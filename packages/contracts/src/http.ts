@@ -290,6 +290,50 @@ export const esquemaColaDeModeracion = conId(
   'Hasta 50 casos: primero los marcados por el clasificador, después los más negados',
 );
 
+// --- Métricas del piloto (Fase 13) ---
+
+export const esquemaConsultaMetricas = z.object({
+  desde: z.iso.date().meta({ description: 'Primer día (hora de Bolivia)', example: '2026-11-01' }),
+  hasta: z.iso.date().meta({ description: 'Último día, incluido', example: '2026-11-30' }),
+});
+
+const esquemaDistribucion = z.object({ mediana: z.number(), p90: z.number() });
+
+export const esquemaMetricas = conId(
+  z.object({
+    desde: z.iso.date(),
+    hasta: z.iso.date(),
+    reportes: z.object({
+      total: z.number().int(),
+      comunitarios: z.number().int(),
+      oficiales: z.number().int(),
+      porCategoria: z.array(
+        z.object({ codigoCategoria: esquemaCodigoCategoria, total: z.number().int() }),
+      ),
+    }),
+    confirmacion: z.object({
+      conAlgunaConfirmacion: z.number().int(),
+      confirmados: z.number().int(),
+      porcentajeConfirmados: z.number().nullable(),
+      minutosHastaPrimeraConfirmacion: esquemaDistribucion.nullable(),
+    }),
+    cierres: z.object({
+      cerrados: z.number().int(),
+      abiertos: z.number().int(),
+      porTipo: z.array(
+        z.object({
+          cierre: z.enum(['CADUCIDAD', 'VOTOS', 'MODERACION']),
+          total: z.number().int(),
+          porcentaje: z.number().nullable(),
+        }),
+      ),
+    }),
+    usuariosActivos: z.array(z.object({ dia: z.iso.date(), usuariosActivos: z.number().int() })),
+  }),
+  'Metricas',
+  'Métricas de uso del piloto, sin datos personales. Confirmación y cierres son de los reportes de la comunidad',
+);
+
 // --- Datos abiertos ---
 
 export const esquemaLicencia = conId(

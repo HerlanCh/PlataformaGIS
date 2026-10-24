@@ -37,6 +37,9 @@ services:
       # Datos abiertos (HU-11). Tras activarlo, cargar el histórico una vez: `pnpm datos-abiertos:cargar`.
       - key: FEATURE_OPEN_DATA
         value: 'true'
+      # Métricas del piloto (Fase 13): solo cuentan desde que se activa.
+      - key: FEATURE_METRICS
+        value: 'true'
       # Usuario de la prueba de humo (docs/runbook.md): su id lo da el workflow Administracion.
       - key: HUMO_ID_USUARIO
         sync: false
@@ -89,6 +92,9 @@ services:
       - key: FEATURE_CLASSIFIER
         value: 'true'
       - key: FEATURE_OPEN_DATA
+        value: 'true'
+      # Métricas del piloto (Fase 13): solo cuentan desde que se activa.
+      - key: FEATURE_METRICS
         value: 'true'
       # Usuario de la prueba de humo (docs/runbook.md): su id lo da el workflow Administracion.
       - key: HUMO_ID_USUARIO

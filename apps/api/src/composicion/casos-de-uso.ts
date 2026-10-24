@@ -40,6 +40,8 @@ import {
 } from '@gis/module-verification';
 import type { Db, InterruptoresDeFunciones } from '@gis/platform';
 import type { GeneradorDeId, LimitadorDeFrecuencia, Reloj } from '@gis/shared-kernel';
+import { componerMetricas, conActividad } from './metricas.js';
+import type { Metricas } from './metricas.js';
 import { consultaParaModeracion, consultaParaVerificacion, reputacionDelAutor } from './puentes.js';
 
 type Caso<C extends { ejecutar: (...args: never[]) => unknown }> = Pick<C, 'ejecutar'>;
@@ -62,6 +64,8 @@ export interface CasosDeUso {
   readonly moderacion: Moderacion | null;
   /** Avisos Web Push (HU-08): `null` con `notifications` apagado o sin claves VAPID. */
   readonly avisosPush: AvisosPush | null;
+  /** Métricas del piloto (Fase 13): `null` con `metrics` apagado. */
+  readonly metricas: Pick<Metricas['consultar'], 'ejecutar'> | null;
 }
 
 export interface Moderacion {
@@ -90,6 +94,10 @@ export interface Infraestructura {
   readonly ids?: GeneradorDeId;
   /** Clave VAPID pública; sin ella no se ofrecen avisos push. */
   readonly clavePublicaPush?: string | null;
+  /** Sal secreta de las huellas de actividad (Fase 13). */
+  readonly salDeMetricas?: string;
+  /** Usuario de la prueba de humo: no cuenta en las métricas. */
+  readonly idUsuarioDeHumo?: string | null;
 }
 
 const siActivo = <T>(activo: boolean, crear: () => T): T | null => (activo ? crear() : null);
@@ -113,6 +121,17 @@ export function componerCasosDeUso(infraestructura: Infraestructura): CasosDeUso
   const suscripciones = new RepositorioSuscripcionesPg(db);
   const unidadDeReporte = new UnidadDeTrabajoReportePg(db);
   const categorias = new RepositorioCategoriasPg(db);
+  const metricas = interruptores.estaActivo('metrics')
+    ? componerMetricas(
+        db,
+        reloj,
+        infraestructura.salDeMetricas ?? '',
+        infraestructura.idUsuarioDeHumo ?? null,
+      )
+    : null;
+  // Con `metrics` activo, crear y votar anotan la actividad de quien lo hizo.
+  const anotar = <E, S>(caso: { ejecutar(e: E): Promise<S> }, idDe: (e: E) => string) =>
+    metricas ? conActividad(caso, idDe, metricas.anotar) : caso;
 
   return {
     registrarDispositivo: new RegistrarDispositivo({
@@ -120,15 +139,18 @@ export function componerCasosDeUso(infraestructura: Infraestructura): CasosDeUso
       reloj,
       ids,
     }),
-    crearReporte: new CrearReporte({
-      reportes,
-      categorias,
-      unidadDeTrabajo: unidadDeReporte,
-      reputacion: reputacionDelAutor(reputaciones),
-      limitador,
-      reloj,
-      ids,
-    }),
+    crearReporte: anotar(
+      new CrearReporte({
+        reportes,
+        categorias,
+        unidadDeTrabajo: unidadDeReporte,
+        reputacion: reputacionDelAutor(reputaciones),
+        limitador,
+        reloj,
+        ids,
+      }),
+      (e) => e.idAutor,
+    ),
     agregarDescripcion: new AgregarDescripcion({
       reportes,
       unidadDeTrabajo: unidadDeReporte,
@@ -136,8 +158,8 @@ export function componerCasosDeUso(infraestructura: Infraestructura): CasosDeUso
       ids,
     }),
     listarReportes: new ListarReportesEnVentana(reportes, reloj),
-    confirmarReporte: new ConfirmarReporte(voto),
-    negarReporte: new NegarReporte(voto),
+    confirmarReporte: anotar(new ConfirmarReporte(voto), (e) => e.idVotante),
+    negarReporte: anotar(new NegarReporte(voto), (e) => e.idVotante),
     obtenerMapaDeCalor: siActivo(
       interruptores.estaActivo('heatmap'),
       () => new ObtenerMapaDeCalor(new ConsultaMapaCalorPg(db)),
@@ -169,6 +191,7 @@ export function componerCasosDeUso(infraestructura: Infraestructura): CasosDeUso
       interruptores.estaActivo('open-data'),
       () => new ConsultarDatosAbiertos(new RepositorioDatosAbiertosPg(db)),
     ),
+    metricas: metricas?.consultar ?? null,
     moderacion: siActivo(interruptores.estaActivo('moderation'), () => {
       const decision = {
         consultaDeReporte: consultaParaModeracion(reportes),

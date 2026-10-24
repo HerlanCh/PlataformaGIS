@@ -32,6 +32,9 @@
       "path": "packages/modules/identity"
     },
     {
+      "path": "packages/modules/metrics"
+    },
+    {
       "path": "packages/modules/moderation"
     },
     {

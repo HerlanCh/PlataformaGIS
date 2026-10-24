@@ -32,6 +32,7 @@ Ambas APIs se definen en el Blueprint **GIS** de Render (`render.yaml`).
 | | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Claves de Web Push propias de producción |
 | | `SENTRY_DSN` | DSN del proyecto `api` de GlitchTip (no es secreto) |
 | | `HUMO_ID_USUARIO` | Id del usuario de humo (lo da el workflow `Administracion`) |
+| | `METRICAS_SAL` (opcional) | Sal de las huellas de actividad del piloto. Sin ella se deriva de `JWT_SECRET` |
 
 ## Desplegar
 
@@ -117,6 +118,7 @@ vez al año.
 | `VERCEL_TOKEN` | Crear uno con scope del equipo, `gh secret set VERCEL_TOKEN --env produccion` y borrar el viejo. Si vence, el paso de la web falla. | Ninguno. |
 | `BACKUP_PASSPHRASE` | Ver [respaldo](operacion/respaldo.md#secretos). Guardar la nueva en el gestor de contraseñas **antes** de cargarla. | Ninguno; los respaldos viejos siguen necesitando la frase vieja. |
 | Claves VAPID | `npx web-push generate-vapid-keys`, cargarlas en Render y desplegar. | **Se pierden todas las suscripciones a avisos:** cada persona debe volver a activarlos. Solo si la privada se filtró. |
+| `METRICAS_SAL` | Evitarlo durante el piloto. Si hace falta, cambiarla en Render y desplegar. Rotar `JWT_SECRET` sin `METRICAS_SAL` tiene el mismo efecto. | Ninguno, pero las personas de ese día pueden contarse dos veces en las métricas. |
 | `HUMO_HASH_DISPOSITIVO` | Nuevo valor aleatorio en el environment y luego `Administracion` → `preparar-usuario-de-humo`; actualizar `HUMO_ID_USUARIO` en Render. | Ninguno. |
 
 ## Usuario moderador y usuario de humo

@@ -141,6 +141,7 @@ export const rutasV1 =
     if (casos.avisosPush) registrarRutasDeAvisos(app, casos.avisosPush, conToken);
     if (casos.moderacion) registrarRutasDeModeracion(app, casos.moderacion, conToken);
     if (casos.datosAbiertos) registrarRutasDeDatosAbiertos(app, casos.datosAbiertos);
+    if (casos.metricas) registrarRutaDeMetricas(app, casos.metricas, conToken);
 
     if (obtenerMapaDeCalor) {
       app.get(
@@ -394,6 +395,42 @@ function registrarRutasDeModeracion(
         motivo: request.body.motivo ?? null,
       });
       return reply.code(204).send();
+    },
+  );
+}
+
+/** Métricas del piloto (Fase 13): exigen token; el caso de uso exige el rol. */
+function registrarRutaDeMetricas(
+  app: Parameters<FastifyPluginAsyncZod>[0],
+  metricas: NonNullable<CasosDeUso['metricas']>,
+  conToken: { preHandler: ReturnType<typeof exigirToken> },
+): void {
+  app.get(
+    '/moderacion/metricas',
+    {
+      ...conToken,
+      schema: {
+        tags: ['moderación'],
+        summary: 'Métricas de uso del piloto (Fase 13, rol MODERADOR)',
+        description:
+          'Reportes creados, tiempo hasta la primera confirmación, porcentaje de confirmados, ' +
+          'cierres y personas activas por día. Sin datos personales.',
+        security: SEGURIDAD_BEARER,
+        querystring: http.esquemaConsultaMetricas,
+        response: { 200: http.esquemaMetricas, ...ERRORES },
+      },
+    },
+    async (request) => {
+      const periodo = await metricas.ejecutar({
+        ...request.query,
+        rolActor: identidadDe(request).rol,
+      });
+      return {
+        ...periodo,
+        reportes: { ...periodo.reportes, porCategoria: [...periodo.reportes.porCategoria] },
+        cierres: { ...periodo.cierres, porTipo: [...periodo.cierres.porTipo] },
+        usuariosActivos: [...periodo.usuariosActivos],
+      };
     },
   );
 }

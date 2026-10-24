@@ -1,3 +1,4 @@
+import { createHmac } from 'node:crypto';
 import { ErrorDeConfig, formatearProblemas } from '@gis/platform';
 import type { Entorno } from '@gis/platform';
 import { z } from 'zod';
@@ -36,6 +37,8 @@ const esquema = z
     SENTRY_DSN: z.preprocess((valor) => (valor === '' ? undefined : valor), z.url().optional()),
     /** Entorno con el que se etiquetan los errores en GlitchTip. */
     SENTRY_ENVIRONMENT: z.string().min(1).default('produccion'),
+    /** Sal de las huellas de actividad del piloto (Fase 13). Sin ella se deriva de `JWT_SECRET`. */
+    METRICAS_SAL: secreto,
     /** Usuario de la prueba de humo (roadmap 12): sus reportes no tienen efectos fuera del mapa. */
     HUMO_ID_USUARIO: z.preprocess(
       (valor) => (valor === '' ? undefined : valor),
@@ -75,34 +78,44 @@ export interface ConfigHttp {
   readonly idUsuarioDeHumo: string | null;
   /** `null` sin DSN: no se envían errores a GlitchTip. */
   readonly errores: { readonly dsn: string; readonly entorno: string } | null;
+  /** Sal secreta de las huellas de actividad (Fase 13). */
+  readonly salDeMetricas: string;
 }
 
 /** Contacto por defecto de VAPID si no se configura otro. */
 const CONTACTO_VAPID = 'mailto:alerta-lp@example.org';
+
+const vapidDe = (datos: z.output<typeof esquema>): ConfigVapid | null =>
+  datos.VAPID_PUBLIC_KEY && datos.VAPID_PRIVATE_KEY
+    ? {
+        publica: datos.VAPID_PUBLIC_KEY,
+        privada: datos.VAPID_PRIVATE_KEY,
+        contacto: datos.VAPID_SUBJECT ?? CONTACTO_VAPID,
+      }
+    : null;
+
+/** Derivada y no igual al secreto de los JWT: conocer una huella no ayuda a firmar tokens. */
+const salDerivada = (secretoJwt: string): string =>
+  createHmac('sha256', secretoJwt).update('metricas').digest('hex');
 
 /** Configuración propia del proceso de la API (HTTP, tiempo real y tareas). Si es inválida, no arranca. */
 export function cargarConfigHttp(env: Entorno = process.env): ConfigHttp {
   const resultado = esquema.safeParse(env);
   if (!resultado.success) throw new ErrorDeConfig(formatearProblemas(resultado.error));
   const datos = resultado.data;
+  const secreto = datos.JWT_SECRET ?? SECRETO_DE_DESARROLLO;
   return {
     jwt: {
-      secreto: datos.JWT_SECRET ?? SECRETO_DE_DESARROLLO,
+      secreto,
       secretoAnterior: datos.JWT_SECRET_ANTERIOR ?? null,
       duracionS: datos.JWT_DURACION_S,
     },
     limitePorMinuto: datos.LIMITE_POR_MINUTO,
     despachoIntervaloMs: datos.DESPACHO_INTERVALO_MS,
     caducidadIntervaloS: datos.CADUCIDAD_INTERVALO_S,
-    vapid:
-      datos.VAPID_PUBLIC_KEY && datos.VAPID_PRIVATE_KEY
-        ? {
-            publica: datos.VAPID_PUBLIC_KEY,
-            privada: datos.VAPID_PRIVATE_KEY,
-            contacto: datos.VAPID_SUBJECT ?? CONTACTO_VAPID,
-          }
-        : null,
+    vapid: vapidDe(datos),
     idUsuarioDeHumo: datos.HUMO_ID_USUARIO ?? null,
     errores: datos.SENTRY_DSN ? { dsn: datos.SENTRY_DSN, entorno: datos.SENTRY_ENVIRONMENT } : null,
+    salDeMetricas: datos.METRICAS_SAL ?? salDerivada(secreto),
   };
 }

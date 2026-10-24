@@ -30,6 +30,9 @@ Esquema físico de la Plataforma GIS sobre PostgreSQL 18 + PostGIS 3.6. Se deriv
 | `cola_moderacion` | `moderation` (opcional) | Cola de reportes negados o marcados (HU-12) |
 | `datos_abiertos_reportes` | `open-data` (opcional) | Datos abiertos anonimizados de los reportes terminados (HU-11) |
 | `clasificaciones` | `classifier` (opcional) | Historial de clasificaciones de reportes (HU-10) |
+| `metricas_reportes` | `metrics` (opcional) | Ciclo de vida de cada reporte para las métricas del piloto (Fase 13) |
+| `metricas_actividad` | `metrics` (opcional) | Huellas de quienes actuaron en el día en curso (Fase 13) |
+| `metricas_diarias` | `metrics` (opcional) | Personas activas por día, ya sin huellas (Fase 13) |
 
 ## `platform` (compartido)
 
@@ -263,6 +266,44 @@ Una fila anonimizada por reporte terminado (HU-11, ADR-005). La llena el manejad
 
 **Índices:** `datos_abiertos_hora_idx`, B-tree sobre `hora` (orden del CSV y rango de fechas).
 
+## `metrics` (opcional)
+
+Métricas de uso del piloto (Fase 13). Ninguna tabla tiene columnas para el autor, los votantes, la ubicación o la
+descripción: no los pueden guardar. Solo cuentan los reportes creados desde que se activa `FEATURE_METRICS`.
+
+### `metricas_reportes`
+
+Una fila por reporte. La llenan los eventos del reporte, con la hora del evento.
+
+| Columna | Tipo | Restricción | Descripción |
+| :--- | :--- | :--- | :--- |
+| `id_reporte` | `uuid` | PK. Referencia lógica a `reportes.id` | Reporte |
+| `codigo_categoria` | `text` | NOT NULL | Categoría |
+| `es_oficial` | `boolean` | NOT NULL | Incidente de fuente oficial (HU-13): se cuenta aparte |
+| `creado_en` | `timestamptz` | NOT NULL | Creación |
+| `primera_confirmacion_en` | `timestamptz` | Nulo | Primer «Sigue ahí» o primer duplicado de otra persona |
+| `confirmado_en` | `timestamptz` | Nulo | Paso a `CONFIRMADO` |
+| `cierre` | `text` | Nulo, `CHECK` en (`CADUCIDAD`, `VOTOS`, `MODERACION`) | Cómo terminó |
+| `cerrado_en` | `timestamptz` | Nulo; `CHECK` nulo si y solo si `cierre` es nulo | Cuándo terminó |
+
+**Índices:** `metricas_reportes_creado_en_idx`, B-tree sobre `creado_en` (periodo de la consulta).
+
+### `metricas_actividad`
+
+| Columna | Tipo | Restricción | Descripción |
+| :--- | :--- | :--- | :--- |
+| `dia` | `date` | PK compuesta | Día de Bolivia |
+| `huella` | `text` | PK compuesta, `CHECK` HMAC-SHA256 en hexadecimal | HMAC del día y el usuario con una sal secreta. Las de dos días distintos no se pueden relacionar |
+
+Al empezar un día, las huellas de los anteriores se reducen a su conteo en `metricas_diarias` y se borran.
+
+### `metricas_diarias`
+
+| Columna | Tipo | Restricción | Descripción |
+| :--- | :--- | :--- | :--- |
+| `dia` | `date` | PK | Día de Bolivia |
+| `usuarios_activos` | `integer` | NOT NULL, `CHECK` ≥ 0 | Personas distintas que reportaron o votaron ese día |
+
 ## Migraciones
 
 | Conjunto | Migración | Contenido |
@@ -283,6 +324,7 @@ Una fila anonimizada por reporte terminado (HU-11, ADR-005). La llena el manejad
 | `moderation` | `0001_cola_moderacion` | `cola_moderacion` y su índice |
 | `classifier` | `0000_clasificaciones` | `clasificaciones` y su índice |
 | `open-data` | `0000_datos_abiertos` | `datos_abiertos_reportes` y su índice |
+| `metrics` | `0000_metricas_piloto` | `metricas_reportes`, `metricas_actividad`, `metricas_diarias` (Fase 13) |
 
 Cada migración tiene su reversa escrita a mano en `<nombre>.down.sql`, porque Drizzle Kit solo genera el avance. Las pruebas de integración aplican, revierten y vuelven a aplicar cada conjunto contra PostGIS real.
 
