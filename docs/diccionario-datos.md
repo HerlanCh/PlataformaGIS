@@ -119,6 +119,7 @@ Catálogo de categorías. La migración `0001_semilla_categorias` carga las cinc
 | `ubicacion_publica` | `geometry(Point, 4326)` | NOT NULL | Ubicación que se muestra. La calcula `PoliticaDePrivacidad` en el dominio; el repositorio la guarda sin recalcularla |
 | `clave_idempotencia` | `text` | NOT NULL, único | Clave que genera el cliente; evita duplicados al reenviar reportes guardados sin conexión |
 | `descripcion` | `text` | Nulo, `CHECK` de 1 a 280 caracteres (`char_length`) | Detalle opcional del autor (HU-10). **Privado:** solo lo leen el clasificador y los moderadores; nunca sale en respuestas ni eventos públicos |
+| `fuente_oficial` | `text` | Nulo, `CHECK` en (`TRANSITO`, `ABC`, `MI_TELEFERICO`, `OTRA`) | Fuente que cita el moderador al publicar un incidente oficial (HU-13). Nula en los reportes de la comunidad. Es pública |
 
 **Índices:**
 
@@ -274,6 +275,7 @@ Una fila anonimizada por reporte terminado (HU-11, ADR-005). La llena el manejad
 | `reports` | `0002_indices_de_consulta` | Índices `reportes_ubicacion_geography_idx` y `reportes_creado_en_idx`; elimina `reportes_ubicacion_idx` |
 | `reports` | `0003_descripcion_reporte` | Columna `descripcion` y su `CHECK` |
 | `reports` | `0004_indice_autor` | Índice `reportes_autor_creado_en_idx` |
+| `reports` | `0005_fuente_oficial` | Columna `fuente_oficial` y su `CHECK` (HU-13) |
 | `verification` | `0000_votos_reputaciones` | `votos` y `reputaciones` |
 | `subscriptions` | `0000_zonas_suscritas` | `zonas_suscritas` y sus índices |
 | `notifications` | `0000_suscripciones_push` | `suscripciones_push` y su índice |

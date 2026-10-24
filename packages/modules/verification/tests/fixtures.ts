@@ -27,6 +27,7 @@ export const reporte = (cambios: Partial<InstantaneaDeReporte> = {}): Instantane
   estado: 'ACTIVO',
   location: lugarDelIncidente,
   extensiones: 0,
+  esOficial: false,
   ...cambios,
 });
 

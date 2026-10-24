@@ -6,7 +6,7 @@ import type { SQL } from 'drizzle-orm';
 import type { Categoria } from '../domain/category.js';
 import type { RepositorioDeReportes } from '../domain/ports.js';
 import { Reporte } from '../domain/report.js';
-import type { MotivoRechazo, EstadoReporte } from '../domain/report.js';
+import type { EstadoReporte, FuenteOficial, MotivoRechazo } from '../domain/report.js';
 import type { ReportePublico } from '../domain/reporte-publico.js';
 import { reportes } from './schema.js';
 
@@ -46,6 +46,7 @@ const aAgregado = (fila: Fila): Reporte =>
     motivoRechazo: fila.motivoRechazo as MotivoRechazo | null,
     idempotencyKey: fila.idempotencyKey,
     descripcion: fila.descripcion,
+    fuenteOficial: fila.fuenteOficial as FuenteOficial | null,
   });
 
 export class RepositorioReportesPostgis implements RepositorioDeReportes {
@@ -88,10 +89,11 @@ export class RepositorioReportesPostgis implements RepositorioDeReportes {
         // Se guarda la ubicación pública que decidió el dominio, sin recalcularla.
         publicLocation: aPunto(reporte.publicLocation),
         idempotencyKey: reporte.idempotencyKey,
+        fuenteOficial: reporte.fuenteOficial,
         ...mutables,
       })
-      // Tras la creación solo cambian el ciclo de vida y la descripción; las ubicaciones y el
-      // autor son fijos.
+      // Tras la creación solo cambian el ciclo de vida y la descripción; las ubicaciones, el
+      // autor y la fuente son fijos.
       .onConflictDoUpdate({ target: reportes.id, set: mutables });
   }
 
@@ -118,6 +120,7 @@ export class RepositorioReportesPostgis implements RepositorioDeReportes {
         longitud: sql<number>`st_x(${reportes.publicLocation})`,
         creadoEn: reportes.creadoEn,
         caducaEn: reportes.caducaEn,
+        fuenteOficial: reportes.fuenteOficial,
       })
       .from(reportes)
       .where(and(...filtros))
@@ -131,6 +134,7 @@ export class RepositorioReportesPostgis implements RepositorioDeReportes {
       publicLocation: PuntoGeo.crear(fila.latitud, fila.longitud),
       creadoEn: fila.creadoEn,
       caducaEn: fila.caducaEn,
+      fuenteOficial: fila.fuenteOficial as FuenteOficial | null,
     }));
   }
 

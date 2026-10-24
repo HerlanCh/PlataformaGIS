@@ -189,7 +189,7 @@ describeIntegration('clasificación y moderación encadenadas por eventos', () =
 
     const entregados = await despachar();
 
-    expect(entregados).toEqual(['ReporteCreado.v1', 'ReporteClasificado.v1']);
+    expect(entregados).toEqual(['ReporteCreado.v2', 'ReporteClasificado.v1']);
     expect(await clasificaciones(reporte.id)).toEqual([
       { sospechoso: false, motivos: [], clasificador: 'reglas-v1' },
     ]);

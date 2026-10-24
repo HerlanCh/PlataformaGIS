@@ -16,11 +16,11 @@ También decide a quién avisar de un reporte nuevo. El envío lo hace el adapta
 
 ## Casos de uso (Fase 5)
 
-| Clase                   | Qué hace                                                                                                                                                                             |
-| :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SuscribirZona`         | Crea una zona (HU-07): como máximo 5 por usuario                                                                                                                                     |
-| `EliminarZona`          | Elimina una zona propia (HU-07)                                                                                                                                                      |
-| `NotificarSuscriptores` | Manejador de `ReporteCreado.v1` (HU-08): avisa una vez por persona, nunca al autor, con la ubicación pública. No escucha `ReporteConfirmado`, así cada reporte se avisa una sola vez |
+| Clase                   | Qué hace                                                                                                                                                                                  |
+| :---------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SuscribirZona`         | Crea una zona (HU-07): como máximo 5 por usuario                                                                                                                                          |
+| `EliminarZona`          | Elimina una zona propia (HU-07)                                                                                                                                                           |
+| `NotificarSuscriptores` | Manejador de `ReporteCreado` v1 y v2 (HU-08): avisa una vez por persona, nunca al autor, con la ubicación pública. No escucha `ReporteConfirmado`, así cada reporte se avisa una sola vez |
 
 ## Eventos que emite
 
@@ -28,9 +28,9 @@ _Ninguno._
 
 ## Eventos que escucha
 
-| Evento             | Qué hace                                           |
-| :----------------- | :------------------------------------------------- |
-| `ReporteCreado.v1` | Avisa a los suscriptores de la zona y la categoría |
+| Evento                     | Qué hace                                           |
+| :------------------------- | :------------------------------------------------- |
+| `ReporteCreado.v1` y `.v2` | Avisa a los suscriptores de la zona y la categoría |
 
 ## Puertos
 

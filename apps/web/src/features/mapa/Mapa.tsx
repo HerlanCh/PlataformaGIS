@@ -4,6 +4,7 @@ import { LocateFixed } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { categoriaDe } from '../../domain/categorias.js';
+import { nombreDeFuente } from '../../domain/fuentes.js';
 import { AREA_DE_SERVICIO, CENTRO_LA_PAZ, ZOOM_INICIAL } from '../../domain/geo.js';
 import type { Caja } from '../../domain/geo.js';
 import { vigenciaDe } from '../../domain/reportes.js';
@@ -38,7 +39,8 @@ const cajaDe = (mapa: L.Map): Caja => {
 
 const iconoDe = (reporte: ReportePublico) =>
   L.divIcon({
-    className: 'marcador',
+    // Un incidente de fuente oficial lleva un marco de tinta (HU-13).
+    className: reporte.fuenteOficial ? 'marcador marcador--oficial' : 'marcador',
     html: estacionSvg(
       categoriaDe(reporte.codigoCategoria).color,
       reporte.estado === 'CONFIRMADO' ? 'CONFIRMADO' : 'ACTIVO',
@@ -59,7 +61,10 @@ const iconoDeGrupo = (grupo: L.MarkerCluster) =>
 const etiquetaDe = (reporte: ReportePublico): string => {
   const categoria = categoriaDe(reporte.codigoCategoria);
   const estado = reporte.estado === 'CONFIRMADO' ? 'confirmado' : 'activo';
-  return `${categoria.corto}, ${estado}, vigente hasta ${vigenciaDe(reporte.caducaEn)}`;
+  const fuente = reporte.fuenteOficial
+    ? `, fuente oficial: ${nombreDeFuente(reporte.fuenteOficial)}`
+    : '';
+  return `${categoria.corto}, ${estado}${fuente}, vigente hasta ${vigenciaDe(reporte.caducaEn)}`;
 };
 
 /** Estado de la consulta del mapa de calor, para la barra del historial. */

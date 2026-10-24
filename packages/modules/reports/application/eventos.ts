@@ -3,7 +3,7 @@ import {
   descripcionAgregadaV1,
   reporteCaducadoV1,
   reporteConfirmadoV1,
-  reporteCreadoV1,
+  reporteCreadoV2,
   reporteExtendidoV1,
   reporteRechazadoV1,
   reporteResueltoV1,
@@ -22,7 +22,7 @@ function traducir(
   switch (evento.tipo) {
     case 'ReporteCreado':
       return crearEvento(
-        reporteCreadoV1,
+        reporteCreadoV2,
         {
           idReporte,
           codigoCategoria: reporte.codigoCategoria,
@@ -34,6 +34,7 @@ function traducir(
           estado: reporte.estado,
           creadoEn: reporte.creadoEn.toISOString(),
           caducaEn: reporte.caducaEn.toISOString(),
+          fuenteOficial: reporte.fuenteOficial,
         },
         sobre,
       );

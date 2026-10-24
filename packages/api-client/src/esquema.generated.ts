@@ -1022,6 +1022,115 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/moderacion/reportes-oficiales': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Publica un incidente de fuente oficial (HU-13, rol MODERADOR)
+     * @description Idempotente por la cabecera Idempotency-Key. No se convierte en confirmación de un reporte cercano ni cuenta para el límite de reportes.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header: {
+          /** @description Clave única que genera el cliente; un reenvío no crea otro reporte */
+          'idempotency-key': string;
+        };
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['NuevoReporteOficialInput'];
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ReporteOficial'];
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Problema'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/moderacion/reportes/{id}/rechazar': {
     parameters: {
       query?: never;
@@ -1871,6 +1980,7 @@ export interface components {
       creadoEn: string;
       /** Format: date-time */
       caducaEn: string;
+      fuenteOficial: ('TRANSITO' | 'ABC' | 'MI_TELEFERICO' | 'OTRA') | null;
     };
     /** @description Categoría y posición del reporte */
     NuevoReporteInput: {
@@ -1961,6 +2071,18 @@ export interface components {
     MantenerInput: {
       motivo?: string;
     };
+    /** @description Incidente anunciado por una fuente oficial: categoría, posición y fuente (HU-13) */
+    NuevoReporteOficialInput: {
+      codigoCategoria: string;
+      latitud: number;
+      longitud: number;
+      /** @enum {string} */
+      fuenteOficial: 'TRANSITO' | 'ABC' | 'MI_TELEFERICO' | 'OTRA';
+    };
+    /** @description El incidente oficial publicado */
+    ReporteOficialInput: {
+      reporte: components['schemas']['ReportePublicoInput'];
+    };
     /** @description Reporte de la cola: su detalle, la descripción privada y por qué está en la cola */
     CasoDeModeracionInput: {
       /** Format: uuid */
@@ -2050,6 +2172,7 @@ export interface components {
       creadoEn: string;
       /** Format: date-time */
       caducaEn: string;
+      fuenteOficial: ('TRANSITO' | 'ABC' | 'MI_TELEFERICO' | 'OTRA') | null;
     };
     /** @description Categoría y posición del reporte */
     NuevoReporte: {
@@ -2139,6 +2262,18 @@ export interface components {
     /** @description Nota opcional del moderador al dejar el reporte publicado */
     Mantener: {
       motivo?: string;
+    };
+    /** @description Incidente anunciado por una fuente oficial: categoría, posición y fuente (HU-13) */
+    NuevoReporteOficial: {
+      codigoCategoria: string;
+      latitud: number;
+      longitud: number;
+      /** @enum {string} */
+      fuenteOficial: 'TRANSITO' | 'ABC' | 'MI_TELEFERICO' | 'OTRA';
+    };
+    /** @description El incidente oficial publicado */
+    ReporteOficial: {
+      reporte: components['schemas']['ReportePublico'];
     };
     /** @description Reporte de la cola: su detalle, la descripción privada y por qué está en la cola */
     CasoDeModeracion: {

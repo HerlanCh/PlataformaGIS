@@ -22,6 +22,7 @@ Los nombres de casos de uso provienen del roadmap; los marcados "por definir" se
 | RF-15 | **HU-10** | Clasificación automática de reportes sospechosos | `classifier`<br>`reports` | `ClasificarReporte`<br>`AgregarDescripcion` | `HU-10: marca un reporte con indicios de spam cuando el autor lo describe`<br>`HU-10: crear un reporte no depende del clasificador y se clasifica con las reglas locales`<br>`HU-10: con el servicio de IA caído clasifica con las reglas locales`<br>`HU-10: mide las reglas solo sobre la partición de prueba y lista sus fallos` | Verificado (Fase 11): clasificador por reglas; evaluación en `docs/clasificador/evaluacion.md` |
 | RF-16 | **HU-11** | Datos abiertos anonimizados | `open-data`<br>`reports` | `RegistrarDatoAbierto`<br>`CargarHistorico`<br>`ConsultarDatosAbiertos` | `HU-11: exporta sin usuarios ni puntos exactos, con encabezado`<br>`HU-11: la tabla no tiene columnas de usuario, punto, descripción ni ID`<br>`HU-11: descarga el CSV sin usuarios ni puntos exactos y con la licencia declarada`<br>`HU-11: muestra los tableros, la descarga del CSV y la licencia de forma visible` | Verificado (Fase 11): portal, CSV y prueba de anonimato (ADR-005) |
 | RF-08<br>RF-17 | **HU-12** | Moderación y auditoría de incidentes | `moderation`<br>`verification`<br>`identity` | `RechazarReporte`<br>`MantenerReporte`<br>`ListarColaDeModeracion`<br>`ActualizarColaDeModeracion`<br>`AplicarRechazoDeModeracion`<br>`AjustarReputacionPorDesenlace`<br>`AscenderAModerador` | `HU-12: rechaza con motivo, audita y penaliza al autor`<br>`HU-12: deniega la acción sin rol MODERADOR`<br>`HU-10 y HU-12: un reporte con enlace aparece marcado en la cola y el moderador lo rechaza`<br>`HU-12: rechazar exige un motivo y ofrece el de la regla ética` | Verificado (Fase 11): moderación con auditoría y control de acceso |
+| RF-18 | **HU-13** | Incidentes de fuente oficial | `reports`<br>`verification`<br>`classifier`<br>`subscriptions` | `PublicarReporteOficial`<br>`AjustarReputacionPorDesenlace`<br>`ClasificarReporte`<br>`NotificarSuscriptores` | `HU-13: crea un reporte ACTIVO con su fuente y emite ReporteCreado.v2`<br>`HU-13: un ciudadano no puede publicar incidentes oficiales`<br>`HU-13: en un incidente oficial no cambia quien lo publicó, pero sí los votantes`<br>`HU-13: solo un moderador publica un incidente oficial, que el mapa muestra con su fuente`<br>`HU-13: parte del centro del último mapa visto y publica categoría, fuente y punto` | Implementado (Fase 13, ADR-006) |
 
 ---
 
@@ -88,7 +89,8 @@ Definidos en `packages/contracts/src/events.ts`. Un evento público puede difund
 
 | Evento | Audiencia | Emite | Escucha |
 | :--- | :--- | :--- | :--- |
-| `ReporteCreado.v1` | Pública | `reports` | `subscriptions`, clientes |
+| `ReporteCreado.v1` | Pública | `reports` (hasta la Fase 12) | `subscriptions`, `classifier`, clientes |
+| `ReporteCreado.v2` (Fase 13) | Pública | `reports` | `subscriptions`, `classifier`, clientes. Agrega `fuenteOficial` (HU-13); quien lo escucha acepta también la v1 que quede en el outbox |
 | `ReporteConfirmado.v1` | Pública | `reports` | `verification`, clientes |
 | `ReporteExtendido.v1` (Fase 5) | Pública | `reports` | clientes |
 | `ReporteResuelto.v1` | Pública | `reports` | `verification`, clientes |
@@ -349,3 +351,15 @@ Las pruebas de extremo a extremo con Playwright contra staging y Lighthouse CI c
 | RNF-14 | CSP por entorno: la web de producción solo habla con su API y GlitchTip | `tools/despliegue/csp.mjs` | `tools/despliegue/csp.test.ts` |
 | Privacidad y términos visibles | `/privacidad` y `/terminos`, enlazados desde los créditos del mapa | `apps/web/src/features/legal/PantallasLegales.tsx` | `features/legal.test.tsx`, `App.test.tsx` (axe sin infracciones) |
 | Ensayo de reversión | Revertir de v2.14.0 a v2.13.1 con `gh workflow run Produccion -f version=v2.13.1` | `docs/runbook.md` | Ejecución 40042486125: `/health` en la versión anterior, prueba de humo 6/6, `/privacidad` 404 |
+
+## 11. Fase 13: validación en piloto
+
+| Requisito | Cómo se cumple | Implementación | Evidencia |
+| :--- | :--- | :--- | :--- |
+| HU-13, escenario 1 | El moderador publica categoría, punto y fuente; el reporte nace `ACTIVO` y emite `ReporteCreado.v2` | `PublicarReporteOficial`, `POST /v1/moderacion/reportes-oficiales`, `FormularioOficial` | `reports/tests/publicar-reporte-oficial.test.ts`, `http/api.integration.test.ts`, `features/moderacion.test.tsx` |
+| HU-13, escenario 1 | El mapa y el detalle distinguen lo oficial de lo comunitario | `fuenteOficial` en `ReportePublico`, marcador `marcador--oficial`, fila «Fuente» del detalle | `domain/dominio.test.ts`, `features/interaccion.test.tsx` |
+| HU-13, escenario 2 | Sin rol `MODERADOR` se deniega (403) | `PublicarReporteOficial` | `publicar-reporte-oficial.test.ts`, `http/api.integration.test.ts` |
+| HU-13, escenario 3 | El desenlace no cambia la reputación de quien publicó; la de los votantes sí | `InstantaneaDeReporte.esOficial`, `AjustarReputacionPorDesenlace` | `verification/tests/casos-de-uso.test.ts` |
+| HU-13, escenario 4 | Sin deduplicación ni límite de frecuencia | `PublicarReporteOficial` | `publicar-reporte-oficial.test.ts` |
+| HU-10 | Un incidente oficial no pasa por el clasificador | `ClasificarReporte` | `classifier/tests/clasificar-reporte.test.ts` |
+| HU-13 | La base solo admite fuentes del catálogo | `CHECK` en `reportes.fuente_oficial` (migración `0005_fuente_oficial`) | `reports/tests/persistence.integration.test.ts` |

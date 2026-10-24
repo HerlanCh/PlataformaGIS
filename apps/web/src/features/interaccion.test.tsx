@@ -37,6 +37,7 @@ const reporte = (norteM = 300, cambios: Partial<ReportePublico> = {}): ReportePu
   },
   creadoEn: '2026-10-18T12:00:00.000Z',
   caducaEn: '2026-10-18T18:00:00.000Z',
+  fuenteOficial: null,
   ...cambios,
 });
 
@@ -134,6 +135,13 @@ describe('detalle del reporte y votos (HU-03)', () => {
     expect(screen.getByText('Sin confirmar')).toBeTruthy();
     expect(screen.getByText('a 300 m de ti')).toBeTruthy();
     expect(await screen.findByRole('button', { name: 'Sigue ahí' })).toBeTruthy();
+    expect(screen.getByText('Comunidad')).toBeTruthy();
+  });
+
+  it('HU-13: un incidente oficial muestra su fuente', () => {
+    abrir([reporte(300, { fuenteOficial: 'MI_TELEFERICO' })]);
+
+    expect(screen.getByText('Oficial: Mi Teleférico')).toBeTruthy();
   });
 
   it('HU-03: «Sigue ahí» vota con la posición del GPS, agradece y cierra', async () => {

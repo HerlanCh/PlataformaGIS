@@ -20,6 +20,7 @@ import {
   AgregarDescripcion,
   CrearReporte,
   ListarReportesEnVentana,
+  PublicarReporteOficial,
   RepositorioCategoriasPg,
   RepositorioReportesPostgis,
   UnidadDeTrabajoReportePg,
@@ -67,6 +68,8 @@ export interface Moderacion {
   readonly rechazar: Caso<RechazarReporte>;
   readonly mantener: Caso<MantenerReporte>;
   readonly listarCola: Caso<ListarColaDeModeracion>;
+  /** HU-13: vive en `reports`, pero solo lo usa un moderador. */
+  readonly publicarOficial: Caso<PublicarReporteOficial>;
 }
 
 export interface AvisosPush {
@@ -109,6 +112,7 @@ export function componerCasosDeUso(infraestructura: Infraestructura): CasosDeUso
   };
   const suscripciones = new RepositorioSuscripcionesPg(db);
   const unidadDeReporte = new UnidadDeTrabajoReportePg(db);
+  const categorias = new RepositorioCategoriasPg(db);
 
   return {
     registrarDispositivo: new RegistrarDispositivo({
@@ -118,7 +122,7 @@ export function componerCasosDeUso(infraestructura: Infraestructura): CasosDeUso
     }),
     crearReporte: new CrearReporte({
       reportes,
-      categorias: new RepositorioCategoriasPg(db),
+      categorias,
       unidadDeTrabajo: unidadDeReporte,
       reputacion: reputacionDelAutor(reputaciones),
       limitador,
@@ -179,6 +183,13 @@ export function componerCasosDeUso(infraestructura: Infraestructura): CasosDeUso
           new RepositorioColaPg(db),
           decision.consultaDeReporte,
         ),
+        publicarOficial: new PublicarReporteOficial({
+          reportes,
+          categorias,
+          unidadDeTrabajo: unidadDeReporte,
+          reloj,
+          ids,
+        }),
       };
     }),
   };

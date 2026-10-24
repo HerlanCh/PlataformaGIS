@@ -21,6 +21,7 @@ const reporte = (
     },
     creadoEn: new Date(AHORA.getTime() - haceMin * 60_000).toISOString(),
     caducaEn: new Date(AHORA.getTime() + 3_600_000).toISOString(),
+    fuenteOficial: null,
     ...resto,
   };
 };

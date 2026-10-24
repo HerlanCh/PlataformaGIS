@@ -1,10 +1,10 @@
 // Moderación (HU-12): la cola y las decisiones. Solo funciona en línea y con el rol MODERADOR,
 // que llega con la credencial: la pantalla renueva el token al abrirse.
-import type { CasoDeModeracion } from '@gis/api-client';
+import type { CasoDeModeracion, NuevoReporteOficial } from '@gis/api-client';
 import { esRechazo, JSON_CABECERA, pedirConToken, rechazoDe } from './peticion.js';
 import type { Rechazo } from './peticion.js';
 
-export type { CasoDeModeracion };
+export type { CasoDeModeracion, NuevoReporteOficial };
 
 export type Decision =
   { readonly tipo: 'RECHAZAR'; readonly motivo: string } | { readonly tipo: 'MANTENER' };
@@ -42,6 +42,25 @@ export async function decidir(
       method: 'POST',
       headers: JSON_CABECERA,
       body: JSON.stringify(cuerpo),
+    }),
+  );
+}
+
+/**
+ * Publica un incidente de fuente oficial (HU-13). La clave de idempotencia la decide quien llama,
+ * para que reintentar el mismo formulario no publique dos veces.
+ */
+export async function publicarOficial(
+  urlApi: string,
+  incidente: NuevoReporteOficial,
+  clave: string,
+  pedir: typeof fetch = fetch,
+): Promise<void> {
+  await comprobar(
+    await pedirConToken(urlApi, pedir, '/v1/moderacion/reportes-oficiales', {
+      method: 'POST',
+      headers: { ...JSON_CABECERA, 'idempotency-key': clave },
+      body: JSON.stringify(incidente),
     }),
   );
 }

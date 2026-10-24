@@ -105,7 +105,7 @@ describeIntegration('casos de uso encadenados por eventos', () => {
     const decision = new AplicarDecisionDeVerificacion(transicion);
     const rechazo = new AplicarRechazoDeModeracion(transicion);
     const reputacion = new AjustarReputacionPorDesenlace(voto);
-    escuchar(['ReporteCreado.v1'], (e) => notificar.manejar(e));
+    escuchar(NotificarSuscriptores.eventos, (e) => notificar.manejar(e));
     escuchar(['ReporteDuplicadoDetectado.v1'], (e) => duplicado.manejar(e));
     escuchar(['VotoEmitido.v1'], (e) => decision.manejar(e));
     escuchar(['RechazoDeModeracion.v1'], (e) => rechazo.manejar(e));
@@ -250,7 +250,7 @@ describeIntegration('casos de uso encadenados por eventos', () => {
     const entregados = await despachar();
 
     expect(entregados).toEqual([
-      'ReporteCreado.v1',
+      'ReporteCreado.v2',
       'RechazoDeModeracion.v1',
       'ReporteRechazado.v1',
     ]);

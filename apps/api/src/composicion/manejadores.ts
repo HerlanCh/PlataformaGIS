@@ -1,7 +1,7 @@
 // Raíz de composición de las reacciones entre módulos (Fase 7): cada manejador de evento se
 // construye con sus adaptadores y se suscribe al bus con un nombre estable, que la bandeja de
 // entrada (`eventos_procesados`) usa para no repetir un evento ya procesado.
-import type { BusDeEventos } from '@gis/event-bus';
+import type { BusDeEventos, ManejadorDeEvento } from '@gis/event-bus';
 import {
   ClasificadorPorReglas,
   ClasificarReporte,
@@ -125,6 +125,16 @@ export interface DependenciasManejadores {
   readonly idUsuarioDeHumo?: string | null;
 }
 
+/** Suscribe un manejador a varias claves con el mismo nombre de suscriptor. */
+const suscribirA = (
+  bus: BusDeEventos,
+  claves: readonly string[],
+  nombre: string,
+  manejar: ManejadorDeEvento,
+): void => {
+  for (const clave of claves) bus.suscribir(clave, nombre, manejar);
+};
+
 export function suscribirManejadores(deps: DependenciasManejadores): void {
   const { bus, db, interruptores, reloj, ids } = deps;
   const reportes = new RepositorioReportesPostgis(db);
@@ -152,13 +162,12 @@ export function suscribirManejadores(deps: DependenciasManejadores): void {
   );
 
   const reputacion = new AjustarReputacionPorDesenlace(voto);
-  for (const clave of AjustarReputacionPorDesenlace.eventos) {
-    bus.suscribir(
-      clave,
-      'verification.ajustar-reputacion',
-      salvoHumo(esDeHumo, (e) => reputacion.manejar(e)),
-    );
-  }
+  suscribirA(
+    bus,
+    AjustarReputacionPorDesenlace.eventos,
+    'verification.ajustar-reputacion',
+    salvoHumo(esDeHumo, (e) => reputacion.manejar(e)),
+  );
 
   if (interruptores.estaActivo('subscriptions')) {
     const notificar = new NotificarSuscriptores({
@@ -166,8 +175,9 @@ export function suscribirManejadores(deps: DependenciasManejadores): void {
       consultaDeAutor: consultaDeAutor(reportes),
       enviador: enviadorDeAvisos(db, interruptores, deps.registro, deps.vapid ?? null),
     });
-    bus.suscribir(
-      'ReporteCreado.v1',
+    suscribirA(
+      bus,
+      NotificarSuscriptores.eventos,
       'subscriptions.notificar',
       salvoHumo(esDeHumo, (e) => notificar.manejar(e)),
     );
@@ -176,9 +186,9 @@ export function suscribirManejadores(deps: DependenciasManejadores): void {
   // HU-12 y HU-10: la cola de moderación se alimenta de votos, clasificaciones y desenlaces.
   if (interruptores.estaActivo('moderation')) {
     const cola = new ActualizarColaDeModeracion(new RepositorioColaPg(db));
-    for (const clave of ActualizarColaDeModeracion.eventos) {
-      bus.suscribir(clave, 'moderation.actualizar-cola', (e) => cola.manejar(e));
-    }
+    suscribirA(bus, ActualizarColaDeModeracion.eventos, 'moderation.actualizar-cola', (e) =>
+      cola.manejar(e),
+    );
   }
 
   // HU-11: cada reporte que termina pasa anonimizado a los datos abiertos.
@@ -187,9 +197,9 @@ export function suscribirManejadores(deps: DependenciasManejadores): void {
       consultaDeReportesFinalizados(reportes, idUsuarioDeHumo),
       new RepositorioDatosAbiertosPg(db),
     );
-    for (const clave of RegistrarDatoAbierto.eventos) {
-      bus.suscribir(clave, 'open-data.registrar', (e) => registrar.manejar(e));
-    }
+    suscribirA(bus, RegistrarDatoAbierto.eventos, 'open-data.registrar', (e) =>
+      registrar.manejar(e),
+    );
   }
 
   // HU-10: clasifica de forma asíncrona, tras el outbox; crear un reporte nunca lo espera.
@@ -201,9 +211,9 @@ export function suscribirManejadores(deps: DependenciasManejadores): void {
       reloj,
       ids,
     });
-    for (const clave of ClasificarReporte.eventos) {
-      bus.suscribir(clave, 'classifier.clasificar', (e) => clasificar.manejar(e));
-    }
+    suscribirA(bus, ClasificarReporte.eventos, 'classifier.clasificar', (e) =>
+      clasificar.manejar(e),
+    );
   }
 
   suscribirPublicador(bus, deps.tiempoReal, async (id) => {

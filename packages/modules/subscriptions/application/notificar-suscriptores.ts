@@ -1,4 +1,4 @@
-import { leerContenido, reporteCreadoV1 } from '@gis/contracts';
+import { CLAVES_REPORTE_CREADO, leerReporteCreado } from '@gis/contracts';
 import type { EventoDeIntegracion } from '@gis/contracts';
 import { codigoCategoria, idReporte, PuntoGeo } from '@gis/shared-kernel';
 import type { IdUsuario } from '@gis/shared-kernel';
@@ -12,16 +12,18 @@ export interface DependenciasNotificarSuscriptores {
 }
 
 /**
- * Manejador de `ReporteCreado.v1` (HU-08): avisa a quien tiene una zona suscrita que contiene el
+ * Manejador de `ReporteCreado` (HU-08): avisa a quien tiene una zona suscrita que contiene el
  * reporte y eligió su categoría. Solo reacciona a la creación, así cada reporte se avisa una vez
  * (escenario 3). Se busca con la ubicación pública, la única que viaja en el evento.
  */
 export class NotificarSuscriptores {
+  static readonly eventos = CLAVES_REPORTE_CREADO;
+
   constructor(private readonly deps: DependenciasNotificarSuscriptores) {}
 
   /** Devuelve a cuántos usuarios avisó. */
   async manejar(evento: EventoDeIntegracion): Promise<number> {
-    const contenido = leerContenido(reporteCreadoV1, evento);
+    const contenido = leerReporteCreado(evento);
     const id = idReporte(contenido.idReporte);
     const categoria = codigoCategoria(contenido.codigoCategoria);
     const punto = PuntoGeo.crear(

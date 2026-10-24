@@ -26,7 +26,7 @@ Indicios y pesos:
 
 ## Casos de uso (Fase 10)
 
-`ClasificarReporte`: manejador de `ReporteCreado.v1` y `DescripcionAgregada.v1`. Pide los datos por `ConsultaParaClasificar`, clasifica y guarda el resultado con `ReporteClasificado.v1` en una transacción.
+`ClasificarReporte`: manejador de `ReporteCreado` (v1 y v2) y `DescripcionAgregada.v1`. No clasifica los incidentes de fuente oficial (HU-13). Pide los datos por `ConsultaParaClasificar`, clasifica y guarda el resultado con `ReporteClasificado.v1` en una transacción.
 
 ## Adaptadores
 
@@ -53,7 +53,7 @@ El modelo de IA de la Fase 13 reemplaza a las reglas solo si las supera en esta 
 
 ## Eventos que escucha
 
-`ReporteCreado.v1` y `DescripcionAgregada.v1`, ambos de `reports`.
+`ReporteCreado.v1`, `ReporteCreado.v2` y `DescripcionAgregada.v1`, todos de `reports`.
 
 ## Puertos
 

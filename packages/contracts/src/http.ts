@@ -5,6 +5,7 @@ import {
   esquemaCodigoCategoria,
   esquemaDecisionVerificacion,
   esquemaEstadoReporte,
+  esquemaFuenteOficial,
   esquemaMotivoDeSospecha,
   esquemaPuntoGeo,
 } from './events.js';
@@ -92,6 +93,8 @@ export const esquemaReportePublico = conId(
     publicLocation: esquemaPuntoGeo,
     creadoEn: esquemaFecha,
     caducaEn: esquemaFecha,
+    /** Fuente de un incidente oficial (HU-13); `null` si lo reportó la comunidad. */
+    fuenteOficial: esquemaFuenteOficial.nullable(),
   }),
   'ReportePublico',
   'Lo que el público ve de un reporte: nunca la ubicación real ni el autor',
@@ -245,6 +248,23 @@ export const esquemaMantener = conId(
   z.object({ motivo: z.string().max(500).optional() }),
   'Mantener',
   'Nota opcional del moderador al dejar el reporte publicado',
+);
+
+export const esquemaNuevoReporteOficial = conId(
+  z.object({
+    codigoCategoria: esquemaCodigoCategoria,
+    latitud: z.number(),
+    longitud: z.number(),
+    fuenteOficial: esquemaFuenteOficial,
+  }),
+  'NuevoReporteOficial',
+  'Incidente anunciado por una fuente oficial: categoría, posición y fuente (HU-13)',
+);
+
+export const esquemaReporteOficial = conId(
+  z.object({ reporte: esquemaReportePublico }),
+  'ReporteOficial',
+  'El incidente oficial publicado',
 );
 
 export const esquemaCasoDeModeracion = conId(

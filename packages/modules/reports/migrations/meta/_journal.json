@@ -36,6 +36,13 @@
       "when": 1792459509160,
       "tag": "0004_indice_autor",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792857335330,
+      "tag": "0005_fuente_oficial",
+      "breakpoints": true
     }
   ]
 }

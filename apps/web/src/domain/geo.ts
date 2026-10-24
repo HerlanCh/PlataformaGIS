@@ -64,3 +64,21 @@ export const aBbox = (caja: Caja): string =>
   [caja.longitudMin, caja.latitudMin, caja.longitudMax, caja.latitudMax]
     .map((n) => n.toFixed(5))
     .join(',');
+
+/** "-16.49550, -68.13360": cinco decimales, unos 1 m. */
+export const formatearCoordenadas = (punto: Punto): string =>
+  `${punto.latitud.toFixed(5)}, ${punto.longitud.toFixed(5)}`;
+
+/**
+ * Lee "latitud, longitud" como la copian OpenStreetMap o Google Maps. Devuelve `null` si no son
+ * dos números o si el punto cae fuera de La Paz y El Alto.
+ */
+export function leerCoordenadas(texto: string): Punto | null {
+  const partes = texto.trim().split(/[\s,;]+/);
+  if (partes.length !== 2) return null;
+  const [latitud, longitud] = partes.map(Number) as [number, number];
+  const punto = { latitud, longitud };
+  return Number.isFinite(latitud) && Number.isFinite(longitud) && dentroDe(punto, AREA_DE_SERVICIO)
+    ? punto
+    : null;
+}

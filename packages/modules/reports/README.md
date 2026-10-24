@@ -26,22 +26,23 @@ No decide si un reporte se confirma o se resuelve: eso lo decide `verification` 
 | `CaducarReportes`               | Caduca los vencidos en lotes de 200 y emite `ReporteCaducado` (HU-04). La programa una tarea periódica (Fase 7)                                                                                                                                                                                                                           |
 | `AplicarDecisionDeVerificacion` | Manejador de `VotoEmitido.v1`: confirma, extiende o resuelve                                                                                                                                                                                                                                                                              |
 | `AplicarRechazoDeModeracion`    | Manejador de `RechazoDeModeracion.v1`: rechaza con motivo `MODERACION`                                                                                                                                                                                                                                                                    |
+| `PublicarReporteOficial`        | Un moderador publica un incidente de una fuente oficial (Fase 13, HU-13): sin deduplicación ni límite, idempotente y con `fuenteOficial`. Exige el rol `MODERADOR`                                                                                                                                                                        |
 | `AgregarDescripcion`            | El autor describe su reporte vigente, una vez y con hasta 280 caracteres (Fase 10, HU-10). Guarda el texto y emite `DescripcionAgregada`. Al autor silenciado se le acepta sin guardar, para no delatarlo                                                                                                                                 |
 
 Los manejadores son idempotentes: si el reporte ya no admite el cambio, no hacen nada.
 
 ## Eventos que emite
 
-| Evento                         | Audiencia | Cuándo                                                            |
-| :----------------------------- | :-------- | :---------------------------------------------------------------- |
-| `ReporteCreado.v1`             | Pública   | Se crea un reporte                                                |
-| `ReporteConfirmado.v1`         | Pública   | Pasa a `CONFIRMADO`                                               |
-| `ReporteExtendido.v1`          | Pública   | Recibe la segunda extensión de vigencia                           |
-| `ReporteResuelto.v1`           | Pública   | Pasa a `RESUELTO`                                                 |
-| `ReporteCaducado.v1`           | Pública   | Pasa a `CADUCADO`                                                 |
-| `ReporteRechazado.v1`          | Pública   | Pasa a `RECHAZADO`, con motivo `MODERACION` o `AUTOR_SILENCIADO`  |
-| `ReporteDuplicadoDetectado.v1` | Interna   | Un reporte nuevo cae en el radio de deduplicación de otro vigente |
-| `DescripcionAgregada.v1`       | Interna   | El autor describe su reporte vigente (solo lleva el ID)           |
+| Evento                         | Audiencia | Cuándo                                                                              |
+| :----------------------------- | :-------- | :---------------------------------------------------------------------------------- |
+| `ReporteCreado.v2`             | Pública   | Se crea un reporte; lleva `fuenteOficial` (HU-13). La v1 se emitió hasta la Fase 12 |
+| `ReporteConfirmado.v1`         | Pública   | Pasa a `CONFIRMADO`                                                                 |
+| `ReporteExtendido.v1`          | Pública   | Recibe la segunda extensión de vigencia                                             |
+| `ReporteResuelto.v1`           | Pública   | Pasa a `RESUELTO`                                                                   |
+| `ReporteCaducado.v1`           | Pública   | Pasa a `CADUCADO`                                                                   |
+| `ReporteRechazado.v1`          | Pública   | Pasa a `RECHAZADO`, con motivo `MODERACION` o `AUTOR_SILENCIADO`                    |
+| `ReporteDuplicadoDetectado.v1` | Interna   | Un reporte nuevo cae en el radio de deduplicación de otro vigente                   |
+| `DescripcionAgregada.v1`       | Interna   | El autor describe su reporte vigente (solo lleva el ID)                             |
 
 Los eventos públicos solo llevan `publicLocation`: nunca la ubicación real, el autor ni la descripción.
 

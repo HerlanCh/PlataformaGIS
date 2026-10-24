@@ -11,7 +11,7 @@ import {
   ErrorNoEsElAutor,
   ErrorReporteNoVigente,
 } from '../domain/errors.js';
-import { MAX_DESCRIPCION, Reporte, TRANSICIONES } from '../domain/report.js';
+import { FUENTES_OFICIALES, MAX_DESCRIPCION, Reporte, TRANSICIONES } from '../domain/report.js';
 import type { EstadoReporte } from '../domain/report.js';
 
 const categoria = (codigo: string): Categoria => {
@@ -264,6 +264,7 @@ describe('Reporte: persistencia y eventos', () => {
       motivoRechazo: original.motivoRechazo,
       idempotencyKey: original.idempotencyKey,
       descripcion: original.descripcion,
+      fuenteOficial: original.fuenteOficial,
     });
 
     expect(restaurado).toMatchObject({ estado: 'CONFIRMADO', extensiones: 1 });
@@ -331,5 +332,33 @@ describe('Reporte: descripción privada', () => {
     reporte.agregarDescripcion('🚧'.repeat(MAX_DESCRIPCION), autor, creado);
 
     expect([...reporte.descripcion!]).toHaveLength(MAX_DESCRIPCION);
+  });
+});
+
+describe('Reporte: fuente oficial', () => {
+  it('HU-13: un reporte comunitario no tiene fuente oficial', () => {
+    const reporte = crear();
+
+    expect(reporte.fuenteOficial).toBeNull();
+    expect(reporte.esOficial).toBe(false);
+  });
+
+  it('HU-13: un reporte oficial nace ACTIVO con su fuente', () => {
+    const reporte = Reporte.crear({
+      id: idReporte('6f1c2f0e-3b7a-4d2a-9c58-0a4f5b1d2e3f'),
+      categoria: categoria('bloqueo'),
+      authorId: autor,
+      location: laPaz,
+      idempotencyKey: CLAVE,
+      ahora: creado,
+      fuenteOficial: 'TRANSITO',
+    });
+
+    expect(reporte).toMatchObject({ estado: 'ACTIVO', fuenteOficial: 'TRANSITO', esOficial: true });
+    expect(reporte.extraerEventos()).toEqual([{ tipo: 'ReporteCreado', ocurridoEn: creado }]);
+  });
+
+  it('HU-13: reconoce solo las fuentes del catálogo', () => {
+    expect(FUENTES_OFICIALES).toEqual(['TRANSITO', 'ABC', 'MI_TELEFERICO', 'OTRA']);
   });
 });

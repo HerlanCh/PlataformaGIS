@@ -161,6 +161,7 @@ Valores iniciales, ajustables durante el piloto mediante configuración.
 | **RF-15** | El sistema clasifica de forma asíncrona los reportes sospechosos para la cola de moderación. | Deseable | HU-10 |
 | **RF-16** | El sistema publica y exporta datos históricos anonimizados. | Deseable | HU-11 |
 | **RF-17** | El sistema permite a un moderador rechazar reportes y deja auditoría. | Deseable | HU-12 |
+| **RF-18** | El sistema permite a un moderador publicar incidentes de una fuente oficial, identificados como tales en el mapa. | Deseable | HU-13 |
 
 ---
 
@@ -418,6 +419,28 @@ Valores iniciales, ajustables durante el piloto mediante configuración.
     - **Dado** un reporte cuya descripción o foto identifica a una persona,
     - **Cuando** el moderador lo revisa,
     - **Entonces** debe rechazarlo conforme a la regla ética de la sección 2.3.
+
+#### HU-13: Incidentes de fuente oficial
+- **Como** moderador de la plataforma.
+- **Quiero** publicar los incidentes que anuncian Tránsito, la ABC o Mi Teleférico, citando la fuente.
+- **Para** que el mapa del piloto no empiece vacío y los vecinos distingan lo oficial de lo comunitario.
+- **Criterios de Aceptación:**
+  - **Escenario 1: Publicación**
+    - **Dado** un usuario con rol `MODERADOR`,
+    - **Cuando** publica un incidente indicando categoría, punto y fuente (`TRANSITO`, `ABC`, `MI_TELEFERICO` u `OTRA`),
+    - **Entonces** el reporte nace `ACTIVO` con su fuente, aparece en el mapa con la insignia «Fuente oficial» y se emite `ReporteCreado.v2`.
+  - **Escenario 2: Rol insuficiente**
+    - **Dado** un usuario sin rol `MODERADOR`,
+    - **Cuando** intenta publicar un incidente oficial,
+    - **Entonces** el sistema deniega la acción.
+  - **Escenario 3: Sin efectos sobre el moderador**
+    - **Dado** un reporte de fuente oficial,
+    - **Cuando** la comunidad lo confirma, lo niega o un moderador lo rechaza,
+    - **Entonces** la reputación de quien lo publicó no cambia: el reporte no es suyo, sino de la fuente.
+  - **Escenario 4: Sin deduplicación ni límite**
+    - **Dado** un reporte comunitario vigente de la misma categoría cerca,
+    - **Cuando** el moderador publica el incidente oficial,
+    - **Entonces** se crea igual: lo oficial no se convierte en confirmación de otro reporte. El límite de 5 reportes en 10 minutos no se aplica.
 
 ---
 

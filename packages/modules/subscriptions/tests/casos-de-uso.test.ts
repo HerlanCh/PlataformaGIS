@@ -1,4 +1,4 @@
-import { crearEvento, reporteCreadoV1 } from '@gis/contracts';
+import { crearEvento, reporteCreadoV1, reporteCreadoV2 } from '@gis/contracts';
 import type { CodigoCategoria, IdReporte, IdUsuario, PuntoGeo } from '@gis/shared-kernel';
 import { desplazar, GeneradorDeIdSecuencial, RelojFijo } from '@gis/testing';
 import { describe, expect, it } from 'vitest';
@@ -223,8 +223,23 @@ describe('NotificarSuscriptores', () => {
     const confirmado = { ...reporteCreado(plazaMurillo), tipo: 'ReporteConfirmado' };
 
     return expect(new NotificarSuscriptores(deps).manejar(confirmado)).rejects.toThrow(
-      /Se esperaba ReporteCreado.v1/,
+      /Se esperaba ReporteCreado/,
     );
+  });
+
+  it('HU-13: avisa también de un ReporteCreado.v2, el de los incidentes oficiales', async () => {
+    const { deps, suscripciones, avisos } = escenario();
+    await suscripciones.guardar(zona());
+    const v1 = reporteCreado(plazaMurillo);
+    const v2 = crearEvento(
+      reporteCreadoV2,
+      { ...(v1.contenido as object), fuenteOficial: 'TRANSITO' } as never,
+      { id: v1.id, ocurridoEn: new Date(v1.ocurridoEn) },
+    );
+
+    expect(NotificarSuscriptores.eventos).toEqual(['ReporteCreado.v1', 'ReporteCreado.v2']);
+    expect(await new NotificarSuscriptores(deps).manejar(v2)).toBe(1);
+    expect(avisos).toHaveLength(1);
   });
 
   it('HU-08: quien crea el reporte dentro de su propia zona no recibe aviso', async () => {

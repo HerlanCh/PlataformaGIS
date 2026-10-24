@@ -503,6 +503,38 @@ describeIntegration('API REST /v1', () => {
       expect(conRol.statusCode).toBe(202);
     });
 
+    it('HU-13: solo un moderador publica un incidente oficial, que el mapa muestra con su fuente', async () => {
+      const usuario = await registrar();
+      const moderador = await tokens.firmar({ idUsuario: usuario.idUsuario, rol: 'MODERADOR' });
+      const publicar = (token: string, clave: string) =>
+        pedir({
+          method: 'POST',
+          url: '/v1/moderacion/reportes-oficiales',
+          token,
+          headers: { 'idempotency-key': clave },
+          payload: {
+            codigoCategoria: 'bloqueo',
+            latitud: -16.45,
+            longitud: -68.27,
+            fuenteOficial: 'TRANSITO',
+          },
+        });
+
+      const ciudadano = await publicar(usuario.token, 'oficial-http-0001');
+      const conRol = await publicar(moderador.token, 'oficial-http-0002');
+      const mapa = await pedir({
+        method: 'GET',
+        url: '/v1/reportes?bbox=-68.28,-16.46,-68.26,-16.44',
+      });
+
+      expect([ciudadano.statusCode, ciudadano.json().codigo]).toEqual([403, 'ROL_INSUFICIENTE']);
+      expect(conRol.statusCode).toBe(201);
+      expect(conRol.json().reporte).toMatchObject({ estado: 'ACTIVO', fuenteOficial: 'TRANSITO' });
+      expect(mapa.json().reportes).toContainEqual(
+        expect.objectContaining({ id: conRol.json().reporte.id, fuenteOficial: 'TRANSITO' }),
+      );
+    });
+
     it('HU-10 y HU-12: la cola muestra al moderador el reporte marcado con su descripción y mantenerlo lo saca', async () => {
       const autor = await registrar();
       const punto = PuntoGeo.crear(-16.44, -68.28);

@@ -1,4 +1,9 @@
-import { crearEvento, descripcionAgregadaV1, reporteCreadoV1 } from '@gis/contracts';
+import {
+  crearEvento,
+  descripcionAgregadaV1,
+  reporteCreadoV1,
+  reporteCreadoV2,
+} from '@gis/contracts';
 import type { EventoDeIntegracion } from '@gis/contracts';
 import type { IdReporte } from '@gis/shared-kernel';
 import { GeneradorDeIdSecuencial, RelojFijo } from '@gis/testing';
@@ -129,8 +134,44 @@ describe('ClasificarReporte', () => {
     expect(unidadDeTrabajo.eventos).toEqual([]);
   });
 
-  it('escucha la creación y la descripción de un reporte', () => {
-    expect(ClasificarReporte.eventos).toEqual(['ReporteCreado.v1', 'DescripcionAgregada.v1']);
+  it('escucha la creación (v1 y v2) y la descripción de un reporte', () => {
+    expect(ClasificarReporte.eventos).toEqual([
+      'ReporteCreado.v1',
+      'ReporteCreado.v2',
+      'DescripcionAgregada.v1',
+    ]);
+  });
+
+  it('HU-13: un incidente de fuente oficial no se clasifica', async () => {
+    const { caso, unidadDeTrabajo } = escenario({
+      descripcion: null,
+      reportesRecientesDelAutor: 9,
+    });
+    const oficial = crearEvento(
+      reporteCreadoV2,
+      { ...(creado.contenido as object), fuenteOficial: 'ABC' } as never,
+      sobre,
+    );
+
+    await caso.manejar(oficial);
+
+    expect(unidadDeTrabajo.registros).toEqual([]);
+  });
+
+  it('HU-13: un ReporteCreado.v2 de la comunidad sí se clasifica', async () => {
+    const { caso, unidadDeTrabajo } = escenario({
+      descripcion: null,
+      reportesRecientesDelAutor: 1,
+    });
+    const comunitario = crearEvento(
+      reporteCreadoV2,
+      { ...(creado.contenido as object), fuenteOficial: null } as never,
+      sobre,
+    );
+
+    await caso.manejar(comunitario);
+
+    expect(unidadDeTrabajo.registros).toHaveLength(1);
   });
 });
 

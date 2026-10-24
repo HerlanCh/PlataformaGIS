@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { URL_API } from '../../configuracion.js';
 import { useEstado } from '../../estado.js';
-import { decidir, obtenerCola } from '../../services/moderacion.js';
-import type { Decision } from '../../services/moderacion.js';
+import { decidir, obtenerCola, publicarOficial } from '../../services/moderacion.js';
+import type { Decision, NuevoReporteOficial } from '../../services/moderacion.js';
 import { idUsuarioActual, obtenerToken, rolActual } from '../../services/sesion.js';
-import { mensajeDeDecision } from './textos.js';
+import { mensajeDeDecision, mensajeDePublicacion } from './textos.js';
 
 export interface Acceso {
   readonly esModerador: boolean;
@@ -62,5 +62,20 @@ export function useDecidir() {
       useEstado.getState().avisar(tono, texto);
     },
     onSettled: () => consulta.invalidateQueries({ queryKey: CLAVE_COLA }),
+  });
+}
+
+/** Publicar un incidente de fuente oficial (HU-13). Devuelve `true` si se publicó. */
+export function usePublicarOficial() {
+  return useMutation({
+    mutationFn: ({ incidente, clave }: { incidente: NuevoReporteOficial; clave: string }) =>
+      publicarOficial(URL_API, incidente, clave),
+    onSuccess: () => {
+      useEstado.getState().avisar('exito', 'Incidente oficial publicado en el mapa.');
+    },
+    onError: (error) => {
+      const { tono, texto } = mensajeDePublicacion(error);
+      useEstado.getState().avisar(tono, texto);
+    },
   });
 }

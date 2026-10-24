@@ -26,6 +26,7 @@ export const consultaParaVerificacion = (
         estado: reporte.estado,
         location: reporte.location,
         extensiones: reporte.extensiones,
+        esOficial: reporte.esOficial,
       }
     );
   },

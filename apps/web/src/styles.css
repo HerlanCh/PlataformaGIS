@@ -256,6 +256,20 @@ button {
   filter: drop-shadow(0 1px 2px rgb(20 24 29 / 30%));
 }
 
+/* Incidente de fuente oficial (HU-13): la estación va dentro de un marco de tinta. */
+.marcador--oficial svg {
+  border-radius: 6px;
+  outline: 3px solid var(--tinta);
+  outline-offset: 1px;
+  background: var(--fondo);
+}
+
+.insignia-oficial {
+  padding: 2px var(--e-2);
+  border: 2px solid var(--tinta);
+  border-radius: 6px;
+}
+
 /* Un grupo es una estación de transbordo: anillo de tinta con el total. */
 .transbordo {
   display: grid;
@@ -1565,6 +1579,33 @@ a.boton-redondo {
   background: var(--fondo);
   color: var(--tinta);
   font: inherit;
+}
+
+/* Incidente de fuente oficial (HU-13) */
+
+.oficial {
+  margin-bottom: var(--e-4);
+  padding-bottom: var(--e-4);
+  border-bottom: 1px solid var(--borde);
+}
+
+.oficial > .boton-texto {
+  margin-top: 0;
+}
+
+.oficial__campos {
+  display: grid;
+  gap: var(--e-2);
+}
+
+.oficial__ayuda {
+  margin: 0;
+  color: var(--tinta-2);
+  font-size: var(--t-2);
+}
+
+.campo[aria-invalid='true'] {
+  border-color: var(--linea-roja);
 }
 
 /* Datos abiertos (HU-11): tableros en tinta; el color de línea solo en las estaciones */

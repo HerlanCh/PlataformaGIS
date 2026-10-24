@@ -28,7 +28,7 @@ _Ninguno._
 
 ## Eventos que escucha
 
-_Ninguno directamente._ El aviso nace en `NotificarSuscriptores` (`subscriptions`, al recibir `ReporteCreado.v1`); la raíz de composición lo envía con `EnviarAvisoPush`.
+_Ninguno directamente._ El aviso nace en `NotificarSuscriptores` (`subscriptions`, al recibir `ReporteCreado`); la raíz de composición lo envía con `EnviarAvisoPush`.
 
 ## Puertos
 

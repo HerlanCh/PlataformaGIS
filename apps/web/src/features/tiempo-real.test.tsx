@@ -127,6 +127,7 @@ describe('fusionarEvento', () => {
         publicLocation: { latitud: -16.4955, longitud: -68.1336 },
         creadoEn: '2026-10-18T12:00:00.000Z',
         caducaEn: '2026-10-18T18:00:00.000Z',
+        fuenteOficial: null,
       },
     ];
     consulta.setQueryData(['reportes', ventana], lista);

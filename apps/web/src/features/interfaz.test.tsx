@@ -24,6 +24,7 @@ const reporte = (
   },
   creadoEn: '2026-10-18T12:00:00.000Z',
   caducaEn: '2026-10-18T22:40:00.000Z',
+  fuenteOficial: null,
   ...cambios,
 });
 
