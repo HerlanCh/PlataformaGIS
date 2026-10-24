@@ -31,6 +31,7 @@
     "clasificador:exportar": "pnpm --filter @gis/api run clasificador:exportar",
     "clasificador:evaluar": "pnpm --filter @gis/api run clasificador:evaluar",
     "piloto:metricas": "pnpm --filter @gis/api run piloto:metricas",
+    "piloto:analizar": "node tools/piloto/analizar.mjs",
     "perf:espacial": "pnpm --filter @gis/api run perf:espacial",
     "gen:api": "pnpm --filter @gis/api run gen:api && pnpm --filter @gis/api-client run gen",
     "carga:difusion": "pnpm --filter @gis/api run carga:difusion",
