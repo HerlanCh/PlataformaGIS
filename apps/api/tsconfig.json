@@ -23,6 +23,9 @@
       "path": "../../packages/platform"
     },
     {
+      "path": "../../packages/errores-remotos"
+    },
+    {
       "path": "../../packages/modules/classifier"
     },
     {

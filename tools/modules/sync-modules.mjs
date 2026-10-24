@@ -16,6 +16,7 @@ const COMPARTIDOS = [
   'event-bus',
   'platform',
   'api-client',
+  'errores-remotos',
 ];
 const APPS = ['api', 'web'];
 
@@ -49,9 +50,11 @@ escribirJson(tsRaiz, {
 const tsApi = en('apps/api/tsconfig.json');
 const configApi = leerJson(tsApi);
 configApi.references = [
-  ...['shared-kernel', 'contracts', 'testing', 'event-bus', 'platform'].map((p) => ({
-    path: `../../packages/${p}`,
-  })),
+  ...['shared-kernel', 'contracts', 'testing', 'event-bus', 'platform', 'errores-remotos'].map(
+    (p) => ({
+      path: `../../packages/${p}`,
+    }),
+  ),
   ...modulos.map((m) => ({ path: `../../packages/modules/${m}` })),
 ];
 escribirJson(tsApi, configApi);

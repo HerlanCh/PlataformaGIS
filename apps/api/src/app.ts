@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type { ReportadorDeErrores } from '@gis/errores-remotos';
 import type { BusDeEventos } from '@gis/event-bus';
 import { verificarBaseDeDatos } from '@gis/platform';
 import type {
@@ -38,6 +39,8 @@ export interface DependenciasApp {
   readonly bus: BusDeEventos;
   readonly modulos: readonly DefinicionDeModulo[];
   readonly api: DependenciasApi;
+  /** Envía a GlitchTip los errores 5xx inesperados (roadmap 12). Sin él no se envía nada. */
+  readonly reportador?: ReportadorDeErrores;
 }
 
 /**
@@ -70,7 +73,7 @@ export async function construirApp(dependencias: DependenciasApp): Promise<Fasti
     origenCors: config.origenCors,
     limitePorMinuto: api.limitePorMinuto,
   });
-  registrarErrores(app);
+  registrarErrores(app, dependencias.reportador);
 
   app.addHook('onSend', async (request, reply) => {
     reply.header(CABECERA_CORRELACION, request.id);

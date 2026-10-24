@@ -266,6 +266,9 @@ importers:
       '@gis/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@gis/errores-remotos':
+        specifier: workspace:*
+        version: link:../../packages/errores-remotos
       '@gis/event-bus':
         specifier: workspace:*
         version: link:../../packages/event-bus
@@ -366,6 +369,9 @@ importers:
       '@gis/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@gis/errores-remotos':
+        specifier: workspace:*
+        version: link:../../packages/errores-remotos
       '@tanstack/react-query':
         specifier: 5.104.1
         version: 5.104.1(react@19.3.0)
@@ -482,6 +488,8 @@ importers:
       zod:
         specifier: ^4.6.5
         version: 4.6.5
+
+  packages/errores-remotos: {}
 
   packages/event-bus:
     dependencies:

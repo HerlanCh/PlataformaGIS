@@ -26,6 +26,7 @@
     "@fastify/swagger": "9.9.1",
     "@fastify/swagger-ui": "6.1.1",
     "@gis/contracts": "workspace:*",
+    "@gis/errores-remotos": "workspace:*",
     "@gis/event-bus": "workspace:*",
     "@gis/module-classifier": "workspace:*",
     "@gis/module-heatmap": "workspace:*",

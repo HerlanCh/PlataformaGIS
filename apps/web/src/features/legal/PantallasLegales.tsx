@@ -78,6 +78,10 @@ export function PantallaDePrivacidad() {
           El mapa se descarga de OpenStreetMap. La app funciona en servicios de alojamiento en la
           nube (Vercel, Render y Neon); no vendemos ni compartimos tus datos con nadie más.
         </p>
+        <p>
+          Cuando la app falla, enviamos el error a GlitchTip para poder corregirlo: el mensaje y la
+          pantalla, sin tu ubicación, tus reportes ni ningún identificador.
+        </p>
       </section>
       <section className="legal" aria-labelledby="privacidad-contacto">
         <h2 id="privacidad-contacto">Dudas o pedidos</h2>

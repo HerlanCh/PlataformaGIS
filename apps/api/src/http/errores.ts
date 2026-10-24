@@ -1,3 +1,5 @@
+import { reportadorNulo } from '@gis/errores-remotos';
+import type { ReportadorDeErrores } from '@gis/errores-remotos';
 import { esBaseDeDatosNoDisponible } from '@gis/platform';
 import { ErrorDeAplicacion, ErrorDeDominio, ErrorLimiteExcedido } from '@gis/shared-kernel';
 import type { TipoDeErrorDeAplicacion } from '@gis/shared-kernel';
@@ -117,12 +119,22 @@ function responder(reply: FastifyReply, cuerpo: Problema): FastifyReply {
   return reply.code(cuerpo.status).type(TIPO_DE_CONTENIDO_PROBLEMA).send(cuerpo);
 }
 
-/** Todos los errores, y las rutas inexistentes, salen como `application/problem+json`. */
-export function registrarErrores(app: FastifyInstance): void {
+/**
+ * Todos los errores, y las rutas inexistentes, salen como `application/problem+json`. Los 5xx
+ * inesperados también van al reportador (GlitchTip), con el patrón de la ruta y no la URL, que
+ * puede llevar ids o una ventana del mapa. La base caída (503) solo queda en el log.
+ */
+export function registrarErrores(
+  app: FastifyInstance,
+  reportador: ReportadorDeErrores = reportadorNulo,
+): void {
   app.setErrorHandler((error, request: FastifyRequest, reply) => {
     const cuerpo = aProblema(error, request.id);
     if (cuerpo.status === 503) request.log.warn({ err: error }, 'base de datos no disponible');
-    else if (cuerpo.status >= 500) request.log.error({ err: error }, 'error no controlado');
+    else if (cuerpo.status >= 500) {
+      request.log.error({ err: error }, 'error no controlado');
+      reportador.reportar(error, { ruta: `${request.method} ${request.routeOptions.url ?? ''}` });
+    }
     if (error instanceof ErrorLimiteExcedido) {
       reply.header('retry-after', String(error.reintentarEnSegundos));
     }

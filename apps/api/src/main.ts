@@ -21,6 +21,7 @@ import { ProgramadorDeTareas } from './composicion/programador.js';
 import { cargarConfigHttp } from './http/config-http.js';
 import { ServicioDeTokens } from './http/tokens.js';
 import { modulos } from './modules.generated.js';
+import { reportadorDeLaApi } from './operacion/reportador.js';
 import { adjuntarTiempoReal } from './tiempo-real/servidor.js';
 
 const config = cargarConfig();
@@ -33,8 +34,15 @@ const pool = crearPool(config.urlBaseDeDatos, (error) => {
 const db = crearDb(pool);
 const bus = new BusDeEventosConSalida(db);
 const tokens = new ServicioDeTokens(configHttp.jwt, relojDelSistema);
+const reportador = reportadorDeLaApi(configHttp.errores, config.version);
+// Una promesa rechazada que nadie atendió: queda en el log y en GlitchTip.
+process.on('unhandledRejection', (error) => {
+  registro.error({ err: error }, 'promesa rechazada sin manejar');
+  reportador.reportar(error, { ruta: 'proceso' });
+});
 
 const app = await construirApp({
+  reportador,
   config,
   interruptores,
   registro,

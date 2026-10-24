@@ -8,6 +8,14 @@ import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import { Raiz } from './Raiz.js';
 import { escucharInstalacion } from './features/instalar/instalacion.js';
+import { reportarErroresDeLaVentana } from './services/errores.js';
+
+// Errores a GlitchTip, solo en la versión construida con VITE_SENTRY_DSN (producción).
+reportarErroresDeLaVentana(window, {
+  dsn: import.meta.env.VITE_SENTRY_DSN,
+  version: import.meta.env.VITE_APP_VERSION ?? 'desconocida',
+  entorno: import.meta.env.VITE_SENTRY_ENVIRONMENT ?? 'produccion',
+});
 
 // El navegador ofrece instalar la app una sola vez y temprano: se escucha antes de pintar.
 escucharInstalacion();
