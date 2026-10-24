@@ -1,0 +1,18 @@
+name: Prevención
+description: Mantenimiento preventivo (ISO/IEC 14764). Evitar un fallo futuro (deuda técnica, dependencia vieja, riesgo).
+title: '[Preventiva] '
+labels: [preventiva]
+body:
+  - type: textarea
+    id: riesgo
+    attributes:
+      label: Qué podría fallar
+      description: Cita el riesgo de docs/riesgos.md (RSK-xx) o la métrica de SonarCloud si aplica.
+    validations:
+      required: true
+  - type: textarea
+    id: propuesta
+    attributes:
+      label: Qué se propone
+    validations:
+      required: true

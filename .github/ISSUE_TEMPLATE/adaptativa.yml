@@ -1,0 +1,25 @@
+name: Adaptación al entorno
+description: Mantenimiento adaptativo (ISO/IEC 14764). Cambió algo externo (navegador, Node, proveedor, plan gratuito, ley).
+title: '[Adaptativa] '
+labels: [adaptativa]
+body:
+  - type: textarea
+    id: cambio
+    attributes:
+      label: Qué cambió afuera
+      description: Con el enlace al anuncio o a la documentación.
+    validations:
+      required: true
+  - type: textarea
+    id: efecto
+    attributes:
+      label: Qué afecta en la plataforma
+      description: Módulos, despliegue, costos (ADR-002 exige que todo siga siendo gratuito).
+    validations:
+      required: true
+  - type: input
+    id: fecha-limite
+    attributes:
+      label: Fecha límite
+      description: Si el cambio externo tiene fecha.
+      placeholder: 2027-01-31

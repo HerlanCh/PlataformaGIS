@@ -751,3 +751,38 @@ monitoreo. La fase se entregó en estos PR:
   más. Es anterior a esta fase.
 - **RNF-05** (disponibilidad ≥ 95 %) y la prueba de usabilidad se miden en el piloto.
 - Siguiente: Fase 13, validación en piloto y mantenimiento.
+
+## [2026-10-24] — Fase 13 (en curso): preparación del piloto y mantenimiento
+
+Se construyó todo lo que el piloto necesita. **La fase sigue abierta:** su criterio de salida exige datos de personas
+reales durante semanas, y ninguno se registra antes de medirlo.
+
+| PR | Contenido |
+| :-- | :-- |
+| #59 (v2.16.0) | Incidentes de fuente oficial publicados por un moderador (HU-13, ADR-006) |
+| #60 (v2.17.0) | Módulo `metrics`: métricas de uso sin datos personales, ruta de moderador y `pnpm piloto:metricas` |
+| #61 | Matriz de marco lógico propuesta, protocolo, guía de instalación, encuesta de impacto, plantillas y `pnpm piloto:analizar` |
+| este | Proceso de mantenimiento ISO/IEC 14764: plantillas de incidencia y de PR, y revisión mensual |
+
+### Decisiones
+- **Fuente oficial por moderador:** Tránsito, la ABC y Mi Teleférico no tienen API abierta. Una sola columna
+  `fuente_oficial`; el origen se deduce de ella. `ReporteCreado.v2`, y los consumidores aceptan también la v1 que
+  quede en el outbox.
+- **Lo oficial no toca la reputación de quien lo publica**, pero sí la de los votantes; no pasa por el clasificador ni
+  por la deduplicación.
+- **Actividad sin identidad:** HMAC del día y el usuario. Las huellas se borran al empezar el día siguiente. La sal se
+  deriva de `JWT_SECRET` si no hay `METRICAS_SAL`, para no exigir otro secreto en producción.
+- **Matriz de marco lógico propuesta por el asistente** (la del documento del proyecto no estaba en el repositorio).
+  La aprueban el autor y el tutor antes del piloto.
+- **Fechas ISO 8601 con zona en las planillas:** `Date.parse` aceptaba «3/11/2026» como 11 de marzo sin avisar.
+
+### Problemas encontrados
+1. **E2E de `main` en rojo desde el 23/10** (anterior a esta fase): el usuario de humo de staging no es moderador. Falta
+   correr `Administracion` → `preparar-usuario-de-humo` en staging y poner `HUMO_ID_USUARIO` en el servicio de
+   staging de Render.
+2. **Reporte privado de vulnerabilidades desactivado** en GitHub: la plantilla de incidencias lo enlaza; hay que
+   activarlo en *Settings → Security*.
+
+### Pendiente
+- Aprobar la matriz de marco lógico y ejecutar el piloto según `docs/piloto/protocolo.md`.
+- Al cierre: análisis, clasificador con IA (Fase 10, paso 3), `docs/informe-validacion.md` y criterio de salida.

@@ -1,0 +1,25 @@
+name: Mejora
+description: Mantenimiento perfectivo (ISO/IEC 14764). Una función nueva o mejor, de usabilidad o de rendimiento.
+title: '[Perfectiva] '
+labels: [perfectiva]
+body:
+  - type: textarea
+    id: historia
+    attributes:
+      label: Historia
+      description: Como…, quiero…, para…
+    validations:
+      required: true
+  - type: textarea
+    id: origen
+    attributes:
+      label: De dónde sale
+      description: Piloto (sesión de usabilidad, encuesta, métricas), moderación o idea propia.
+  - type: textarea
+    id: aceptacion
+    attributes:
+      label: Criterios de aceptación
+      placeholder: |
+        Dado…
+        Cuando…
+        Entonces…

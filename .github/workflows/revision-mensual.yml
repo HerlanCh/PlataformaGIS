@@ -1,0 +1,46 @@
+name: Revision mensual
+
+# Mantenimiento preventivo (ISO/IEC 14764, Fase 13): el día 1 de cada mes abre una incidencia con la
+# lista de revisión de .github/revision-mensual.md (SonarCloud, Dependabot, auditoría, disponibilidad,
+# GlitchTip, respaldo y planes gratuitos). También asegura que existan las cuatro etiquetas de tipo de
+# mantenimiento que usan las plantillas de incidencias. No abre otra si la del mes ya existe.
+on:
+  schedule:
+    - cron: '0 13 1 * *' # día 1, 09:00 en Bolivia
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: revision-mensual
+  cancel-in-progress: false
+
+jobs:
+  abrir:
+    name: Abrir la revisión del mes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Etiquetas de mantenimiento
+        run: |
+          gh label create correctiva --force --color d73a4a --description 'ISO/IEC 14764: corrige un fallo'
+          gh label create adaptativa --force --color fbca04 --description 'ISO/IEC 14764: se adapta a un cambio externo'
+          gh label create perfectiva --force --color 0e8a16 --description 'ISO/IEC 14764: mejora o función nueva'
+          gh label create preventiva --force --color 5319e7 --description 'ISO/IEC 14764: evita un fallo futuro'
+
+      - name: Incidencia del mes
+        run: |
+          titulo="Revisión mensual $(TZ=America/La_Paz date +%Y-%m)"
+          if gh issue list --state all --label preventiva --search "\"$titulo\" in:title" --json title \
+              --jq '.[].title' | grep -qxF "$titulo"; then
+            echo "Ya existe: $titulo"
+            exit 0
+          fi
+          gh issue create --title "$titulo" --label preventiva --body-file .github/revision-mensual.md
