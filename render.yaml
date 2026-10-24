@@ -75,6 +75,9 @@ services:
         sync: false
       - key: VAPID_SUBJECT
         sync: false
+      # Errores a GlitchTip (proyecto api). Sin DSN, los errores solo quedan en el log.
+      - key: SENTRY_DSN
+        sync: false
       - key: FEATURE_HEATMAP
         value: 'true'
       - key: FEATURE_SUBSCRIPTIONS

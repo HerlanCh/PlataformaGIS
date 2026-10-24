@@ -24,12 +24,13 @@ Ambas APIs se definen en el Blueprint **GIS** de Render (`render.yaml`).
 | | `RENDER_API_KEY` | API key de Render (Account Settings → API Keys) |
 | | `VERCEL_TOKEN` | Token de Vercel con scope de todo el equipo, no de un proyecto |
 | | `HUMO_HASH_DISPOSITIVO` | Hash aleatorio del usuario de humo |
-| | Variables `API_URL`, `WEB_URL`, `RENDER_SERVICE_ID`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` | No son secretas |
+| | Variables `API_URL`, `WEB_URL`, `RENDER_SERVICE_ID`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `SENTRY_DSN_WEB` | No son secretas |
 | Environment `produccion-respaldo` | `DATABASE_URL`, `BACKUP_PASSPHRASE` | Ver [respaldo](operacion/respaldo.md) |
 | Servicio de Render | `DATABASE_URL` | Cadena **con `-pooler`** de Neon |
 | | `JWT_SECRET` | Al menos 32 caracteres, distinta de staging |
 | | `CORS_ORIGIN` | `https://plataforma-gis-produccion.vercel.app` |
 | | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Claves de Web Push propias de producción |
+| | `SENTRY_DSN` | DSN del proyecto `api` de GlitchTip (no es secreto) |
 | | `HUMO_ID_USUARIO` | Id del usuario de humo (lo da el workflow `Administracion`) |
 
 ## Desplegar
@@ -139,7 +140,15 @@ contra la base del entorno elegido. En producción pide aprobación.
   - `https://plataforma-gis-produccion.vercel.app`.
 
   El ping a la API también evita que Render la duerma (RSK-01).
-- **Errores de la aplicación:** GlitchTip (plan gratuito, compatible con el SDK de Sentry).
+- **Errores de la aplicación:** GlitchTip (app.glitchtip.com, plan gratuito de 1.000 eventos al mes).
+  - Proyecto `api`: recibe los 5xx inesperados y las promesas rechazadas sin manejar. El DSN va en `SENTRY_DSN` de
+    Render.
+  - Proyecto `web`: recibe los errores no atrapados de la PWA. El DSN va en la variable `SENTRY_DSN_WEB` del
+    environment `produccion`, y el pipeline lo agrega al build y a la CSP.
+  - El envío no usa el SDK de Sentry: lo hace `packages/errores-remotos`, con el mismo protocolo. Todo pasa por
+    `sinDatosPersonales`, que quita ids, coordenadas y parámetros de URL. Se envía la ruta como patrón
+    (`GET /v1/reportes/:id`), nunca la URL.
+  - Staging no envía errores: no tiene DSN.
 
 ## Si un plan gratuito se suspende o se agota (RSK-02)
 

@@ -11,6 +11,9 @@
   "references": [
     {
       "path": "../../packages/api-client"
+    },
+    {
+      "path": "../../packages/errores-remotos"
     }
   ]
 }

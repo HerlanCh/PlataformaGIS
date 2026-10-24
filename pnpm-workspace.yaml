@@ -15,3 +15,6 @@ allowBuilds:
 overrides:
   tmp@<0.2.6: ^0.2.6
   basic-ftp@<6.2.1: ^6.2.1
+  # GHSA de undici (DoS por content-encodings excesivos, 2026-10). Solo lo usan jsdom y Testcontainers,
+  # en las pruebas, pero entra por @gis/testing, que es una dependencia de producción del monorepo.
+  undici@>=8.0.0 <8.12.2: ^8.12.2

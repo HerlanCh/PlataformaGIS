@@ -20,6 +20,9 @@
       "path": "packages/api-client"
     },
     {
+      "path": "packages/errores-remotos"
+    },
+    {
       "path": "packages/modules/classifier"
     },
     {

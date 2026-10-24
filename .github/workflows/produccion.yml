@@ -130,6 +130,9 @@ jobs:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
           VITE_API_URL: ${{ vars.API_URL }}
+          # Errores de la PWA a GlitchTip; csp.mjs agrega su origen a connect-src.
+          VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN_WEB }}
+          VITE_APP_VERSION: ${{ needs.version.outputs.commit }}
         run: |
           node tools/despliegue/csp.mjs apps/web/vercel.json
           vercel() { pnpm dlx vercel@63.1.0 "$@" --token="$VERCEL_TOKEN"; }

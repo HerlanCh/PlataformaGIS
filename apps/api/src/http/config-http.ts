@@ -32,6 +32,10 @@ const esquema = z
     VAPID_PUBLIC_KEY: opcional,
     VAPID_PRIVATE_KEY: opcional,
     VAPID_SUBJECT: opcional,
+    /** DSN de GlitchTip (roadmap 12). Sin él, los errores solo quedan en el log. */
+    SENTRY_DSN: z.preprocess((valor) => (valor === '' ? undefined : valor), z.url().optional()),
+    /** Entorno con el que se etiquetan los errores en GlitchTip. */
+    SENTRY_ENVIRONMENT: z.string().min(1).default('produccion'),
     /** Usuario de la prueba de humo (roadmap 12): sus reportes no tienen efectos fuera del mapa. */
     HUMO_ID_USUARIO: z.preprocess(
       (valor) => (valor === '' ? undefined : valor),
@@ -69,6 +73,8 @@ export interface ConfigHttp {
   readonly vapid: ConfigVapid | null;
   /** `null` si no hay prueba de humo en este entorno. */
   readonly idUsuarioDeHumo: string | null;
+  /** `null` sin DSN: no se envían errores a GlitchTip. */
+  readonly errores: { readonly dsn: string; readonly entorno: string } | null;
 }
 
 /** Contacto por defecto de VAPID si no se configura otro. */
@@ -97,5 +103,6 @@ export function cargarConfigHttp(env: Entorno = process.env): ConfigHttp {
           }
         : null,
     idUsuarioDeHumo: datos.HUMO_ID_USUARIO ?? null,
+    errores: datos.SENTRY_DSN ? { dsn: datos.SENTRY_DSN, entorno: datos.SENTRY_ENVIRONMENT } : null,
   };
 }
