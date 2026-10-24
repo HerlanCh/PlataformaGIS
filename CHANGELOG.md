@@ -1,3 +1,10 @@
+# [2.17.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.16.0...v2.17.0) (2026-10-24)
+
+
+### Features
+
+* **metrics:** métricas de uso del piloto sin datos personales (Fase 13) ([6fa5081](https://github.com/HerlanCh/PlataformaGIS/commit/6fa5081fe24fc30060dd668957bdeba6aab4443e))
+
 # [2.16.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.15.0...v2.16.0) (2026-10-24)
 
 
