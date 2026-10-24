@@ -600,6 +600,17 @@ Resultado: el sistema en producción, monitoreado y con respaldo, desplegado por
 
 Resultado: evidencia de que la plataforma resuelve el problema planteado (validación, ISO/IEC 12207) y un proceso de mantenimiento en marcha.
 
+> **Cambios al ejecutarla (2026-10-24):**
+> - **Zona del piloto:** todo el rectángulo del SRS 1.3. Duración propuesta, 4 semanas ([protocolo](piloto/protocolo.md)).
+> - **Fuente oficial:** Tránsito, la ABC y Mi Teleférico no publican una API abierta; sus incidentes los publica un
+>   moderador desde `/moderacion` (**ADR-006**, HU-13).
+> - **Métricas:** módulo `metrics` alimentado por eventos, sin datos personales, con `GET /v1/moderacion/metricas` y
+>   `pnpm piloto:metricas`.
+> - **Matriz de marco lógico:** no estaba en el repositorio; se propuso en [`marco-logico.md`](marco-logico.md) y la
+>   aprueban el autor y el tutor antes del piloto.
+> - **Sin bot:** la guía de instalación cubre solo la PWA (ADR-004).
+> - **Análisis:** `pnpm piloto:analizar` calcula los tres indicadores del Propósito desde las planillas.
+
 **Preparación**
 
 1. Definir la zona del piloto y precargar el mapa con incidentes públicos vigentes (Tránsito, ABC, Mi Teleférico) marcados como "fuente oficial".
