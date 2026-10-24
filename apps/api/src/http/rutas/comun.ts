@@ -28,6 +28,7 @@ export const aReporteHttp = (
   },
   creadoEn: reporte.creadoEn.toISOString(),
   caducaEn: reporte.caducaEn.toISOString(),
+  fuenteOficial: reporte.fuenteOficial,
 });
 
 export const aZonaHttp = (zona: ZonaSuscrita): z.output<typeof http.esquemaZona> => ({

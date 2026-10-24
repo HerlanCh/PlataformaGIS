@@ -144,6 +144,22 @@
             "type": "string",
             "format": "date-time",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "fuenteOficial": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "TRANSITO",
+                  "ABC",
+                  "MI_TELEFERICO",
+                  "OTRA"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -152,7 +168,8 @@
           "estado",
           "publicLocation",
           "creadoEn",
-          "caducaEn"
+          "caducaEn",
+          "fuenteOficial"
         ],
         "description": "Lo que el público ve de un reporte: nunca la ubicación real ni el autor"
       },
@@ -472,6 +489,49 @@
           }
         },
         "description": "Nota opcional del moderador al dejar el reporte publicado"
+      },
+      "NuevoReporteOficialInput": {
+        "type": "object",
+        "properties": {
+          "codigoCategoria": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "latitud": {
+            "type": "number"
+          },
+          "longitud": {
+            "type": "number"
+          },
+          "fuenteOficial": {
+            "type": "string",
+            "enum": [
+              "TRANSITO",
+              "ABC",
+              "MI_TELEFERICO",
+              "OTRA"
+            ]
+          }
+        },
+        "required": [
+          "codigoCategoria",
+          "latitud",
+          "longitud",
+          "fuenteOficial"
+        ],
+        "description": "Incidente anunciado por una fuente oficial: categoría, posición y fuente (HU-13)"
+      },
+      "ReporteOficialInput": {
+        "type": "object",
+        "properties": {
+          "reporte": {
+            "$ref": "#/components/schemas/ReportePublicoInput"
+          }
+        },
+        "required": [
+          "reporte"
+        ],
+        "description": "El incidente oficial publicado"
       },
       "CasoDeModeracionInput": {
         "type": "object",
@@ -811,6 +871,22 @@
             "type": "string",
             "format": "date-time",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "fuenteOficial": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "TRANSITO",
+                  "ABC",
+                  "MI_TELEFERICO",
+                  "OTRA"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -819,7 +895,8 @@
           "estado",
           "publicLocation",
           "creadoEn",
-          "caducaEn"
+          "caducaEn",
+          "fuenteOficial"
         ],
         "additionalProperties": false,
         "description": "Lo que el público ve de un reporte: nunca la ubicación real ni el autor"
@@ -1158,6 +1235,51 @@
         },
         "additionalProperties": false,
         "description": "Nota opcional del moderador al dejar el reporte publicado"
+      },
+      "NuevoReporteOficial": {
+        "type": "object",
+        "properties": {
+          "codigoCategoria": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "latitud": {
+            "type": "number"
+          },
+          "longitud": {
+            "type": "number"
+          },
+          "fuenteOficial": {
+            "type": "string",
+            "enum": [
+              "TRANSITO",
+              "ABC",
+              "MI_TELEFERICO",
+              "OTRA"
+            ]
+          }
+        },
+        "required": [
+          "codigoCategoria",
+          "latitud",
+          "longitud",
+          "fuenteOficial"
+        ],
+        "additionalProperties": false,
+        "description": "Incidente anunciado por una fuente oficial: categoría, posición y fuente (HU-13)"
+      },
+      "ReporteOficial": {
+        "type": "object",
+        "properties": {
+          "reporte": {
+            "$ref": "#/components/schemas/ReportePublico"
+          }
+        },
+        "required": [
+          "reporte"
+        ],
+        "additionalProperties": false,
+        "description": "El incidente oficial publicado"
       },
       "CasoDeModeracion": {
         "type": "object",
@@ -2361,6 +2483,123 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ColaDeModeracion"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/moderacion/reportes-oficiales": {
+      "post": {
+        "summary": "Publica un incidente de fuente oficial (HU-13, rol MODERADOR)",
+        "tags": [
+          "moderación"
+        ],
+        "description": "Idempotente por la cabecera Idempotency-Key. No se convierte en confirmación de un reporte cercano ni cuenta para el límite de reportes.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NuevoReporteOficialInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "description": "Clave única que genera el cliente; un reenvío no crea otro reporte"
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReporteOficial"
                 }
               }
             }

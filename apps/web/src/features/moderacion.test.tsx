@@ -7,12 +7,17 @@ import { useEstado } from '../estado.js';
 import { infracciones } from '../pruebas/axe.js';
 import { pantallaDe } from '../Raiz.js';
 import { reiniciarAlmacen } from '../services/almacen.js';
-import { decidir, ErrorDeModeracion, obtenerCola } from '../services/moderacion.js';
+import {
+  decidir,
+  ErrorDeModeracion,
+  obtenerCola,
+  publicarOficial,
+} from '../services/moderacion.js';
 import type { CasoDeModeracion } from '../services/moderacion.js';
 import { obtenerToken, rolActual } from '../services/sesion.js';
 import { Encabezado } from '../ui/Encabezado.js';
 import { PantallaDeModeracion } from './moderacion/PantallaDeModeracion.js';
-import { mensajeDeDecision, textoDeMotivo } from './moderacion/textos.js';
+import { mensajeDeDecision, mensajeDePublicacion, textoDeMotivo } from './moderacion/textos.js';
 
 const API = 'http://api.prueba';
 const ID_USUARIO = '11111111-1111-4111-8111-111111111111';
@@ -56,6 +61,7 @@ function api(
       });
     }
     if (solicitud.url.endsWith('/v1/moderacion/cola')) return cola();
+    if (solicitud.url.endsWith('/reportes-oficiales')) return json({}, 201);
     if (solicitud.method === 'POST') return json(null, 204);
     return json({}, 500);
   });
@@ -171,6 +177,81 @@ describe('pantalla de moderación (HU-12)', () => {
 
     expect(await screen.findByText('Sin descripción del autor.')).toBeTruthy();
     expect(screen.getByText('1 persona dijo que ya no está')).toBeTruthy();
+  });
+});
+
+describe('incidente de fuente oficial (HU-13)', () => {
+  const abrirFormulario = async () => {
+    api('MODERADOR');
+    const pantalla = montar(<PantallaDeModeracion />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Publicar incidente oficial' }));
+    return pantalla;
+  };
+  const publicaciones = () => pedidos.filter((p) => p.url.endsWith('/reportes-oficiales'));
+
+  it('HU-13: parte del centro del último mapa visto y publica categoría, fuente y punto', async () => {
+    useEstado.setState({
+      ventana: { latitudMin: -16.51, latitudMax: -16.49, longitudMin: -68.14, longitudMax: -68.12 },
+    });
+    const { container } = await abrirFormulario();
+    expect(screen.getByLabelText('Ubicación (latitud, longitud)')).toHaveProperty(
+      'value',
+      '-16.50000, -68.13000',
+    );
+
+    fireEvent.change(screen.getByLabelText('Categoría'), { target: { value: 'accidente' } });
+    fireEvent.change(screen.getByLabelText('Fuente'), { target: { value: 'MI_TELEFERICO' } });
+    expect(await infracciones(container)).toEqual([]);
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar' }));
+
+    await waitFor(() => expect(publicaciones()).toHaveLength(1));
+    expect(publicaciones()[0]!.headers.get('idempotency-key')).toMatch(/^[0-9a-f-]{36}$/);
+    expect(await publicaciones()[0]!.json()).toEqual({
+      codigoCategoria: 'accidente',
+      fuenteOficial: 'MI_TELEFERICO',
+      latitud: -16.5,
+      longitud: -68.13,
+    });
+    await waitFor(() =>
+      expect(useEstado.getState().aviso?.texto).toBe('Incidente oficial publicado en el mapa.'),
+    );
+    expect(screen.getByRole('button', { name: 'Publicar incidente oficial' })).toBeTruthy();
+  });
+
+  it('HU-13: cancelar pliega el formulario sin publicar', async () => {
+    await abrirFormulario();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(screen.getByRole('button', { name: 'Publicar incidente oficial' })).toBeTruthy();
+    expect(publicaciones()).toEqual([]);
+  });
+
+  it('HU-13: un punto fuera de La Paz y El Alto no se puede publicar', async () => {
+    await abrirFormulario();
+
+    fireEvent.change(screen.getByLabelText('Ubicación (latitud, longitud)'), {
+      target: { value: '-17.39, -66.16' },
+    });
+
+    expect(screen.getByRole('button', { name: 'Publicar' })).toHaveProperty('disabled', true);
+    expect(screen.getByText(/Escribe dos números/)).toBeTruthy();
+  });
+
+  it('HU-13: si la API la rechaza, lo explica', async () => {
+    const pedir = vi.fn(async () => json({ codigo: 'FUERA_DEL_AREA_DE_SERVICIO' }, 422));
+    api('MODERADOR');
+    await obtenerToken(API);
+
+    const error = await publicarOficial(
+      API,
+      { codigoCategoria: 'bloqueo', fuenteOficial: 'ABC', latitud: -16.5, longitud: -68.13 },
+      'clave-000001',
+      pedir as unknown as typeof fetch,
+    ).catch((e: unknown) => e);
+
+    expect(mensajeDePublicacion(error).texto).toBe('Ese punto está fuera de La Paz y El Alto.');
+    expect(mensajeDePublicacion(new Error('red')).texto).toMatch(/No pudimos publicar/);
   });
 });
 

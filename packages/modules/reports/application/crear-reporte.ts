@@ -4,17 +4,14 @@ import {
   reporteDuplicadoDetectadoV1,
   validarEntrada,
 } from '@gis/contracts';
-import {
-  aErrorDeAplicacion,
-  codigoCategoria,
-  ErrorConflicto,
-  ErrorLimiteExcedido,
-  ErrorValidacionFallida,
-  idReporte,
-  idUsuario,
+import { ErrorLimiteExcedido, idReporte, idUsuario } from '@gis/shared-kernel';
+import type {
+  GeneradorDeId,
+  IdUsuario,
+  LimitadorDeFrecuencia,
   PuntoGeo,
+  Reloj,
 } from '@gis/shared-kernel';
-import type { GeneradorDeId, IdUsuario, LimitadorDeFrecuencia, Reloj } from '@gis/shared-kernel';
 import { z } from 'zod';
 import type { Categoria } from '../domain/category.js';
 import type {
@@ -25,8 +22,14 @@ import type {
 import { esClaveDeIdempotenciaValida, Reporte } from '../domain/report.js';
 import { proyeccionPublica } from '../domain/reporte-publico.js';
 import type { ReportePublico } from '../domain/reporte-publico.js';
+import {
+  buscarCategoria,
+  buscarReenvio,
+  creacionIdempotente,
+  puntoDe,
+  vistaDelAutor,
+} from './creacion.js';
 import { eventosDeIntegracionDe } from './eventos.js';
-import { CLAVE_DE_IDEMPOTENCIA_REPETIDA } from './ports.js';
 import type { UnidadDeTrabajoDeReporte } from './ports.js';
 
 /** Límite de creación de reportes por usuario (SRS 3.3). */
@@ -66,15 +69,6 @@ export interface DependenciasCrearReporte {
   readonly ids: GeneradorDeId;
 }
 
-/**
- * Lo que ve el autor de su reporte. El de un autor silenciado se guarda `RECHAZADO`, pero él
- * no recibe aviso (SRS 3.2.7): lo sigue viendo `ACTIVO`.
- */
-const vistaDelAutor = (reporte: Reporte): ReportePublico => {
-  const publico = proyeccionPublica(reporte);
-  return reporte.motivoRechazo === 'AUTOR_SILENCIADO' ? { ...publico, estado: 'ACTIVO' } : publico;
-};
-
 /** HU-01 y HU-05: crea un reporte, o lo convierte en confirmación si ya hay uno igual cerca. */
 export class CrearReporte {
   constructor(private readonly deps: DependenciasCrearReporte) {}
@@ -88,35 +82,22 @@ export class CrearReporte {
     if (reenviado) return reenviado;
 
     await this.consumirCupo(idAutor);
-    const categoria = await this.categoria(datos.codigoCategoria);
-    const punto = this.punto(datos.latitud, datos.longitud);
+    const categoria = await buscarCategoria(this.deps.categorias, datos.codigoCategoria);
+    const punto = puntoDe(datos.latitud, datos.longitud);
     const ahora = this.deps.reloj.ahora();
 
     const existente = await this.deps.reportes.buscarDuplicado(categoria, punto, ahora);
     if (existente) return this.alEncontrarDuplicado(existente, idAutor, punto, ahora);
 
-    try {
-      return await this.crear(categoria, idAutor, punto, datos.idempotencyKey, ahora);
-    } catch (error) {
-      // Dos envíos simultáneos con la misma clave: gana el primero y este devuelve su resultado.
-      if (error instanceof ErrorConflicto && error.codigo === CLAVE_DE_IDEMPOTENCIA_REPETIDA) {
-        const ganador = await this.reenvio(idAutor, datos.idempotencyKey);
-        if (ganador) return ganador;
-      }
-      throw error;
-    }
+    return creacionIdempotente(
+      () => this.crear(categoria, idAutor, punto, datos.idempotencyKey, ahora),
+      () => this.reenvio(idAutor, datos.idempotencyKey),
+    );
   }
 
   private async reenvio(idAutor: IdUsuario, clave: string): Promise<SalidaCrearReporte | null> {
-    const previo = await this.deps.reportes.buscarPorClaveDeIdempotencia(clave);
-    if (!previo) return null;
-    if (previo.authorId !== idAutor) {
-      throw new ErrorConflicto(
-        'CLAVE_DE_IDEMPOTENCIA_AJENA',
-        'La clave de idempotencia ya la usó otro usuario',
-      );
-    }
-    return { resultado: 'CREADO', reporte: vistaDelAutor(previo) };
+    const previo = await buscarReenvio(this.deps.reportes, idAutor, clave);
+    return previo && { resultado: 'CREADO', reporte: vistaDelAutor(previo) };
   }
 
   private async consumirCupo(idAutor: IdUsuario): Promise<void> {
@@ -127,25 +108,6 @@ export class CrearReporte {
       ventanaSegundos,
     );
     if (!consumo.permitido) throw new ErrorLimiteExcedido(consumo.reintentarEnSegundos);
-  }
-
-  private async categoria(codigo: string): Promise<Categoria> {
-    const categoria = await this.deps.categorias.buscarPorCodigo(codigoCategoria(codigo));
-    if (!categoria) {
-      throw new ErrorValidacionFallida(
-        'CATEGORIA_DESCONOCIDA',
-        `No existe la categoría "${codigo}"`,
-      );
-    }
-    return categoria;
-  }
-
-  private punto(latitud: number, longitud: number): PuntoGeo {
-    try {
-      return PuntoGeo.crear(latitud, longitud);
-    } catch (error) {
-      throw aErrorDeAplicacion(error, { FUERA_DEL_AREA_DE_SERVICIO: 'VALIDACION_FALLIDA' });
-    }
   }
 
   private async alEncontrarDuplicado(

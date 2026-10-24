@@ -15,6 +15,11 @@ import { PoliticaDePrivacidad } from './privacy-policy.js';
 
 export type EstadoReporte = 'ACTIVO' | 'CONFIRMADO' | 'RESUELTO' | 'CADUCADO' | 'RECHAZADO';
 
+/** Fuentes oficiales que un moderador puede citar al publicar un incidente (HU-13). */
+export const FUENTES_OFICIALES = ['TRANSITO', 'ABC', 'MI_TELEFERICO', 'OTRA'] as const;
+
+export type FuenteOficial = (typeof FUENTES_OFICIALES)[number];
+
 /** `AUTOR_SILENCIADO` no penaliza de nuevo al autor (SRS 3.2.7). */
 export type MotivoRechazo = 'MODERACION' | 'AUTOR_SILENCIADO';
 
@@ -69,6 +74,8 @@ export interface PropsReporte {
   readonly idempotencyKey: string;
   /** Texto opcional del autor. Privado: solo lo leen el clasificador y los moderadores. */
   readonly descripcion: string | null;
+  /** Fuente del incidente si lo publicó un moderador citando una fuente oficial (HU-13). */
+  readonly fuenteOficial: FuenteOficial | null;
 }
 
 export interface EntradaCrearReporte {
@@ -78,6 +85,8 @@ export interface EntradaCrearReporte {
   readonly location: PuntoGeo;
   readonly idempotencyKey: string;
   readonly ahora: Date;
+  /** Solo en los incidentes de fuente oficial (HU-13). */
+  readonly fuenteOficial?: FuenteOficial;
 }
 
 /** Agregado raíz: un incidente urbano georreferenciado y su ciclo de vida. */
@@ -104,6 +113,7 @@ export class Reporte {
       motivoRechazo: null,
       idempotencyKey,
       descripcion: null,
+      fuenteOficial: input.fuenteOficial ?? null,
     });
     reporte.eventos.push({ tipo: 'ReporteCreado', ocurridoEn: ahora });
     return reporte;
@@ -164,6 +174,15 @@ export class Reporte {
 
   get descripcion(): string | null {
     return this.props.descripcion;
+  }
+
+  get fuenteOficial(): FuenteOficial | null {
+    return this.props.fuenteOficial;
+  }
+
+  /** Lo publicó un moderador citando una fuente oficial: no es un aporte del autor (HU-13). */
+  get esOficial(): boolean {
+    return this.props.fuenteOficial !== null;
   }
 
   /** Vigente: visible en el mapa y abierto a votos. */

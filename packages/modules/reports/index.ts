@@ -19,7 +19,8 @@ export { RepositorioReportesPostgis } from './adapters/report-repository.js';
 export { CATEGORIAS_MVP } from './domain/category.js';
 export type { Categoria } from './domain/category.js';
 export type { RepositorioDeCategorias, RepositorioDeReportes } from './domain/ports.js';
-export type { EstadoReporte } from './domain/report.js';
+export { FUENTES_OFICIALES } from './domain/report.js';
+export type { EstadoReporte, FuenteOficial } from './domain/report.js';
 export type { ReportePublico } from './domain/reporte-publico.js';
 
 // Casos de uso y manejadores de eventos (Fase 5).
@@ -39,6 +40,11 @@ export type {
   ResultadoCrearReporte,
   SalidaCrearReporte,
 } from './application/crear-reporte.js';
+export { PublicarReporteOficial } from './application/publicar-reporte-oficial.js';
+export type {
+  DependenciasPublicarReporteOficial,
+  EntradaPublicarReporteOficial,
+} from './application/publicar-reporte-oficial.js';
 export {
   ListarReportesEnVentana,
   MAX_REPORTES_POR_VENTANA,

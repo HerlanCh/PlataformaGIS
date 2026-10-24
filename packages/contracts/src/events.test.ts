@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
+  CLAVES_REPORTE_CREADO,
   eventosDeIntegracion,
+  leerReporteCreado,
   reporteCreadoV1,
+  reporteCreadoV2,
   reporteDuplicadoDetectadoV1,
   rechazoDeModeracionV1,
   reporteRechazadoV1,
@@ -22,7 +25,7 @@ function campos(esquema: z.ZodType): string[] {
 }
 
 describe('catálogo de eventos de integración', () => {
-  it('contiene los eventos de las Fases 2, 5 y 10 con clave única', () => {
+  it('contiene los eventos de las Fases 2, 5, 10 y 13 con clave única', () => {
     const claves = eventosDeIntegracion.map((evento) => evento.clave);
 
     expect(claves).toEqual([
@@ -37,6 +40,7 @@ describe('catálogo de eventos de integración', () => {
       'RechazoDeModeracion.v1',
       'DescripcionAgregada.v1',
       'ReporteClasificado.v1',
+      'ReporteCreado.v2',
     ]);
     expect(new Set(claves).size).toBe(claves.length);
   });
@@ -121,5 +125,56 @@ describe('contratos', () => {
     expect(votoEmitidoV1.esquema.safeParse(voto(1, 'CONFIRMAR')).success).toBe(true);
     expect(votoEmitidoV1.esquema.safeParse(voto(5.1, 'NINGUNA')).success).toBe(false);
     expect(votoEmitidoV1.esquema.safeParse(voto(1, 'BORRAR')).success).toBe(false);
+  });
+
+  it('HU-13: ReporteCreado.v2 agrega la fuente oficial, nula en los reportes comunitarios', () => {
+    const v2 = (fuenteOficial: unknown) => ({
+      ...creado,
+      version: 2,
+      contenido: { ...creado.contenido, fuenteOficial },
+    });
+
+    expect(reporteCreadoV2.esquema.safeParse(v2('TRANSITO')).success).toBe(true);
+    expect(reporteCreadoV2.esquema.safeParse(v2(null)).success).toBe(true);
+    expect(reporteCreadoV2.esquema.safeParse(v2('ALCALDIA')).success).toBe(false);
+    expect(reporteCreadoV2.esquema.safeParse(creado).success).toBe(false);
+  });
+});
+
+describe('leerReporteCreado', () => {
+  const contenido = {
+    idReporte: ID,
+    codigoCategoria: 'bloqueo',
+    publicLocation: { latitud: -16.5, longitud: -68.15 },
+    estado: 'ACTIVO',
+    creadoEn: '2026-10-11T12:00:00Z',
+    caducaEn: '2026-10-11T18:00:00Z',
+  };
+
+  it('HU-13: un v1 pendiente del outbox se lee como reporte comunitario', () => {
+    const v1 = { ...sobre, tipo: 'ReporteCreado', version: 1, contenido };
+
+    expect(leerReporteCreado(v1)).toEqual({ ...contenido, fuenteOficial: null });
+  });
+
+  it('HU-13: un v2 conserva su fuente', () => {
+    const v2 = {
+      ...sobre,
+      tipo: 'ReporteCreado',
+      version: 2,
+      contenido: { ...contenido, fuenteOficial: 'ABC' },
+    };
+
+    expect(leerReporteCreado(v2).fuenteOficial).toBe('ABC');
+  });
+
+  it('rechaza otro evento', () => {
+    const otro = { ...sobre, tipo: 'ReporteCaducado', version: 1, contenido: { idReporte: ID } };
+
+    expect(() => leerReporteCreado(otro)).toThrow(/ReporteCreado/);
+  });
+
+  it('los manejadores se suscriben a las dos versiones', () => {
+    expect(CLAVES_REPORTE_CREADO).toEqual(['ReporteCreado.v1', 'ReporteCreado.v2']);
   });
 });

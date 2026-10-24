@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { categoriaDe } from '../../domain/categorias.js';
+import { nombreDeFuente } from '../../domain/fuentes.js';
 import { distanciaM, formatearDistancia } from '../../domain/geo.js';
 import type { Punto } from '../../domain/geo.js';
 import { horaDe, vigenciaDe } from '../../domain/reportes.js';
@@ -41,6 +42,18 @@ function Ficha({ reporte, desde, conGps }: PropsFicha) {
             tamano={22}
           />
           {confirmado ? 'Confirmado por la comunidad' : 'Sin confirmar'}
+        </dd>
+      </div>
+      <div className="ficha__fila">
+        <dt>Fuente</dt>
+        <dd>
+          {reporte.fuenteOficial ? (
+            <span className="insignia-oficial">
+              Oficial: {nombreDeFuente(reporte.fuenteOficial)}
+            </span>
+          ) : (
+            nombreDeFuente(null)
+          )}
         </dd>
       </div>
       <div className="ficha__fila">

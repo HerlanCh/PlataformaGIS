@@ -7,6 +7,7 @@ import type { CasoDeModeracion, Decision } from '../../services/moderacion.js';
 import { Estacion } from '../../ui/Estacion.js';
 import { TRAZO } from '../../ui/iconos.js';
 import { Pagina } from '../../ui/Pagina.js';
+import { FormularioOficial } from './FormularioOficial.js';
 import { MOTIVOS_DE_RECHAZO, textoDeMotivo } from './textos.js';
 import { useAcceso, useCola, useDecidir } from './usarModeracion.js';
 
@@ -214,10 +215,19 @@ function Contenido() {
   if (acceso.isError) {
     return <p className="pagina__ayuda">Sin conexión: la moderación necesita señal.</p>;
   }
-  return acceso.data.esModerador ? <Cola /> : <SinRol idUsuario={acceso.data.idUsuario} />;
+  if (!acceso.data.esModerador) return <SinRol idUsuario={acceso.data.idUsuario} />;
+  return (
+    <>
+      <FormularioOficial />
+      <Cola />
+    </>
+  );
 }
 
-/** `/moderacion` (HU-12): la cola de reportes negados o marcados, para el rol MODERADOR. */
+/**
+ * `/moderacion` (HU-12 y HU-13): la cola de reportes negados o marcados y la publicación de
+ * incidentes oficiales, para el rol MODERADOR.
+ */
 export function PantallaDeModeracion() {
   return (
     <Pagina titulo="Moderación">

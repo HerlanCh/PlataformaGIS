@@ -1,5 +1,5 @@
 import type { CodigoCategoria, IdReporte, PuntoGeo } from '@gis/shared-kernel';
-import type { EstadoReporte, Reporte } from './report.js';
+import type { EstadoReporte, FuenteOficial, Reporte } from './report.js';
 
 /**
  * Lo que el público puede ver de un reporte. Es una proyección de solo lectura: lleva la
@@ -12,6 +12,8 @@ export interface ReportePublico {
   readonly publicLocation: PuntoGeo;
   readonly creadoEn: Date;
   readonly caducaEn: Date;
+  /** `null` en los reportes de la comunidad (HU-13). */
+  readonly fuenteOficial: FuenteOficial | null;
 }
 
 /** Proyección pública de un agregado: descarta la ubicación real y el autor. */
@@ -22,4 +24,5 @@ export const proyeccionPublica = (reporte: Reporte): ReportePublico => ({
   publicLocation: reporte.publicLocation,
   creadoEn: reporte.creadoEn,
   caducaEn: reporte.caducaEn,
+  fuenteOficial: reporte.fuenteOficial,
 });

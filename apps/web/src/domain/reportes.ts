@@ -37,6 +37,8 @@ export function aplicarEvento(
       publicLocation: nuevo.publicLocation,
       creadoEn: nuevo.creadoEn,
       caducaEn: nuevo.caducaEn,
+      // `ReporteCreado.v1` no la trae: era siempre de la comunidad (HU-13).
+      fuenteOficial: nuevo.fuenteOficial ?? null,
     };
     return [reporte, ...lista];
   }

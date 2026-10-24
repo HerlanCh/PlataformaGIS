@@ -317,6 +317,34 @@ function registrarRutasDeModeracion(
   );
 
   app.post(
+    '/moderacion/reportes-oficiales',
+    {
+      ...conToken,
+      schema: {
+        tags: ['moderación'],
+        summary: 'Publica un incidente de fuente oficial (HU-13, rol MODERADOR)',
+        description:
+          'Idempotente por la cabecera Idempotency-Key. No se convierte en confirmación de un ' +
+          'reporte cercano ni cuenta para el límite de reportes.',
+        security: SEGURIDAD_BEARER,
+        headers: http.esquemaCabecerasNuevoReporte,
+        body: http.esquemaNuevoReporteOficial,
+        response: { 201: http.esquemaReporteOficial, ...ERRORES },
+      },
+    },
+    async (request, reply) => {
+      const { idUsuario, rol } = identidadDe(request);
+      const reporte = await moderacion.publicarOficial.ejecutar({
+        ...request.body,
+        idModerador: idUsuario,
+        rolActor: rol,
+        idempotencyKey: request.headers['idempotency-key'],
+      });
+      return reply.code(201).send({ reporte: aReporteHttp(reporte) });
+    },
+  );
+
+  app.post(
     '/moderacion/reportes/:id/rechazar',
     {
       ...conToken,

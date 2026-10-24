@@ -34,6 +34,8 @@ export interface DependenciasAjustarReputacion {
  * - `ReporteConfirmado`: +0,20 al autor y +0,05 a quienes confirmaron.
  * - `ReporteResuelto`: +0,05 a quienes negaron.
  * - `ReporteRechazado`: la penalización al autor que fije `PoliticaDeReputacion`.
+ *
+ * El autor de un incidente de fuente oficial no gana ni pierde nada; los votantes sí (HU-13).
  */
 export class AjustarReputacionPorDesenlace {
   constructor(private readonly deps: DependenciasAjustarReputacion) {}
@@ -81,7 +83,7 @@ export class AjustarReputacionPorDesenlace {
 
   private async autor(id: IdReporte): Promise<Reputacion | null> {
     const reporte = await this.deps.consultaDeReporte.buscarPorId(id);
-    return reporte ? this.reputacion(reporte.authorId) : null;
+    return reporte && !reporte.esOficial ? this.reputacion(reporte.authorId) : null;
   }
 
   /** Reputaciones de quienes votaron en el sentido del desenlace, ya premiadas. */

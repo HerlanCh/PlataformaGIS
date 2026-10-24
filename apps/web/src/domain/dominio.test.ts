@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { CATEGORIAS, categoriaDe } from './categorias.js';
-import { aBbox, CENTRO_LA_PAZ, dentroDe, distanciaM, formatearDistancia } from './geo.js';
+import {
+  aBbox,
+  CENTRO_LA_PAZ,
+  dentroDe,
+  distanciaM,
+  formatearCoordenadas,
+  formatearDistancia,
+  leerCoordenadas,
+} from './geo.js';
+import { nombreDeFuente } from './fuentes.js';
 import { aplicarEvento, horaDe, vigenciaDe } from './reportes.js';
 import type { EventoPublico, ReportePublico } from './reportes.js';
 
@@ -18,6 +27,7 @@ const reporte = (id: string, cambios: Partial<ReportePublico> = {}): ReportePubl
   publicLocation: { latitud: -16.4955, longitud: -68.1336 },
   creadoEn: '2026-10-18T12:00:00.000Z',
   caducaEn: '2026-10-18T18:00:00.000Z',
+  fuenteOficial: null,
   ...cambios,
 });
 
@@ -61,6 +71,26 @@ describe('geografía', () => {
     expect(dentroDe({ latitud: -17, longitud: -68.13 }, ventana)).toBe(false);
     expect(aBbox(ventana)).toBe('-68.15000,-16.51000,-68.12000,-16.48000');
   });
+
+  it('HU-13: lee coordenadas pegadas de un mapa y las escribe con cinco decimales', () => {
+    expect(leerCoordenadas(' -16.4955, -68.1336 ')).toEqual(CENTRO_LA_PAZ);
+    expect(leerCoordenadas('-16.4955 -68.1336')).toEqual(CENTRO_LA_PAZ);
+    expect(formatearCoordenadas(CENTRO_LA_PAZ)).toBe('-16.49550, -68.13360');
+  });
+
+  it('HU-13: no acepta texto, un solo número ni un punto fuera de La Paz y El Alto', () => {
+    expect(leerCoordenadas('Plaza Murillo')).toBeNull();
+    expect(leerCoordenadas('-16.4955')).toBeNull();
+    expect(leerCoordenadas('-17.39, -66.16')).toBeNull();
+  });
+});
+
+describe('fuentes oficiales (HU-13)', () => {
+  it('nombra la fuente, o «Comunidad» si no la hay', () => {
+    expect(nombreDeFuente('MI_TELEFERICO')).toBe('Mi Teleférico');
+    expect(nombreDeFuente('TRANSITO')).toBe('Tránsito');
+    expect(nombreDeFuente(null)).toBe('Comunidad');
+  });
 });
 
 describe('aplicarEvento (HU-02: el mapa se actualiza en vivo)', () => {
@@ -80,6 +110,25 @@ describe('aplicarEvento (HU-02: el mapa se actualiza en vivo)', () => {
     expect(nueva.map((r) => r.id)).toEqual(['r2', 'r1']);
     expect(nueva[0]).not.toHaveProperty('idReporte');
     expect(aplicarEvento(nueva, creado, ventana)).toBe(nueva);
+  });
+
+  it('HU-13: ReporteCreado.v2 trae la fuente oficial y el v1 queda como comunitario', () => {
+    const oficial = evento('ReporteCreado', {
+      idReporte: 'r4',
+      publicLocation: { latitud: -16.49, longitud: -68.13 },
+      fuenteOficial: 'MI_TELEFERICO',
+    });
+    const comunitario = evento('ReporteCreado', {
+      idReporte: 'r5',
+      publicLocation: { latitud: -16.49, longitud: -68.13 },
+    });
+
+    const nueva = aplicarEvento(aplicarEvento([], oficial, ventana), comunitario, ventana);
+
+    expect(nueva.map((r) => [r.id, r.fuenteOficial])).toEqual([
+      ['r5', null],
+      ['r4', 'MI_TELEFERICO'],
+    ]);
   });
 
   it('ReporteCreado fuera de la ventana no cambia la lista', () => {

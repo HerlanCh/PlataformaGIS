@@ -324,6 +324,26 @@ describe('AjustarReputacionPorDesenlace', () => {
     expect(reputaciones.puntaje(AUTOR)).toBeUndefined();
   });
 
+  it('HU-13: en un incidente oficial no cambia quien lo publicó, pero sí los votantes', async () => {
+    const { deps, reputaciones, conVotos } = escenario(reporte({ esOficial: true }));
+    conVotos([1, 'CONFIRMACION', 1]);
+    const manejador = new AjustarReputacionPorDesenlace(deps);
+
+    await manejador.manejar(
+      crearEvento(
+        reporteConfirmadoV1,
+        { idReporte: ID_REPORTE, caducaEn: sobre.ocurridoEn.toISOString() },
+        sobre,
+      ),
+    );
+    await manejador.manejar(
+      crearEvento(reporteRechazadoV1, { idReporte: ID_REPORTE, motivo: 'MODERACION' }, sobre),
+    );
+
+    expect(reputaciones.puntaje(usuario(1))).toBe(1.05);
+    expect(reputaciones.puntaje(AUTOR)).toBeUndefined();
+  });
+
   it('sin el reporte no ajusta al autor, pero sí a los votantes', async () => {
     const { deps, reputaciones, conVotos } = escenario();
     deps.consultaDeReporte.reportes.clear();

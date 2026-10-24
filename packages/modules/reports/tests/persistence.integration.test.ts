@@ -18,6 +18,7 @@ import { UnidadDeTrabajoReportePg } from '../adapters/report-unit-of-work.js';
 import { CATEGORIAS_MVP } from '../domain/category.js';
 import type { Categoria } from '../domain/category.js';
 import { Reporte } from '../domain/report.js';
+import type { FuenteOficial } from '../domain/report.js';
 import { reportsModulo } from '../index.js';
 
 const migraciones = reportsModulo.migraciones!;
@@ -30,7 +31,7 @@ const categoria = (codigo: string): Categoria => CATEGORIAS_MVP.find((c) => c.co
 
 let secuencia = 0;
 /** Reporte nuevo con identificador y clave de idempotencia únicos. */
-function nuevoReporte(codigo = 'accidente'): Reporte {
+function nuevoReporte(codigo = 'accidente', fuenteOficial?: FuenteOficial): Reporte {
   secuencia += 1;
   const sufijo = String(secuencia).padStart(12, '0');
   return Reporte.crear({
@@ -40,6 +41,7 @@ function nuevoReporte(codigo = 'accidente'): Reporte {
     location: plazaMurillo,
     idempotencyKey: `clave-${sufijo}`,
     ahora: creado,
+    ...(fuenteOficial && { fuenteOficial }),
   });
 }
 
@@ -103,11 +105,37 @@ describeIntegration('persistencia de reports', () => {
       extensiones: 0,
       motivoRechazo: null,
       descripcion: null,
+      fuenteOficial: null,
       idempotencyKey: reporte.idempotencyKey,
     });
     expect(recuperado.location.esIgualA(plazaMurillo)).toBe(true);
     expect(recuperado.publicLocation.esIgualA(plazaMurillo)).toBe(true);
     expect(recuperado.extraerEventos()).toEqual([]);
+  });
+
+  it('HU-13: guarda la fuente oficial y la devuelve en la ventana del mapa', async () => {
+    const oficial = nuevoReporte('bloqueo', 'MI_TELEFERICO');
+
+    await reportes.guardar(oficial);
+
+    expect((await reportes.buscarPorId(oficial.id))?.fuenteOficial).toBe('MI_TELEFERICO');
+    const caja = {
+      latitudMin: -16.5,
+      latitudMax: -16.49,
+      longitudMin: -68.14,
+      longitudMax: -68.13,
+    };
+    const enVentana = await reportes.buscarEnVentana(caja, [], ['ACTIVO'], 100);
+    expect(enVentana.find((r) => r.id === oficial.id)?.fuenteOficial).toBe('MI_TELEFERICO');
+  });
+
+  it('HU-13: la base rechaza una fuente que no está en el catálogo', async () => {
+    const reporte = nuevoReporte('bloqueo');
+    await reportes.guardar(reporte);
+
+    await expect(
+      db.execute(sql`update reportes set fuente_oficial = 'ALCALDIA' where id = ${reporte.id}`),
+    ).rejects.toThrow();
   });
 
   it('RNF-14: guarda por separado la ubicación real y la pública que decidió el dominio', async () => {
@@ -381,6 +409,8 @@ describeIntegration('migraciones de reports', () => {
   it('se aplican sobre una base vacía y se revierten por completo', async () => {
     await migrarTodo(db, [migracionesDePlataforma, migraciones]);
     expect(await tablas()).toEqual(['categorias', 'reportes']);
+
+    expect(await revertirUltima(db, migraciones)).toBe('0005_fuente_oficial');
 
     expect(await revertirUltima(db, migraciones)).toBe('0004_indice_autor');
 

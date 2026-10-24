@@ -26,13 +26,32 @@ const MENSAJES_DE_ERROR: Readonly<Record<string, string>> = {
   ROL_INSUFICIENTE: 'Tu cuenta ya no tiene el rol de moderación.',
 };
 
+const codigoDe = (error: unknown): string | undefined =>
+  error instanceof ErrorDeModeracion ? error.rechazo?.codigo : undefined;
+
 /** Qué decir cuando falla una decisión. */
 export function mensajeDeDecision(error: unknown): Mensaje {
-  const codigo = error instanceof ErrorDeModeracion ? error.rechazo?.codigo : undefined;
+  const codigo = codigoDe(error);
   return {
     tono: 'problema',
     texto:
       (codigo && MENSAJES_DE_ERROR[codigo]) ??
       'No pudimos guardar la decisión. Revisa tu conexión e intenta de nuevo.',
+  };
+}
+
+const MENSAJES_DE_PUBLICACION: Readonly<Record<string, string>> = {
+  ROL_INSUFICIENTE: MENSAJES_DE_ERROR.ROL_INSUFICIENTE!,
+  FUERA_DEL_AREA_DE_SERVICIO: 'Ese punto está fuera de La Paz y El Alto.',
+};
+
+/** Qué decir cuando falla la publicación de un incidente oficial (HU-13). */
+export function mensajeDePublicacion(error: unknown): Mensaje {
+  const codigo = codigoDe(error);
+  return {
+    tono: 'problema',
+    texto:
+      (codigo && MENSAJES_DE_PUBLICACION[codigo]) ??
+      'No pudimos publicar el incidente. Revisa tu conexión e intenta de nuevo.',
   };
 }

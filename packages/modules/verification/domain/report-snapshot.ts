@@ -12,4 +12,9 @@ export interface InstantaneaDeReporte {
   readonly location: PuntoGeo;
   /** Extensiones de vigencia ya aplicadas. */
   readonly extensiones: number;
+  /**
+   * Incidente de fuente oficial (HU-13): lo publicó un moderador citando la fuente, así que su
+   * desenlace no cambia la reputación de quien lo publicó.
+   */
+  readonly esOficial: boolean;
 }

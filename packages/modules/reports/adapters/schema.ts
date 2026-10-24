@@ -52,6 +52,8 @@ export const reportes = pgTable(
     idempotencyKey: text('clave_idempotencia').notNull().unique(),
     /** Texto opcional del autor. Nunca se expone en respuestas ni eventos públicos. */
     descripcion: text('descripcion'),
+    /** Fuente citada por el moderador en un incidente oficial (HU-13); nula si es de la comunidad. */
+    fuenteOficial: text('fuente_oficial'),
   },
   (tabla) => [
     check(
@@ -62,6 +64,10 @@ export const reportes = pgTable(
     check(
       'reportes_motivo_rechazo_check',
       sql`${tabla.motivoRechazo} is null or ${tabla.motivoRechazo} in ('MODERACION', 'AUTOR_SILENCIADO')`,
+    ),
+    check(
+      'reportes_fuente_oficial_check',
+      sql`${tabla.fuenteOficial} is null or ${tabla.fuenteOficial} in ('TRANSITO', 'ABC', 'MI_TELEFERICO', 'OTRA')`,
     ),
     check(
       'reportes_descripcion_check',

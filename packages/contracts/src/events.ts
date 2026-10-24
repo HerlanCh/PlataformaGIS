@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { definirEvento } from './integration-event.js';
-import type { DefinicionDeEvento } from './integration-event.js';
+import { claveDeEvento, definirEvento } from './integration-event.js';
+import type { DefinicionDeEvento, EventoDeIntegracion } from './integration-event.js';
 
 export const esquemaPuntoGeo = z.object({ latitud: z.number(), longitud: z.number() });
 export const esquemaCodigoCategoria = z.string().regex(/^[a-z][a-z0-9_]*$/);
@@ -29,6 +29,9 @@ export const esquemaMotivoDeSospecha = z.enum([
   'LONGITUD_ANORMAL',
 ]);
 
+/** Fuente citada por un moderador al publicar un incidente oficial (HU-13). */
+export const esquemaFuenteOficial = z.enum(['TRANSITO', 'ABC', 'MI_TELEFERICO', 'OTRA']);
+
 /** Lo que `verification` pide aplicar a `reports` tras un voto (SRS 3.2). */
 export const esquemaDecisionVerificacion = z.enum(['NINGUNA', 'CONFIRMAR', 'EXTENDER', 'RESOLVER']);
 
@@ -46,6 +49,14 @@ export const reporteCreadoV1 = definirEvento(
     creadoEn: z.iso.datetime(),
     caducaEn: z.iso.datetime(),
   }),
+);
+
+/** HU-13: agrega la fuente oficial, `null` en los reportes de la comunidad. */
+export const reporteCreadoV2 = definirEvento(
+  'ReporteCreado',
+  2,
+  'publico',
+  reporteCreadoV1.contenido.extend({ fuenteOficial: esquemaFuenteOficial.nullable() }),
 );
 
 export const reporteConfirmadoV1 = definirEvento(
@@ -159,4 +170,28 @@ export const eventosDeIntegracion: readonly DefinicionDeEvento[] = [
   rechazoDeModeracionV1,
   descripcionAgregadaV1,
   reporteClasificadoV1,
+  reporteCreadoV2,
 ];
+
+/**
+ * Claves de `ReporteCreado`. Se publica la v2; quien lo escucha también acepta la v1, que puede
+ * quedar pendiente en el outbox de un despliegue anterior.
+ */
+export const CLAVES_REPORTE_CREADO = [reporteCreadoV1.clave, reporteCreadoV2.clave] as const;
+
+/**
+ * Contenido de un `ReporteCreado` de cualquier versión, en la forma de la v2: la v1 era siempre
+ * de la comunidad.
+ * @throws {Error} si el evento no es un `ReporteCreado`.
+ */
+export function leerReporteCreado(
+  evento: EventoDeIntegracion,
+): z.output<typeof reporteCreadoV2.contenido> {
+  if (claveDeEvento(evento) === reporteCreadoV1.clave) {
+    return { ...reporteCreadoV1.contenido.parse(evento.contenido), fuenteOficial: null };
+  }
+  if (claveDeEvento(evento) === reporteCreadoV2.clave) {
+    return reporteCreadoV2.contenido.parse(evento.contenido);
+  }
+  throw new Error(`Se esperaba ReporteCreado y llegó ${claveDeEvento(evento)}`);
+}

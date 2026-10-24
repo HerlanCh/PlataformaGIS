@@ -17,7 +17,7 @@ export interface Envio {
 export interface EstadoEnBase {
   /** Filas de `reportes` con esa clave de idempotencia. */
   readonly filas: number;
-  /** Eventos `ReporteCreado.v1` del reporte en el outbox. */
+  /** Eventos `ReporteCreado` (de cualquier versión) del reporte en el outbox. */
   readonly eventos: number;
   /** De esos eventos, cuántos quedaron publicados. */
   readonly publicados: number;

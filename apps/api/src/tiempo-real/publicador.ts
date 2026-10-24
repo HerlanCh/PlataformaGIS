@@ -1,4 +1,4 @@
-import { claveDeEvento, eventosDeIntegracion, reporteCreadoV1 } from '@gis/contracts';
+import { CLAVES_REPORTE_CREADO, eventosDeIntegracion, leerReporteCreado } from '@gis/contracts';
 import type { EventoDeIntegracion } from '@gis/contracts';
 import type { BusDeEventos } from '@gis/event-bus';
 import { PuntoGeo } from '@gis/shared-kernel';
@@ -23,14 +23,16 @@ export function crearPublicador(
   ubicacionDe: UbicacionPublicaDe,
 ) {
   return async (evento: EventoDeIntegracion): Promise<void> => {
-    const contenido = evento.contenido as { idReporte: string; publicLocation?: unknown };
-    const punto =
-      claveDeEvento(evento) === reporteCreadoV1.clave
-        ? aPunto(reporteCreadoV1.contenido.parse(evento.contenido).publicLocation)
-        : await ubicacionDe(contenido.idReporte);
+    const contenido = evento.contenido as { idReporte: string };
+    const punto = esReporteCreado(evento)
+      ? aPunto(leerReporteCreado(evento).publicLocation)
+      : await ubicacionDe(contenido.idReporte);
     if (punto) tiempoReal.difundir(evento, punto);
   };
 }
+
+const esReporteCreado = (evento: EventoDeIntegracion): boolean =>
+  (CLAVES_REPORTE_CREADO as readonly string[]).includes(`${evento.tipo}.v${evento.version}`);
 
 const aPunto = ({ latitud, longitud }: { latitud: number; longitud: number }): PuntoGeo =>
   PuntoGeo.crear(latitud, longitud);

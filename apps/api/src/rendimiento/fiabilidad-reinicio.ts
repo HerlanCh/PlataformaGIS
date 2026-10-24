@@ -110,7 +110,7 @@ async function estadoEnBase(claves: readonly string[]): Promise<Map<string, Esta
             count(e.publicado_en)::int as publicados
        from reportes r
        left join eventos_salida e
-         on e.tipo = 'ReporteCreado.v1' and e.contenido->'contenido'->>'idReporte' = r.id::text
+         on e.tipo like 'ReporteCreado.v%' and e.contenido->'contenido'->>'idReporte' = r.id::text
       where r.clave_idempotencia = any($1)
       group by r.clave_idempotencia`,
     [claves],

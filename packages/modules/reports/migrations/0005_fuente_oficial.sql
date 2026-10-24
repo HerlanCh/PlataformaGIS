@@ -1,0 +1,2 @@
+ALTER TABLE "reportes" ADD COLUMN "fuente_oficial" text;--> statement-breakpoint
+ALTER TABLE "reportes" ADD CONSTRAINT "reportes_fuente_oficial_check" CHECK ("reportes"."fuente_oficial" is null or "reportes"."fuente_oficial" in ('TRANSITO', 'ABC', 'MI_TELEFERICO', 'OTRA'));

@@ -173,6 +173,7 @@ describe('suscripción de manejadores', () => {
         ['ReporteDuplicadoDetectado.v1', 'verification.confirmar-duplicado'],
         ['ReporteConfirmado.v1', 'verification.ajustar-reputacion'],
         ['ReporteCreado.v1', 'tiempo-real'],
+        ['ReporteCreado.v2', 'tiempo-real'],
       ]),
     );
   });
@@ -182,6 +183,15 @@ describe('suscripción de manejadores', () => {
 
     expect(notificar(suscribir({}))).toBe(false);
     expect(notificar(suscribir({ FEATURE_SUBSCRIPTIONS: 'true' }))).toBe(true);
+  });
+
+  it('HU-13: los avisos escuchan las dos versiones de ReporteCreado', () => {
+    const suscritos = suscribir({ FEATURE_SUBSCRIPTIONS: 'true' });
+
+    expect(suscritos.filter(([, n]) => n === 'subscriptions.notificar')).toEqual([
+      ['ReporteCreado.v1', 'subscriptions.notificar'],
+      ['ReporteCreado.v2', 'subscriptions.notificar'],
+    ]);
   });
 
   it('el enviador de la Fase 7 deja el aviso en el log, solo con datos públicos', async () => {
