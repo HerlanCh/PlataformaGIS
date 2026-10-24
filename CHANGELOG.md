@@ -1,3 +1,10 @@
+# [2.16.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.15.0...v2.16.0) (2026-10-24)
+
+
+### Features
+
+* **reports:** incidentes de fuente oficial publicados por un moderador (HU-13) ([b45a449](https://github.com/HerlanCh/PlataformaGIS/commit/b45a449de60ca82ff0f77526a35ed295f865a675))
+
 # [2.15.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.14.0...v2.15.0) (2026-10-24)
 
 
