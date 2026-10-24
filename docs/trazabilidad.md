@@ -33,14 +33,14 @@ Los nombres de casos de uso provienen del roadmap; los marcados "por definir" se
 | **RNF-02** | Analizabilidad | Complejidad ciclomática ≤ 10 | Todas las funciones TS | ESLint `complexity` en CI | Cumple (Fase 11): 0 funciones > 10 |
 | **RNF-03** | Modificabilidad | Código duplicado < 3 % | Monorepo completo | `jscpd` / SonarCloud | Cumple (Fase 11): 1,28 % (jscpd) |
 | **RNF-04** | Capacidad de prueba | Cobertura Dominio ≥ 95 %, App ≥ 85 %, Global ≥ 75 % | Módulos y paquetes | Vitest con cobertura v8 | Cumple (Fase 11): 100 % / 99,3 % / 95,9 % |
-| **RNF-05** | Disponibilidad | Disponibilidad ≥ 95 % en piloto | `apps/api` | UptimeRobot a `/health` | Desviación aceptada: se mide en el piloto (Fase 13) |
+| **RNF-05** | Disponibilidad | Disponibilidad ≥ 95 % en piloto | `apps/api` | UptimeRobot a `/health` de producción (activo desde la Fase 12) y prueba de humo tras cada despliegue | Desviación aceptada: se mide en el piloto (Fase 13) |
 | **RNF-06** | Tolerancia a fallos | 0 reportes perdidos sin conexión | `apps/web`, `apps/api` | Playwright (HU-05 sin conexión y con corte durante el envío), `pnpm fiabilidad:reinicio` y 503 con la base caída | Cumple (Fase 11): 0 perdidos ni duplicados |
-| **RNF-07** | Recuperabilidad | 1 restauración probada por versión | PostgreSQL / PostGIS | `.github/workflows/respaldo.yml`: `pg_dump` cifrado y restauración comparando conteos | Cumple (Fase 11): restauración tras cada versión |
+| **RNF-07** | Recuperabilidad | 1 restauración probada por versión | PostgreSQL / PostGIS | `.github/workflows/respaldo.yml`: `pg_dump` cifrado y restauración comparando conteos, de staging y de producción | Cumple (Fase 12): restauración de los dos entornos tras cada versión y a diario |
 | **RNF-08** | Ausencia de fallos | Tasa errores 5xx < 1 % | `apps/api` | k6 (`escenario-completo.js`), ZAP local y logs pino | Cumple (Fase 11): 0 % en 43.554 solicitudes |
 | **RNF-09** | Tiempo de respuesta | Latencia API p95 < 300 ms | Endpoints Fastify | Escenario de prueba en `k6` | Cumple (Fase 11): 19 ms local, 261 ms staging |
 | **RNF-10** | Difusión de eventos | Difusión WebSocket p95 < 2 s | Socket.io | `pnpm carga:difusion` con 500 clientes | Cumple (Fase 11): 337 ms local, 708 ms staging |
 | **RNF-11** | Consulta espacial | Consulta espacial p95 < 100 ms | PostGIS (100k registros) | `pnpm perf:espacial` (`EXPLAIN ANALYZE`) con 100.000 reportes | Cumple (Fase 11): 42,4 ms el peor caso |
-| **RNF-12** | Tamaño de bundle | JS inicial PWA < 250 KB | `apps/web` | `tools/presupuesto/js-inicial.mjs` y Lighthouse CI | Cumple (Fase 11): 152 KB |
+| **RNF-12** | Tamaño de bundle | JS inicial PWA < 250 KB | `apps/web` | `tools/presupuesto/js-inicial.mjs` y Lighthouse CI | Cumple (Fase 12): 153 KB |
 | **RNF-13** | Seguridad | 0 vulnerabilidades altas/críticas | Dependencias y API | `pnpm audit --prod`, Dependabot, ZAP baseline y completo | Cumple (Fase 11): 0 en producción y en ZAP |
 | **RNF-14** | Privacidad | 0 respuestas públicas con `location` o `author_id` | `apps/api`, Socket.io, datos abiertos | Prueba de privacidad sobre todas las rutas | Cumple (Fase 11): API, WebSocket y datos abiertos |
 
@@ -334,3 +334,18 @@ Las pruebas de extremo a extremo con Playwright contra staging y Lighthouse CI c
 | Rendimiento | JS inicial < 250 KB comprimido; Performance ≥ 90 | Teselas iniciales precargadas; `leaflet.heat` aparte | `tools/presupuesto/js-inicial.mjs` (164 KB), Lighthouse CI (93) |
 
 **Cierre en staging (v2.7.1):** la corrida de `e2e.yml` contra staging aprobó las 8 pruebas de `apps/web/e2e/historias.spec.ts` (HU-01, 02, 03, 05, 06, 07 y 08, la instalabilidad y la accesibilidad). Con eso se marcan los criterios de salida de la Fase 8 en el roadmap.
+
+## 10. Fase 12: transición a producción
+
+| Requisito | Cómo se cumple | Implementación | Evidencia |
+| :--- | :--- | :--- | :--- |
+| Producción solo por pipeline | Etiqueta `vX.Y.Z` → aprobación del environment `produccion` → migrar → API (commit exacto) → web | `.github/workflows/produccion.yml`, `render.yaml` (`autoDeploy: false`) | `tools/despliegue/produccion.test.ts`; despliegues de v2.13.1, v2.14.0 y v2.15.0 |
+| Migraciones compatibles hacia atrás | La CI rechaza borrar, renombrar, cambiar tipo o exigir no nulo sin justificar | `tools/migraciones/verificar-compatibles.mjs` | `tools/migraciones/verificar-compatibles.test.ts` |
+| Prueba de humo tras cada despliegue | `/health` con la versión, crear, leer, recibir por WebSocket y rechazar | `apps/api/src/operacion/prueba-de-humo.ts`, `pnpm humo` | `prueba-de-humo.test.ts`; 6/6 en cada despliegue de producción |
+| HU-08, HU-11 | El reporte de humo no avisa a suscriptores ni entra en los datos abiertos | `apps/api/src/composicion/humo.ts`, `puentes.ts` | `composicion/humo.test.ts`; datos abiertos de producción en 0 tras las pruebas |
+| RNF-07 | Respaldo diario de producción con restauración de prueba | `.github/workflows/respaldo.yml` (matriz `staging` / `produccion`) | Ejecución 39994833998: 22 tablas restauradas con los mismos conteos |
+| RNF-05 | Monitoreo de disponibilidad | UptimeRobot sobre `/health` de la API y sobre la web | Monitores activos con alerta por correo |
+| RNF-08, RNF-14 | Errores a GlitchTip sin datos personales | `packages/errores-remotos`, `apps/api/src/operacion/reportador.ts`, `apps/web/src/services/errores.ts` | `errores-remotos.test.ts`, `reportador.test.ts`, `errores.test.ts`; evento de prueba recibido por GlitchTip |
+| RNF-14 | CSP por entorno: la web de producción solo habla con su API y GlitchTip | `tools/despliegue/csp.mjs` | `tools/despliegue/csp.test.ts` |
+| Privacidad y términos visibles | `/privacidad` y `/terminos`, enlazados desde los créditos del mapa | `apps/web/src/features/legal/PantallasLegales.tsx` | `features/legal.test.tsx`, `App.test.tsx` (axe sin infracciones) |
+| Ensayo de reversión | Revertir de v2.14.0 a v2.13.1 con `gh workflow run Produccion -f version=v2.13.1` | `docs/runbook.md` | Ejecución 40042486125: `/health` en la versión anterior, prueba de humo 6/6, `/privacidad` 404 |

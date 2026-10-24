@@ -49,6 +49,13 @@ Ambas APIs se definen en el Blueprint **GIS** de Render (`render.yaml`).
 Si falla un paso, los siguientes no corren. Una migración que falla deja la versión anterior funcionando: por eso
 las migraciones son solo de avance compatible (ver abajo).
 
+**Una ejecución sin aprobar bloquea la cola.** Todas las ejecuciones de `Produccion` comparten un grupo de
+concurrencia. Mientras una espera aprobación, la siguiente queda en *pending*. Apruébala o cancélala con
+`gh run cancel <id>`.
+
+**Volver a intentar un despliegue fallido:** lanza `gh workflow run Produccion -f version=vX.Y.Z`. No uses
+*Re-run*: repite el workflow con el que corrió la primera vez, aunque ya se haya corregido en `main`.
+
 ## Revertir a la versión anterior
 
 1. Busca la versión anterior: `gh release list --limit 5`.

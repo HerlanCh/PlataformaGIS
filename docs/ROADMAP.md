@@ -559,6 +559,17 @@ Resultado: evidencia medida de que el producto cumple cada RNF de ISO/IEC 25010 
 
 Resultado: el sistema en producción, monitoreado y con respaldo, desplegado por el pipeline y no a mano.
 
+> **Cambios al ejecutarla (2026-10-24):** runbook en `docs/runbook.md`.
+> - **Proveedores:** Neon, Render y Vercel, en proyectos nuevos separados de staging.
+> - **Staging** sigue desplegándose por las integraciones de Render y Vercel al llegar a `main`. Producción solo por
+>   el workflow `Produccion`.
+> - **Errores en GlitchTip** sin el SDK de Sentry: `packages/errores-remotos` habla el mismo protocolo, sin dependencias
+>   y filtrando ids, coordenadas y parámetros de URL.
+> - **Prueba de humo:** en vez de borrar el reporte, el usuario de humo (moderador) lo rechaza. Sus reportes no avisan
+>   a suscriptores, no entran en los datos abiertos ni cambian su reputación.
+> - **Respaldo de producción:** usa el environment `produccion-respaldo`, sin revisor, para que no pida aprobación
+>   cada día.
+
 **Configuración**
 
 1. Crear el entorno de producción separado de staging: base de datos propia (Supabase o Neon con PostGIS), servicio de API propio (Render u Oracle Cloud Always Free), proyecto de Vercel propio. Secretos distintos por entorno en GitHub Environments.
@@ -581,9 +592,9 @@ Resultado: el sistema en producción, monitoreado y con respaldo, desplegado por
 
 **Criterio de salida**
 
-- [ ] Producción desplegada solo por pipeline
-- [ ] Respaldo diario y monitoreo activos
-- [ ] Runbook probado con un ensayo de reversión
+- [x] Producción desplegada solo por pipeline
+- [x] Respaldo diario y monitoreo activos
+- [x] Runbook probado con un ensayo de reversión
 
 ## Fase 13: Validación en piloto y mantenimiento
 

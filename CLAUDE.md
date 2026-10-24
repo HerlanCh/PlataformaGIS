@@ -88,6 +88,12 @@ Requiere Node 24 y pnpm 12. En bash de Windows, pnpm está en `%APPDATA%\npm`.
   El escenario completo (todas las rutas públicas) es `escenario-completo.js` (`VUS`, `PAUSA_S`, `DURACION`, `SALIDA`); contra la
   API local conviene k6 instalado en la máquina: el reenvío de puertos de Docker Desktop pierde conexiones. Ver
   `docs/rendimiento/verificacion-fase-11.md`.
+- Producción (ver `docs/runbook.md`): cada versión `vX.Y.Z` se despliega con el workflow `Produccion` tras aprobar el
+  environment `produccion`. Para revertir: `gh workflow run Produccion -f version=vX.Y.Z`. Nunca se despliega a mano.
+- Las migraciones de avance solo agregan: `node tools/migraciones/verificar-compatibles.mjs` lo exige en la CI.
+- `pnpm humo` (`BASE_URL`, `HUMO_HASH_DISPOSITIVO`) es la prueba de humo de un despliegue. El workflow `Administracion`
+  asciende moderadores y prepara el usuario de humo en cada entorno.
+- Errores a GlitchTip con `@gis/errores-remotos` (`SENTRY_DSN` en la API, `VITE_SENTRY_DSN` en el build de la web).
 - Las pruebas de integración (`*.integration.test.ts`) usan PostGIS real con Testcontainers: necesitan Docker.
   Sin Docker se omiten en local; en la CI son obligatorias.
 - TypeScript está fijado en la serie 6: typescript-eslint aún no admite la 7.
