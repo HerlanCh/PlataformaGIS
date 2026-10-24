@@ -686,3 +686,68 @@ estuvo congelado: solo correcciones. La fase se entregó en seis PR:
 ### Pendiente
 - Prueba de usabilidad con 5 personas reales al inicio del piloto (Fase 13).
 - Siguiente: Fase 12, transición a producción.
+
+## [2026-10-24] — Fase 12: transición a producción
+
+### Qué se hizo
+El sistema quedó en producción, separado de staging, desplegado solo por el pipeline, con respaldo diario y
+monitoreo. La fase se entregó en estos PR:
+
+| PR | Versión | Contenido |
+| :-- | :-- | :-- |
+| #48 | — | Workflow `Produccion` con aprobación manual, servicio de producción en `render.yaml`, CSP por entorno y compuerta de migraciones compatibles |
+| #51 | v2.13.0 | `pnpm humo`, usuario de humo excluido de avisos, datos abiertos y reputación, y workflow `Administracion` |
+| #52 | v2.13.1 | `CORS_ORIGIN` en el paso de migraciones (el primer despliegue falló ahí, antes de tocar la base) |
+| #53 | — | Respaldo diario y restauración de prueba también de producción (`produccion-respaldo`) |
+| #54 | v2.14.0 | `/privacidad`, `/terminos` y `docs/runbook.md` |
+| #55 | v2.15.0 | Errores a GlitchTip (`packages/errores-remotos`), claves VAPID de producción y zod 4.6.7 / undici 8.12.2 por dos avisos altos |
+| este | — | Cierre de la fase |
+
+### Entorno de producción
+- **Web:** `plataforma-gis-produccion.vercel.app` (proyecto de Vercel sin repositorio conectado).
+- **API:** `plataforma-gis-api-produccion.onrender.com` (Blueprint **GIS**, `autoDeploy: false`).
+- **Base:** proyecto `plataforma-gis-produccion` de Neon.
+- **Secretos:** en los environments `produccion` (con revisor) y `produccion-respaldo` (sin revisor).
+- **Monitoreo:** UptimeRobot sobre la API y la web, y GlitchTip (proyectos `api` y `web`).
+
+### Resultados
+- **Despliegues de producción**, todos por el pipeline: v2.13.0 (primer despliegue), v2.13.1, v2.14.0, v2.13.1
+  (reversión) y v2.15.0. La prueba de humo pasó 6/6 en cada uno, salvo en el primero (abajo).
+- **Ensayo de reversión** siguiendo el runbook, de v2.14.0 a v2.13.1: unos 4 minutos desde la aprobación.
+  - `/health` volvió al commit anterior;
+  - `/privacidad` pasó a 404, porque la web también volvió a la versión anterior;
+  - la prueba de humo pasó.
+  - Después se volvió a desplegar la última versión.
+- **Respaldo de producción:** restaurado en una base vacía con los mismos conteos (22 tablas).
+- **Datos abiertos de producción:** siguen en 0 tras varias pruebas de humo, así que la exclusión funciona.
+- **GlitchTip:** recibió un error enviado con el código real, con las coordenadas ya reemplazadas por
+  `<coordenada>`.
+- **JS inicial de la PWA:** 153,0 KB. El reporte de errores suma 0,9 KB; las pantallas legales se cargan aparte.
+
+### Decisiones
+- **Sin SDK de Sentry:** el SDK suma dependencias y peso, y mete OpenTelemetry en el bundle de la API.
+  `packages/errores-remotos` habla el mismo protocolo y filtra cada campo.
+- **Usuario de humo:** se rechaza su reporte en lugar de borrarlo, porque no existe una ruta para borrar. La
+  exclusión vive en la raíz de composición, sin tocar módulos (ADR-001).
+- **Migraciones en el pipeline y no al arrancar:** la versión anterior sigue sirviendo sobre el esquema nuevo, y
+  revertir la API no exige revertir la base.
+- **`produccion-respaldo`:** el respaldo diario no debe esperar la aprobación que exige el despliegue.
+- **El enlace a privacidad y términos va en los créditos del mapa:** a 360 px la cabecera no admite otro botón.
+
+### Problemas encontrados
+1. **Primer despliegue (v2.13.0):** falló en «Migraciones» porque `db:migrate` exige `CORS_ORIGIN`. Se corrigió en
+   el workflow (#52), con una prueba que exige las variables obligatorias del paso.
+2. **Primera prueba de humo:** falló a propósito en «registro»: el usuario de humo solo puede crearse con la API
+   arriba. Se preparó con `Administracion` y la siguiente versión pasó.
+3. **Avisos altos publicados durante la fase** (zod y undici): la auditoría de la CI los detectó en el PR #55 y se
+   corrigieron allí.
+4. **Una ejecución de `Produccion` sin aprobar bloquea la siguiente** (mismo grupo de concurrencia). Quedó anotado
+   en el runbook.
+
+### Pendiente
+- **Rotar las claves que se pegaron en el chat** durante la configuración: `DATABASE_URL` de Neon de producción,
+  `RENDER_API_KEY` y el token de Vercel. El runbook explica cómo.
+- **Cabecera del moderador a 360 px:** con el botón de moderación probablemente desborda, igual que con un ícono
+  más. Es anterior a esta fase.
+- **RNF-05** (disponibilidad ≥ 95 %) y la prueba de usabilidad se miden en el piloto.
+- Siguiente: Fase 13, validación en piloto y mantenimiento.
