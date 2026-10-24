@@ -1,0 +1,52 @@
+name: Corrección de un fallo
+description: Mantenimiento correctivo (ISO/IEC 14764). Algo no funciona como dice el SRS.
+title: '[Correctiva] '
+labels: [correctiva]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        No incluyas datos personales: ni nombres, ni teléfonos, ni ubicaciones exactas, ni capturas con personas.
+        Un fallo de seguridad no va aquí: repórtalo en privado (Security → Report a vulnerability).
+  - type: textarea
+    id: que-pasa
+    attributes:
+      label: Qué pasa
+      description: Lo que ves, con el mensaje de error si lo hay.
+    validations:
+      required: true
+  - type: textarea
+    id: pasos
+    attributes:
+      label: Pasos para reproducirlo
+      description: La corrección empieza con una prueba que reproduce estos pasos y falla.
+      placeholder: |
+        1. Abrir…
+        2. Tocar…
+        3. Ver…
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Qué debería pasar
+      description: Si puedes, cita la historia (HU-xx) o el requisito (RF-xx, RNF-xx).
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versión y entorno
+      description: La versión aparece en `/health`. Entorno, navegador y teléfono.
+      placeholder: v2.16.0, producción, Chrome en Android 14
+  - type: dropdown
+    id: gravedad
+    attributes:
+      label: Gravedad
+      options:
+        - Crítica (se pierden reportes, se exponen datos o la app no carga)
+        - Alta (una función principal no sirve)
+        - Media (hay forma de evitarlo)
+        - Baja (detalle)
+    validations:
+      required: true

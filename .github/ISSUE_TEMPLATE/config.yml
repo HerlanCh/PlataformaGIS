@@ -1,0 +1,6 @@
+# Toda incidencia se clasifica con una de las cuatro plantillas (docs/mantenimiento.md).
+blank_issues_enabled: false
+contact_links:
+  - name: Fallo de seguridad
+    url: https://github.com/HerlanCh/PlataformaGIS/security/advisories/new
+    about: Repórtalo en privado, nunca en una incidencia pública.
