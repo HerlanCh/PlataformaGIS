@@ -760,7 +760,7 @@ reales durante semanas, y ninguno se registra antes de medirlo.
 | PR | Contenido |
 | :-- | :-- |
 | #59 (v2.16.0) | Incidentes de fuente oficial publicados por un moderador (HU-13, ADR-006) |
-| #60 | Módulo `metrics`: métricas de uso sin datos personales, ruta de moderador y `pnpm piloto:metricas` |
+| #60 (v2.17.0) | Módulo `metrics`: métricas de uso sin datos personales, ruta de moderador y `pnpm piloto:metricas` |
 | #61 | Matriz de marco lógico propuesta, protocolo, guía de instalación, encuesta de impacto, plantillas y `pnpm piloto:analizar` |
 | este | Proceso de mantenimiento ISO/IEC 14764: plantillas de incidencia y de PR, y revisión mensual |
 
