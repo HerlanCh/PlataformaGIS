@@ -2,6 +2,7 @@ import { BusDeEventosEnMemoria } from '@gis/event-bus';
 import { heatmapModulo } from '@gis/module-heatmap';
 import { identityModulo } from '@gis/module-identity';
 import { moderationModulo } from '@gis/module-moderation';
+import { diaEnLaPaz, metricsModulo } from '@gis/module-metrics';
 import { huellaDe, openDataModulo, RepositorioDatosAbiertosPg } from '@gis/module-open-data';
 import { reportsModulo } from '@gis/module-reports';
 import { subscriptionsModulo } from '@gis/module-subscriptions';
@@ -34,6 +35,7 @@ const TODOS_ACTIVOS = {
   FEATURE_SUBSCRIPTIONS: 'true',
   FEATURE_MODERATION: 'true',
   FEATURE_OPEN_DATA: 'true',
+  FEATURE_METRICS: 'true',
 };
 const CAMPOS_PRIVADOS = [
   'location',
@@ -80,6 +82,7 @@ describeIntegration('API REST /v1', () => {
           db,
           interruptores,
           limitador: new LimitadorDeFrecuenciaEnProceso(relojDelSistema),
+          salDeMetricas: 'sal-de-prueba',
         }),
         tokens,
         limitePorMinuto,
@@ -142,6 +145,7 @@ describeIntegration('API REST /v1', () => {
         moderationModulo,
         heatmapModulo,
         openDataModulo,
+        metricsModulo,
       ].flatMap((m) => (m.migraciones ? [m.migraciones] : [])),
     ]);
     tokens = new ServicioDeTokens(
@@ -582,6 +586,38 @@ describeIntegration('API REST /v1', () => {
       expect(despues.json().casos.map((c: { idReporte: string }) => c.idReporte)).not.toContain(
         reporte.id,
       );
+    });
+  });
+
+  describe('métricas del piloto (Fase 13)', () => {
+    it('cuenta a quien reporta y solo un moderador ve las métricas', async () => {
+      const usuario = await registrar();
+      await crearReporte(usuario.token, PuntoGeo.crear(-16.42, -68.25));
+      const moderador = await tokens.firmar({ idUsuario: usuario.idUsuario, rol: 'MODERADOR' });
+      const hoy = diaEnLaPaz(new Date());
+      const metricas = (token: string) =>
+        pedir({ method: 'GET', url: `/v1/moderacion/metricas?desde=${hoy}&hasta=${hoy}`, token });
+
+      const ciudadano = await metricas(usuario.token);
+      const conRol = await metricas(moderador.token);
+
+      expect([ciudadano.statusCode, ciudadano.json().codigo]).toEqual([403, 'ROL_INSUFICIENTE']);
+      expect(conRol.statusCode).toBe(200);
+      expect(conRol.json()).toMatchObject({ desde: hoy, hasta: hoy });
+      expect(conRol.json().usuariosActivos[0].usuariosActivos).toBeGreaterThanOrEqual(1);
+    });
+
+    it('un periodo invertido es un 422', async () => {
+      const usuario = await registrar();
+      const moderador = await tokens.firmar({ idUsuario: usuario.idUsuario, rol: 'MODERADOR' });
+
+      const respuesta = await pedir({
+        method: 'GET',
+        url: '/v1/moderacion/metricas?desde=2026-11-02&hasta=2026-11-01',
+        token: moderador.token,
+      });
+
+      expect([respuesta.statusCode, respuesta.json().codigo]).toEqual([422, 'PERIODO_INVALIDO']);
     });
   });
 

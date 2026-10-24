@@ -101,6 +101,7 @@ jobs:
           FEATURE_MODERATION: 'true'
           FEATURE_CLASSIFIER: 'true'
           FEATURE_OPEN_DATA: 'true'
+          FEATURE_METRICS: 'true'
         run: |
           test -n "$DATABASE_URL" || { echo "::error::falta el secreto DATABASE_URL"; exit 1; }
           pnpm db:migrate

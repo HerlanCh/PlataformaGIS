@@ -13,6 +13,7 @@ import {
   RepositorioReportesPostgis,
   UnidadDeTrabajoReportePg,
 } from '@gis/module-reports';
+import { RegistrarEventoDeReporte, RepositorioMetricasPg } from '@gis/module-metrics';
 import { ActualizarColaDeModeracion, RepositorioColaPg } from '@gis/module-moderation';
 import { RegistrarDatoAbierto, RepositorioDatosAbiertosPg } from '@gis/module-open-data';
 import {
@@ -213,6 +214,17 @@ export function suscribirManejadores(deps: DependenciasManejadores): void {
     });
     suscribirA(bus, ClasificarReporte.eventos, 'classifier.clasificar', (e) =>
       clasificar.manejar(e),
+    );
+  }
+
+  // Fase 13: métricas del piloto. Los reportes de humo no cuentan.
+  if (interruptores.estaActivo('metrics')) {
+    const metricas = new RegistrarEventoDeReporte(new RepositorioMetricasPg(db));
+    suscribirA(
+      bus,
+      RegistrarEventoDeReporte.eventos,
+      'metrics.registrar',
+      salvoHumo(esDeHumo, (e) => metricas.manejar(e)),
     );
   }
 

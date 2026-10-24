@@ -2,6 +2,11 @@ import type { EventoDeIntegracion } from '@gis/contracts';
 import { claveDeEvento } from '@gis/contracts';
 import { identityModulo } from '@gis/module-identity';
 import {
+  metricsModulo,
+  RegistrarEventoDeReporte,
+  RepositorioMetricasPg,
+} from '@gis/module-metrics';
+import {
   moderationModulo,
   RechazarReporte,
   UnidadDeTrabajoModeracionPg,
@@ -89,12 +94,12 @@ describeIntegration('casos de uso encadenados por eventos', () => {
       reloj,
       ids,
     };
-    const manejadores: Record<string, (evento: EventoDeIntegracion) => Promise<unknown>> = {};
+    const manejadores: Record<string, ((evento: EventoDeIntegracion) => Promise<unknown>)[]> = {};
     const escuchar = (
       claves: readonly string[],
       manejar: (e: EventoDeIntegracion) => Promise<unknown>,
     ) => {
-      for (const clave of claves) manejadores[clave] = manejar;
+      for (const clave of claves) (manejadores[clave] ??= []).push(manejar);
     };
     const notificar = new NotificarSuscriptores({
       suscripciones,
@@ -110,10 +115,14 @@ describeIntegration('casos de uso encadenados por eventos', () => {
     escuchar(['VotoEmitido.v1'], (e) => decision.manejar(e));
     escuchar(['RechazoDeModeracion.v1'], (e) => rechazo.manejar(e));
     escuchar(AjustarReputacionPorDesenlace.eventos, (e) => reputacion.manejar(e));
+    const metricas = new RepositorioMetricasPg(db);
+    const registrarMetrica = new RegistrarEventoDeReporte(metricas);
+    escuchar(RegistrarEventoDeReporte.eventos, (e) => registrarMetrica.manejar(e));
 
     return {
       reportes,
       votos,
+      metricas,
       reputaciones,
       manejadores,
       crear: new CrearReporte({
@@ -148,7 +157,7 @@ describeIntegration('casos de uso encadenados por eventos', () => {
         despachados.add(fila.id);
         const evento = fila.contenido as EventoDeIntegracion;
         entregados.push(claveDeEvento(evento));
-        await casos.manejadores[claveDeEvento(evento)]?.(evento);
+        for (const manejar of casos.manejadores[claveDeEvento(evento)] ?? []) await manejar(evento);
       }
     }
   }
@@ -182,6 +191,7 @@ describeIntegration('casos de uso encadenados por eventos', () => {
         verificationModulo,
         subscriptionsModulo,
         moderationModulo,
+        metricsModulo,
       ].map((modulo) => modulo.migraciones!),
     ]);
     casos = componer(db);
@@ -234,6 +244,15 @@ describeIntegration('casos de uso encadenados por eventos', () => {
       1.05, 1.05, 1.05,
     ]);
     expect(avisos.filter((a) => a.idReporte === reporte.id).map((a) => a.idUsuario)).toEqual([EVA]);
+    // Fase 13: la métrica tomó el duplicado de Beto como primera confirmación.
+    const registros = await casos.metricas.buscarRegistros(
+      new Date(0),
+      new Date('2100-01-01T00:00:00Z'),
+    );
+    const metrica = registros.find((r) => r.idReporte === reporte.id);
+    expect(metrica).toMatchObject({ esOficial: false, cierre: null });
+    expect(metrica?.primeraConfirmacionEn).not.toBeNull();
+    expect(metrica?.confirmadoEn).not.toBeNull();
   });
 
   it('HU-12: el rechazo de un moderador retira el reporte y resta 0,50 al autor', async () => {

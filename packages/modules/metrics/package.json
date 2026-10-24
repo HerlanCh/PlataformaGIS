@@ -1,0 +1,23 @@
+{
+  "name": "@gis/module-metrics",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@gis/contracts": "workspace:*",
+    "@gis/event-bus": "workspace:*",
+    "@gis/platform": "workspace:*",
+    "@gis/shared-kernel": "workspace:*",
+    "drizzle-orm": "^0.45.4",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@gis/testing": "workspace:*"
+  },
+  "scripts": {
+    "db:generate": "drizzle-kit generate"
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "id": "82b8bf82-cc01-45ed-9c81-ac98a046ad46",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.metricas_actividad": {
+      "name": "metricas_actividad",
+      "schema": "",
+      "columns": {
+        "dia": {
+          "name": "dia",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "huella": {
+          "name": "huella",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "metricas_actividad_dia_huella_pk": {
+          "name": "metricas_actividad_dia_huella_pk",
+          "columns": [
+            "dia",
+            "huella"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "metricas_actividad_huella_check": {
+          "name": "metricas_actividad_huella_check",
+          "value": "\"metricas_actividad\".\"huella\" ~ '^[0-9a-f]{64}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.metricas_diarias": {
+      "name": "metricas_diarias",
+      "schema": "",
+      "columns": {
+        "dia": {
+          "name": "dia",
+          "type": "date",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "usuarios_activos": {
+          "name": "usuarios_activos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "metricas_diarias_usuarios_check": {
+          "name": "metricas_diarias_usuarios_check",
+          "value": "\"metricas_diarias\".\"usuarios_activos\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.metricas_reportes": {
+      "name": "metricas_reportes",
+      "schema": "",
+      "columns": {
+        "id_reporte": {
+          "name": "id_reporte",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "codigo_categoria": {
+          "name": "codigo_categoria",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "es_oficial": {
+          "name": "es_oficial",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "primera_confirmacion_en": {
+          "name": "primera_confirmacion_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "confirmado_en": {
+          "name": "confirmado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cierre": {
+          "name": "cierre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cerrado_en": {
+          "name": "cerrado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "metricas_reportes_creado_en_idx": {
+          "name": "metricas_reportes_creado_en_idx",
+          "columns": [
+            {
+              "expression": "creado_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "metricas_reportes_cierre_check": {
+          "name": "metricas_reportes_cierre_check",
+          "value": "\"metricas_reportes\".\"cierre\" is null or \"metricas_reportes\".\"cierre\" in ('CADUCIDAD', 'VOTOS', 'MODERACION')"
+        },
+        "metricas_reportes_cierre_completo_check": {
+          "name": "metricas_reportes_cierre_completo_check",
+          "value": "(\"metricas_reportes\".\"cierre\" is null) = (\"metricas_reportes\".\"cerrado_en\" is null)"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

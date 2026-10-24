@@ -134,6 +134,7 @@ describe('cargarConfigHttp', () => {
       vapid: null,
       idUsuarioDeHumo: null,
       errores: null,
+      salDeMetricas: expect.stringMatching(/^[0-9a-f]{64}$/),
     });
   });
 
@@ -157,6 +158,7 @@ describe('cargarConfigHttp', () => {
       vapid: null,
       idUsuarioDeHumo: null,
       errores: null,
+      salDeMetricas: expect.stringMatching(/^[0-9a-f]{64}$/),
     });
   });
 

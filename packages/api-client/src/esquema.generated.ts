@@ -2112,6 +2112,46 @@ export interface components {
     ColaDeModeracionInput: {
       casos: components['schemas']['CasoDeModeracionInput'][];
     };
+    /** @description Métricas de uso del piloto, sin datos personales. Confirmación y cierres son de los reportes de la comunidad */
+    MetricasInput: {
+      /** Format: date */
+      desde: string;
+      /** Format: date */
+      hasta: string;
+      reportes: {
+        total: number;
+        comunitarios: number;
+        oficiales: number;
+        porCategoria: {
+          codigoCategoria: string;
+          total: number;
+        }[];
+      };
+      confirmacion: {
+        conAlgunaConfirmacion: number;
+        confirmados: number;
+        porcentajeConfirmados: number | null;
+        minutosHastaPrimeraConfirmacion: {
+          mediana: number;
+          p90: number;
+        } | null;
+      };
+      cierres: {
+        cerrados: number;
+        abiertos: number;
+        porTipo: {
+          /** @enum {string} */
+          cierre: 'CADUCIDAD' | 'VOTOS' | 'MODERACION';
+          total: number;
+          porcentaje: number | null;
+        }[];
+      };
+      usuariosActivos: {
+        /** Format: date */
+        dia: string;
+        usuariosActivos: number;
+      }[];
+    };
     /** @description Licencia abierta de los datos (HU-11) */
     LicenciaInput: {
       nombre: string;
@@ -2303,6 +2343,46 @@ export interface components {
     /** @description Hasta 50 casos: primero los marcados por el clasificador, después los más negados */
     ColaDeModeracion: {
       casos: components['schemas']['CasoDeModeracion'][];
+    };
+    /** @description Métricas de uso del piloto, sin datos personales. Confirmación y cierres son de los reportes de la comunidad */
+    Metricas: {
+      /** Format: date */
+      desde: string;
+      /** Format: date */
+      hasta: string;
+      reportes: {
+        total: number;
+        comunitarios: number;
+        oficiales: number;
+        porCategoria: {
+          codigoCategoria: string;
+          total: number;
+        }[];
+      };
+      confirmacion: {
+        conAlgunaConfirmacion: number;
+        confirmados: number;
+        porcentajeConfirmados: number | null;
+        minutosHastaPrimeraConfirmacion: {
+          mediana: number;
+          p90: number;
+        } | null;
+      };
+      cierres: {
+        cerrados: number;
+        abiertos: number;
+        porTipo: {
+          /** @enum {string} */
+          cierre: 'CADUCIDAD' | 'VOTOS' | 'MODERACION';
+          total: number;
+          porcentaje: number | null;
+        }[];
+      };
+      usuariosActivos: {
+        /** Format: date */
+        dia: string;
+        usuariosActivos: number;
+      }[];
     };
     /** @description Licencia abierta de los datos (HU-11) */
     Licencia: {

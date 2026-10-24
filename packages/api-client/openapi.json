@@ -632,6 +632,200 @@
         ],
         "description": "Hasta 50 casos: primero los marcados por el clasificador, después los más negados"
       },
+      "MetricasInput": {
+        "type": "object",
+        "properties": {
+          "desde": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+          },
+          "hasta": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+          },
+          "reportes": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "comunitarios": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "oficiales": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "porCategoria": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "codigoCategoria": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9_]*$"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "codigoCategoria",
+                    "total"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "total",
+              "comunitarios",
+              "oficiales",
+              "porCategoria"
+            ]
+          },
+          "confirmacion": {
+            "type": "object",
+            "properties": {
+              "conAlgunaConfirmacion": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "confirmados": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "porcentajeConfirmados": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "minutosHastaPrimeraConfirmacion": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mediana": {
+                        "type": "number"
+                      },
+                      "p90": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "mediana",
+                      "p90"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "conAlgunaConfirmacion",
+              "confirmados",
+              "porcentajeConfirmados",
+              "minutosHastaPrimeraConfirmacion"
+            ]
+          },
+          "cierres": {
+            "type": "object",
+            "properties": {
+              "cerrados": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "abiertos": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "porTipo": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "cierre": {
+                      "type": "string",
+                      "enum": [
+                        "CADUCIDAD",
+                        "VOTOS",
+                        "MODERACION"
+                      ]
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "porcentaje": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "cierre",
+                    "total",
+                    "porcentaje"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "cerrados",
+              "abiertos",
+              "porTipo"
+            ]
+          },
+          "usuariosActivos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "dia": {
+                  "type": "string",
+                  "format": "date",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                },
+                "usuariosActivos": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "dia",
+                "usuariosActivos"
+              ]
+            }
+          }
+        },
+        "required": [
+          "desde",
+          "hasta",
+          "reportes",
+          "confirmacion",
+          "cierres",
+          "usuariosActivos"
+        ],
+        "description": "Métricas de uso del piloto, sin datos personales. Confirmación y cierres son de los reportes de la comunidad"
+      },
       "LicenciaInput": {
         "type": "object",
         "properties": {
@@ -1382,6 +1576,208 @@
         ],
         "additionalProperties": false,
         "description": "Hasta 50 casos: primero los marcados por el clasificador, después los más negados"
+      },
+      "Metricas": {
+        "type": "object",
+        "properties": {
+          "desde": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+          },
+          "hasta": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+          },
+          "reportes": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "comunitarios": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "oficiales": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "porCategoria": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "codigoCategoria": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9_]*$"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "codigoCategoria",
+                    "total"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "total",
+              "comunitarios",
+              "oficiales",
+              "porCategoria"
+            ],
+            "additionalProperties": false
+          },
+          "confirmacion": {
+            "type": "object",
+            "properties": {
+              "conAlgunaConfirmacion": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "confirmados": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "porcentajeConfirmados": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "minutosHastaPrimeraConfirmacion": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mediana": {
+                        "type": "number"
+                      },
+                      "p90": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "mediana",
+                      "p90"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "conAlgunaConfirmacion",
+              "confirmados",
+              "porcentajeConfirmados",
+              "minutosHastaPrimeraConfirmacion"
+            ],
+            "additionalProperties": false
+          },
+          "cierres": {
+            "type": "object",
+            "properties": {
+              "cerrados": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "abiertos": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "porTipo": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "cierre": {
+                      "type": "string",
+                      "enum": [
+                        "CADUCIDAD",
+                        "VOTOS",
+                        "MODERACION"
+                      ]
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "porcentaje": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "cierre",
+                    "total",
+                    "porcentaje"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "cerrados",
+              "abiertos",
+              "porTipo"
+            ],
+            "additionalProperties": false
+          },
+          "usuariosActivos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "dia": {
+                  "type": "string",
+                  "format": "date",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                },
+                "usuariosActivos": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "dia",
+                "usuariosActivos"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "desde",
+          "hasta",
+          "reportes",
+          "confirmacion",
+          "cierres",
+          "usuariosActivos"
+        ],
+        "additionalProperties": false,
+        "description": "Métricas de uso del piloto, sin datos personales. Confirmación y cierres son de los reportes de la comunidad"
       },
       "Licencia": {
         "type": "object",

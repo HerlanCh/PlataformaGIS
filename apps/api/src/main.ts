@@ -55,6 +55,8 @@ const app = await construirApp({
       interruptores,
       limitador: new LimitadorDeFrecuenciaEnProceso(relojDelSistema),
       clavePublicaPush: configHttp.vapid?.publica ?? null,
+      salDeMetricas: configHttp.salDeMetricas,
+      idUsuarioDeHumo: configHttp.idUsuarioDeHumo,
     }),
     tokens,
     limitePorMinuto: configHttp.limitePorMinuto,

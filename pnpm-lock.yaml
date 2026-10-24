@@ -282,6 +282,9 @@ importers:
       '@gis/module-identity':
         specifier: workspace:*
         version: link:../../packages/modules/identity
+      '@gis/module-metrics':
+        specifier: workspace:*
+        version: link:../../packages/modules/metrics
       '@gis/module-moderation':
         specifier: workspace:*
         version: link:../../packages/modules/moderation
@@ -549,6 +552,31 @@ importers:
         version: link:../../testing
 
   packages/modules/identity:
+    dependencies:
+      '@gis/contracts':
+        specifier: workspace:*
+        version: link:../../contracts
+      '@gis/event-bus':
+        specifier: workspace:*
+        version: link:../../event-bus
+      '@gis/platform':
+        specifier: workspace:*
+        version: link:../../platform
+      '@gis/shared-kernel':
+        specifier: workspace:*
+        version: link:../../shared-kernel
+      drizzle-orm:
+        specifier: ^0.45.4
+        version: 0.45.4(@types/pg@8.23.1)(pg@8.23.1)
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@gis/testing':
+        specifier: workspace:*
+        version: link:../../testing
+
+  packages/modules/metrics:
     dependencies:
       '@gis/contracts':
         specifier: workspace:*
