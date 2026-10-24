@@ -1,3 +1,15 @@
+# [2.15.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.14.0...v2.15.0) (2026-10-24)
+
+
+### Bug Fixes
+
+* **deps:** zod 4.6.7 y undici 8.12.2 por dos avisos altos de seguridad ([9eeb2e2](https://github.com/HerlanCh/PlataformaGIS/commit/9eeb2e2a254a6d2191096e9c9c9b735597d3a0bc))
+
+
+### Features
+
+* errores de la API y de la PWA a GlitchTip sin datos personales ([7c3c568](https://github.com/HerlanCh/PlataformaGIS/commit/7c3c5680f16432010ecc51e733769b12ca5cf1fe))
+
 # [2.14.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.13.1...v2.14.0) (2026-10-23)
 
 
