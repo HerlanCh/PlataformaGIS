@@ -611,26 +611,87 @@ Resultado: evidencia de que la plataforma resuelve el problema planteado (valida
 > - **Sin bot:** la guía de instalación cubre solo la PWA (ADR-004).
 > - **Análisis:** `pnpm piloto:analizar` calcula los tres indicadores del Propósito desde las planillas.
 
+> **Cambios por el ADR-007 (2026-11-22, propuesto; rige cuando el tutor apruebe el perfil de grado v5):**
+> - **Sin grupo de WhatsApp:** la comparación es interna, entre la vista procesada y la vista base, sobre los mismos
+>   datos y en la misma interfaz. Reemplaza el grupo de comparación y el `pnpm piloto:analizar` del 2026-10-24.
+> - **Hipótesis con costo:** se contrastan H1a a H1d del perfil v5 (oportunidad de localización, redundancia,
+>   veracidad y vigencia), cada una con su indicador de costo (omisiones, fusiones erróneas, incidentes reales sin
+>   confirmar y latencia de confirmación, caducidad prematura).
+> - **Instrumentos nuevos:** módulo `evaluation` y herramientas de evaluación (bloque «Instrumentos de evaluación»),
+>   construidos antes del piloto.
+> - **Referencia independiente:** la veracidad y la hora de fin se comprueban en campo y con fuentes secundarias, nunca
+>   con los votos de la plataforma.
+
 **Preparación**
 
 1. Definir la zona del piloto y precargar el mapa con incidentes públicos vigentes (Tránsito, ABC, Mi Teleférico) marcados como "fuente oficial".
 2. Instrumentar métricas de uso sin datos personales: reportes creados, tiempo hasta la primera confirmación, porcentaje de reportes confirmados, porcentaje cerrados por caducidad o por votos, usuarios activos.
-3. Elegir el grupo de WhatsApp vecinal de comparación y definir cómo se registrarán sus incidentes (hora de publicación y si fueron ciertos).
+3. ~~Elegir el grupo de WhatsApp vecinal de comparación y definir cómo se registrarán sus incidentes (hora de publicación y si fueron ciertos).~~ Retirado por ADR-007.
+4. Actualizar al diseño del perfil v5 la [matriz de marco lógico](marco-logico.md), el [protocolo](piloto/protocolo.md)
+   y las planillas de `docs/piloto/`: vista base, secuencias contrabalanceadas, metas mínimas de datos y extensión de
+   dos semanas. El tutor las aprueba antes del piloto.
+5. Agregar al SRS y a la [trazabilidad](trazabilidad.md) la historia del modo de evaluación (HU-14).
+6. Ensayo general de una semana en producción con 3 o 4 personas, incluido un iPhone con la PWA instalada, con
+   `FEATURE_EVALUATION` activo desde el primer día.
+
+**Instrumentos de evaluación (ADR-007)**
+
+1. Crear el módulo `evaluation` con `pnpm gen:module evaluation`. Se alimenta solo de eventos y guarda envíos,
+   transiciones de estado y votos (peso y decisión), sin autor, votante ni ubicación real.
+2. Emitir desde `reports` el evento interno `EnvioDuplicadoRegistrado.v1` (con `publicLocation`) junto a
+   `ReporteDuplicadoDetectado.v1`, en la misma unidad de trabajo.
+3. Reconstruir en un instante `t` la vista procesada (lo que mostró el mapa) y la vista base (cada envío de
+   `(t − 24 h, t]` como un punto propio, sin estado ni caducidad). Ambas excluyen lo rechazado por moderación e
+   incluyen los incidentes de fuente oficial.
+4. Congelar instantáneas inmutables de una zona en un instante (escenarios E1 y E2).
+5. Pantalla `/evaluacion`, cargada bajo demanda y solo para el rol `MODERADOR`:
+   1. Tarea cronometrada: aplica la secuencia asignada, limita la tarea a 180 s y registra tiempo, aciertos,
+      omisiones y marcados de más con un código anónimo de participante.
+   2. Etiquetado: dos evaluadores agrupan por separado los envíos en incidentes; el módulo calcula el kappa de Cohen.
+   3. Verificación: real, falso o no verificable, hora de fin y fuente.
+6. Reescribir `pnpm piloto:analizar` para calcular los cuatro indicadores de beneficio y los cuatro de costo, y
+   escribir `tools/piloto/contraste.R` con las pruebas del perfil (Wilcoxon, Fisher, Holm, tamaños de efecto,
+   intervalos de Wilson) y el análisis de supervivencia de la caducidad por tipo (Kaplan-Meier).
+7. Crear `pnpm piloto:sensibilidad` en `apps/api/src/evaluacion/`: reprocesa el registro con umbrales de 2,0, 3,0 y
+   4,0, y con radios y tiempos de vida de 0,5, 1 y 1,5 veces los del SRS.
+
+**Pruebas de los instrumentos**
+
+1. **Privacidad:** ninguna tabla `evaluacion_*` ni respuesta de `/v1/evaluacion/*` contiene ubicación real, autor ni
+   votante.
+2. **Acceso:** un ciudadano recibe `403` en `/v1/evaluacion/*`.
+3. **Reconstrucción:** en un instante `t`, la vista procesada coincide con lo que devolvía la consulta del mapa, con el
+   flujo real de eventos sobre PostGIS (Testcontainers).
+4. **Vista base:** un envío duplicado aparece como un punto propio, y un rechazo por moderación lo quita de ambas vistas.
+5. **Equivalencia:** con los parámetros del SRS, el simulador de sensibilidad da el mismo resultado que los casos de uso
+   reales.
+6. **Presupuesto:** el JavaScript inicial de la PWA sigue < 250 KB comprimido.
 
 **Ejecución**
 
 1. Incorporar a los usuarios del piloto con una guía de instalación de la PWA y del bot.
 2. Al inicio, aplicar la prueba de usabilidad con tareas guiadas a 5 participantes (`docs/usabilidad/guion.md`;
    pendiente de la Fase 11). Corregir los bloqueos y validar las hipótesis anotadas en `docs/informe-calidad.md`.
-3. Recolectar en paralelo los datos de la plataforma y los del grupo de comparación.
-4. Al cierre, aplicar la encuesta SUS y la encuesta de impacto (indicador del Fin de la matriz de marco lógico).
-5. Exportar el conjunto etiquetado de moderación y ejecutar el paso 3 del bloque de IA de la Fase 10; desplegar el modelo solo si supera al clasificador por reglas.
+3. ~~Recolectar en paralelo los datos de la plataforma y los del grupo de comparación.~~ Reemplazado por ADR-007:
+   recolectar los datos de la plataforma con el módulo `evaluation` activo y, cada semana, verificar al menos 5 alertas
+   confirmadas y 5 reportes no confirmados, al azar y por tipo, y registrar las horas de fin.
+4. Al cierre de la semana 2, revisar las metas mínimas de datos (30 incidentes etiquetados, 40 reportes verificados,
+   20 horas de fin). Si no se alcanza la mitad, extender el piloto dos semanas.
+5. Al cierre de la semana 2, congelar E1 y E2. En las semanas 3 y 4, aplicar la tarea cronometrada con las cuatro
+   secuencias contrabalanceadas, cinco participantes por secuencia.
+6. Etiquetar los incidentes con dos evaluadores (kappa ≥ 0,61) y resolver los desacuerdos por consenso.
+7. Al cierre, aplicar la encuesta SUS y la encuesta de impacto (indicador del Fin de la matriz de marco lógico).
+8. Exportar el conjunto etiquetado de moderación y ejecutar el paso 3 del bloque de IA de la Fase 10; desplegar el modelo solo si supera al clasificador por reglas.
 
 **Análisis**
 
-1. Comparar plataforma frente a grupo de WhatsApp: tiempo hasta que aparece un incidente, porcentaje de reportes ciertos, tiempo que siguen visibles reportes que ya no son ciertos.
-2. Contrastar cada indicador de la matriz de marco lógico con el valor medido.
-3. Redactar `docs/informe-validacion.md` con resultados, limitaciones y trabajo futuro (rutas alternas, botón de pánico).
+1. ~~Comparar plataforma frente a grupo de WhatsApp: tiempo hasta que aparece un incidente, porcentaje de reportes ciertos, tiempo que siguen visibles reportes que ya no son ciertos.~~ Reemplazado por ADR-007.
+2. Contrastar H1a a H1d con `pnpm piloto:analizar` y `tools/piloto/contraste.R` (unilaterales, α = 0,05, corrección de
+   Holm) e informar cada indicador de costo con su intervalo de confianza.
+3. Ejecutar `pnpm piloto:sensibilidad` y el análisis de supervivencia; proponer umbral, radios y tiempos de vida.
+4. Contrastar cada indicador de la matriz de marco lógico con el valor medido.
+5. Redactar `docs/informe-validacion.md` con resultados, limitaciones y trabajo futuro (rutas alternas, botón de
+   pánico, integración semiautomática con fuentes oficiales).
 
 **Mantenimiento (proceso continuo)**
 
@@ -640,6 +701,11 @@ Resultado: evidencia de que la plataforma resuelve el problema planteado (valida
 
 **Criterio de salida**
 
-- [ ] Datos del piloto y del grupo de comparación recolectados
+- ~~Datos del piloto y del grupo de comparación recolectados~~: reemplazado por ADR-007
+- [ ] Instrumentos de evaluación probados en el ensayo general (vista base, instantáneas, tarea cronometrada,
+      etiquetado y verificación)
+- [ ] Metas mínimas de datos alcanzadas (30 incidentes etiquetados con kappa ≥ 0,61, 40 reportes verificados y 20 horas
+      de fin) o extensión aplicada y documentada
+- [ ] Hipótesis H1a a H1d contrastadas, con sus indicadores de costo y el análisis de sensibilidad
 - [ ] Indicadores de la matriz de marco lógico medidos y documentados
 - [ ] Informe de validación listo para la defensa
