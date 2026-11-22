@@ -1,3 +1,10 @@
+# [2.18.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.17.1...v2.18.0) (2026-11-22)
+
+
+### Features
+
+* **evaluation:** registro propio de envíos, transiciones y votos (ADR-007) ([c5afbee](https://github.com/HerlanCh/PlataformaGIS/commit/c5afbeed3b03362e0e617f67f6eec22a41213ec5))
+
 ## [2.17.1](https://github.com/HerlanCh/PlataformaGIS/compare/v2.17.0...v2.17.1) (2026-11-22)
 
 
