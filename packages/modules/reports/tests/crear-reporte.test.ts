@@ -5,6 +5,7 @@ import { CrearReporte, LIMITE_DE_REPORTES } from '../application/crear-reporte.j
 import type { EntradaCrearReporte } from '../application/crear-reporte.js';
 import type { UnidadDeTrabajoDeReporte } from '../application/ports.js';
 import { CATEGORIAS_MVP } from '../domain/category.js';
+import { PoliticaDePrivacidad } from '../domain/privacy-policy.js';
 import { Reporte } from '../domain/report.js';
 import {
   CategoriasEnMemoria,
@@ -83,15 +84,59 @@ describe('CrearReporte', () => {
 
     expect(salida).toEqual({ resultado: 'DUPLICADO', reporte: original.reporte });
     expect(reportes.todos()).toHaveLength(1);
-    const duplicado = unidad.eventos.at(-1)!;
+    const duplicado = unidad.eventos.find((e) => e.tipo === 'ReporteDuplicadoDetectado');
     expect(duplicado).toMatchObject({
-      tipo: 'ReporteDuplicadoDetectado',
       contenido: {
         idReporteExistente: original.reporte.id,
         idReportante: BETO,
         ubicacionReportante: { latitud: cercano.latitud, longitud: cercano.longitud },
       },
     });
+  });
+
+  it('HU-14: un duplicado también emite EnvioDuplicadoRegistrado, en la misma unidad de trabajo', async () => {
+    const { crear, unidad, reloj } = escenario();
+    const original = await crear.ejecutar(entrada(ANA));
+    const cercano = desplazar(laPaz, 40, 0);
+    const lotes: string[][] = [];
+    const registrar = unidad.registrarEventos.bind(unidad);
+    unidad.registrarEventos = (eventos) => {
+      lotes.push(eventos.map((e) => e.tipo));
+      return registrar(eventos);
+    };
+
+    await crear.ejecutar(entrada(BETO, cercano));
+
+    expect(lotes).toEqual([['ReporteDuplicadoDetectado', 'EnvioDuplicadoRegistrado']]);
+    const envio = unidad.eventos.find((e) => e.tipo === 'EnvioDuplicadoRegistrado')!;
+    expect(envio).toMatchObject({ version: 1, ocurridoEn: reloj.ahora().toISOString() });
+    const contenido = envio.contenido as Record<string, unknown>;
+    expect(contenido).toEqual({
+      idEnvio: expect.any(String),
+      idReporteExistente: original.reporte.id,
+      codigoCategoria: 'bloqueo',
+      // Fuera de las categorías sensibles la ubicación pública es la exacta.
+      publicLocation: { latitud: cercano.latitud, longitud: cercano.longitud },
+      recibidoEn: reloj.ahora().toISOString(),
+    });
+    expect(contenido['idEnvio']).not.toBe(original.reporte.id);
+  });
+
+  it('HU-14: en un robo, EnvioDuplicadoRegistrado lleva el centro de la celda y no la ubicación real', async () => {
+    const { crear, unidad } = escenario();
+    await crear.ejecutar(entrada(ANA, laPaz, 'robo'));
+    const cercano = desplazar(laPaz, 30, 0);
+
+    await crear.ejecutar(entrada(BETO, cercano, 'robo'));
+
+    const envio = unidad.eventos.find((e) => e.tipo === 'EnvioDuplicadoRegistrado')!;
+    const { publicLocation } = envio.contenido as {
+      publicLocation: { latitud: number; longitud: number };
+    };
+    const esperada = PoliticaDePrivacidad.ubicacionPublica(cercano, true);
+    expect(publicLocation).toEqual({ latitud: esperada.latitud, longitud: esperada.longitud });
+    expect(cercano.esIgualA(esperada)).toBe(false);
+    expect(Object.keys(envio.contenido as object)).not.toContain('idReportante');
   });
 
   it('HU-01: fuera del radio de deduplicación o de otra categoría se crea otro reporte', async () => {

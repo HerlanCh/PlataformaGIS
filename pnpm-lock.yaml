@@ -276,6 +276,9 @@ importers:
       '@gis/module-classifier':
         specifier: workspace:*
         version: link:../../packages/modules/classifier
+      '@gis/module-evaluation':
+        specifier: workspace:*
+        version: link:../../packages/modules/evaluation
       '@gis/module-heatmap':
         specifier: workspace:*
         version: link:../../packages/modules/heatmap
@@ -502,6 +505,31 @@ importers:
         version: link:../contracts
 
   packages/modules/classifier:
+    dependencies:
+      '@gis/contracts':
+        specifier: workspace:*
+        version: link:../../contracts
+      '@gis/event-bus':
+        specifier: workspace:*
+        version: link:../../event-bus
+      '@gis/platform':
+        specifier: workspace:*
+        version: link:../../platform
+      '@gis/shared-kernel':
+        specifier: workspace:*
+        version: link:../../shared-kernel
+      drizzle-orm:
+        specifier: ^0.45.4
+        version: 0.45.4(@types/pg@8.23.1)(pg@8.23.1)
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@gis/testing':
+        specifier: workspace:*
+        version: link:../../testing
+
+  packages/modules/evaluation:
     dependencies:
       '@gis/contracts':
         specifier: workspace:*

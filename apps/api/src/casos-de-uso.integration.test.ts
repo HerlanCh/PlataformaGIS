@@ -1,5 +1,10 @@
 import type { EventoDeIntegracion } from '@gis/contracts';
 import { claveDeEvento } from '@gis/contracts';
+import {
+  evaluationModulo,
+  RegistrarEventoDeEvaluacion,
+  RepositorioEvaluacionPg,
+} from '@gis/module-evaluation';
 import { identityModulo } from '@gis/module-identity';
 import {
   metricsModulo,
@@ -118,6 +123,8 @@ describeIntegration('casos de uso encadenados por eventos', () => {
     const metricas = new RepositorioMetricasPg(db);
     const registrarMetrica = new RegistrarEventoDeReporte(metricas);
     escuchar(RegistrarEventoDeReporte.eventos, (e) => registrarMetrica.manejar(e));
+    const evaluacion = new RegistrarEventoDeEvaluacion(new RepositorioEvaluacionPg(db));
+    escuchar(RegistrarEventoDeEvaluacion.eventos, (e) => evaluacion.manejar(e));
 
     return {
       reportes,
@@ -192,6 +199,7 @@ describeIntegration('casos de uso encadenados por eventos', () => {
         subscriptionsModulo,
         moderationModulo,
         metricsModulo,
+        evaluationModulo,
       ].map((modulo) => modulo.migraciones!),
     ]);
     casos = componer(db);
@@ -253,6 +261,35 @@ describeIntegration('casos de uso encadenados por eventos', () => {
     expect(metrica).toMatchObject({ esOficial: false, cierre: null });
     expect(metrica?.primeraConfirmacionEn).not.toBeNull();
     expect(metrica?.confirmadoEn).not.toBeNull();
+  });
+
+  it('HU-14: el registro de la evaluación guarda el duplicado como envío propio, sin autor ni ubicación real', async () => {
+    const parada = PuntoGeo.crear(-16.51, -68.12);
+    const { reporte } = await crear(DARIO, 'robo', parada, 'evaluacion-dario-01');
+    const real = desplazar(parada, 30, 0);
+    await crear(EVA, 'robo', real, 'evaluacion-eva-0001');
+    await despachar();
+
+    const consultar = async (tabla: string) =>
+      (
+        await base.pool.query<Record<string, unknown>>(
+          `select * from ${tabla} where id_reporte = $1`,
+          [reporte.id],
+        )
+      ).rows;
+    const envios = await base.pool.query<{ tipo: string; latitud: number; longitud: number }>(
+      `select tipo, st_y(ubicacion_publica) as latitud, st_x(ubicacion_publica) as longitud
+       from evaluacion_envios where id_reporte = $1 order by recibido_en, tipo`,
+      [reporte.id],
+    );
+    expect(envios.rows.map((e) => e.tipo)).toEqual(['CREADO', 'DUPLICADO']);
+    const duplicado = envios.rows[1]!;
+    // Robo: el duplicado se guarda en el centro de su celda de 200 m, nunca en el punto real.
+    expect(PuntoGeo.crear(duplicado.latitud, duplicado.longitud).esIgualA(real)).toBe(false);
+    expect(await consultar('evaluacion_transiciones')).toMatchObject([{ estado: 'ACTIVO' }]);
+    const votos = await consultar('evaluacion_votos');
+    expect(votos).toMatchObject([{ valor: 'CONFIRMACION', peso: 1, decision: 'NINGUNA' }]);
+    expect(JSON.stringify([envios.rows, votos])).not.toContain(EVA);
   });
 
   it('HU-12: el rechazo de un moderador retira el reporte y resta 0,50 al autor', async () => {

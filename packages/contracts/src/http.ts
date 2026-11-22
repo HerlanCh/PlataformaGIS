@@ -368,3 +368,14 @@ export const esquemaCsvDatosAbiertos = z.string().meta({
 
 /** Respuesta sin cuerpo (204 y 202). */
 export const esquemaSinContenido = z.undefined();
+
+// --- Evaluación (ADR-007, rol MODERADOR) ---
+
+export const esquemaEstadoDelRegistro = conId(
+  z.object({
+    enviosRegistrados: z.number().int(),
+    ultimoEnvioEn: esquemaFecha.nullable(),
+  }),
+  'EstadoDelRegistro',
+  'Envíos registrados por el módulo de evaluación y hora del último, sin datos personales',
+);

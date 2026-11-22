@@ -2173,6 +2173,11 @@ export interface components {
       hasta: string | null;
       licencia: components['schemas']['LicenciaInput'];
     };
+    /** @description Envíos registrados por el módulo de evaluación y hora del último, sin datos personales */
+    EstadoDelRegistroInput: {
+      enviosRegistrados: number;
+      ultimoEnvioEn: string | null;
+    };
     /** @description Error en formato RFC 7807 */
     Problema: {
       type: string;
@@ -2404,6 +2409,11 @@ export interface components {
       desde: string | null;
       hasta: string | null;
       licencia: components['schemas']['Licencia'];
+    };
+    /** @description Envíos registrados por el módulo de evaluación y hora del último, sin datos personales */
+    EstadoDelRegistro: {
+      enviosRegistrados: number;
+      ultimoEnvioEn: string | null;
     };
   };
   responses: never;

@@ -1,9 +1,11 @@
 import {
   crearEvento,
+  envioDuplicadoRegistradoV1,
   esquemaCodigoCategoria,
   reporteDuplicadoDetectadoV1,
   validarEntrada,
 } from '@gis/contracts';
+import type { EventoDeIntegracion } from '@gis/contracts';
 import { ErrorLimiteExcedido, idReporte, idUsuario } from '@gis/shared-kernel';
 import type {
   GeneradorDeId,
@@ -19,6 +21,7 @@ import type {
   RepositorioDeReportes,
   ReputacionDelAutor,
 } from '../domain/ports.js';
+import { PoliticaDePrivacidad } from '../domain/privacy-policy.js';
 import { esClaveDeIdempotenciaValida, Reporte } from '../domain/report.js';
 import { proyeccionPublica } from '../domain/reporte-publico.js';
 import type { ReportePublico } from '../domain/reporte-publico.js';
@@ -87,7 +90,7 @@ export class CrearReporte {
     const ahora = this.deps.reloj.ahora();
 
     const existente = await this.deps.reportes.buscarDuplicado(categoria, punto, ahora);
-    if (existente) return this.alEncontrarDuplicado(existente, idAutor, punto, ahora);
+    if (existente) return this.alEncontrarDuplicado(existente, categoria, idAutor, punto, ahora);
 
     return creacionIdempotente(
       () => this.crear(categoria, idAutor, punto, datos.idempotencyKey, ahora),
@@ -112,6 +115,7 @@ export class CrearReporte {
 
   private async alEncontrarDuplicado(
     existente: Reporte,
+    categoria: Categoria,
     idAutor: IdUsuario,
     punto: PuntoGeo,
     ahora: Date,
@@ -121,7 +125,7 @@ export class CrearReporte {
       return { resultado: 'PROPIO_EXISTENTE', reporte: proyeccionPublica(existente) };
     }
     // HU-01, escenario 2: `verification` lo registra como confirmación de quien lo envió.
-    const evento = crearEvento(
+    const duplicado = crearEvento(
       reporteDuplicadoDetectadoV1,
       {
         idReporteExistente: existente.id,
@@ -130,8 +134,32 @@ export class CrearReporte {
       },
       { id: this.deps.ids.siguiente(), ocurridoEn: ahora },
     );
-    await this.deps.unidadDeTrabajo.registrarEventos([evento]);
+    await this.deps.unidadDeTrabajo.registrarEventos([
+      duplicado,
+      this.envioDuplicado(existente, categoria, punto, ahora),
+    ]);
     return { resultado: 'DUPLICADO', reporte: proyeccionPublica(existente) };
+  }
+
+  /** ADR-007: el mismo envío para la vista base, sin autor y solo con la ubicación pública. */
+  private envioDuplicado(
+    existente: Reporte,
+    categoria: Categoria,
+    punto: PuntoGeo,
+    ahora: Date,
+  ): EventoDeIntegracion {
+    const publica = PoliticaDePrivacidad.ubicacionPublica(punto, categoria.esSensible);
+    return crearEvento(
+      envioDuplicadoRegistradoV1,
+      {
+        idEnvio: this.deps.ids.siguiente(),
+        idReporteExistente: existente.id,
+        codigoCategoria: categoria.codigo,
+        publicLocation: { latitud: publica.latitud, longitud: publica.longitud },
+        recibidoEn: ahora.toISOString(),
+      },
+      { id: this.deps.ids.siguiente(), ocurridoEn: ahora },
+    );
   }
 
   private async crear(

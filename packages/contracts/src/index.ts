@@ -2,6 +2,7 @@ export { crearEvento, leerContenido, validarEntrada } from './casos-de-uso.js';
 export type { SobreDeEvento } from './casos-de-uso.js';
 export {
   CLAVES_REPORTE_CREADO,
+  envioDuplicadoRegistradoV1,
   eventosDeIntegracion,
   esquemaFuenteOficial,
   leerReporteCreado,

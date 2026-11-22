@@ -42,6 +42,7 @@ Los manejadores son idempotentes: si el reporte ya no admite el cambio, no hacen
 | `ReporteCaducado.v1`           | Pública   | Pasa a `CADUCADO`                                                                   |
 | `ReporteRechazado.v1`          | Pública   | Pasa a `RECHAZADO`, con motivo `MODERACION` o `AUTOR_SILENCIADO`                    |
 | `ReporteDuplicadoDetectado.v1` | Interna   | Un reporte nuevo cae en el radio de deduplicación de otro vigente                   |
+| `EnvioDuplicadoRegistrado.v1`  | Interna   | El mismo duplicado, sin autor y con `publicLocation`, para la vista base (ADR-007)  |
 | `DescripcionAgregada.v1`       | Interna   | El autor describe su reporte vigente (solo lleva el ID)                             |
 
 Los eventos públicos solo llevan `publicLocation`: nunca la ubicación real, el autor ni la descripción.

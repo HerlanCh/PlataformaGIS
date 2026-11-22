@@ -1,4 +1,5 @@
 import { BusDeEventosEnMemoria } from '@gis/event-bus';
+import { evaluationModulo } from '@gis/module-evaluation';
 import { heatmapModulo } from '@gis/module-heatmap';
 import { identityModulo } from '@gis/module-identity';
 import { moderationModulo } from '@gis/module-moderation';
@@ -36,6 +37,7 @@ const TODOS_ACTIVOS = {
   FEATURE_MODERATION: 'true',
   FEATURE_OPEN_DATA: 'true',
   FEATURE_METRICS: 'true',
+  FEATURE_EVALUATION: 'true',
 };
 const CAMPOS_PRIVADOS = [
   'location',
@@ -146,6 +148,7 @@ describeIntegration('API REST /v1', () => {
         heatmapModulo,
         openDataModulo,
         metricsModulo,
+        evaluationModulo,
       ].flatMap((m) => (m.migraciones ? [m.migraciones] : [])),
     ]);
     tokens = new ServicioDeTokens(
@@ -618,6 +621,33 @@ describeIntegration('API REST /v1', () => {
       });
 
       expect([respuesta.statusCode, respuesta.json().codigo]).toEqual([422, 'PERIODO_INVALIDO']);
+    });
+  });
+
+  describe('instrumentos de evaluación (ADR-007)', () => {
+    it('HU-14: un ciudadano recibe 403 y un moderador ve el estado del registro', async () => {
+      const usuario = await registrar();
+      const moderador = await tokens.firmar({ idUsuario: usuario.idUsuario, rol: 'MODERADOR' });
+      const estado = (token: string) =>
+        pedir({ method: 'GET', url: '/v1/evaluacion/estado', token });
+
+      const ciudadano = await estado(usuario.token);
+      const conRol = await estado(moderador.token);
+
+      expect([ciudadano.statusCode, ciudadano.json().codigo]).toEqual([403, 'ROL_INSUFICIENTE']);
+      expect(conRol.statusCode).toBe(200);
+      expect(conRol.json()).toEqual({
+        enviosRegistrados: expect.any(Number),
+        ultimoEnvioEn: expect.toSatisfy((v: unknown) => v === null || typeof v === 'string'),
+      });
+    });
+
+    it('HU-14: con el módulo apagado la ruta no existe (404)', async () => {
+      const sinEvaluacion = await crearApp({});
+      const respuesta = await sinEvaluacion.inject({ method: 'GET', url: '/v1/evaluacion/estado' });
+      await sinEvaluacion.close();
+
+      expect(respuesta.statusCode).toBe(404);
     });
   });
 

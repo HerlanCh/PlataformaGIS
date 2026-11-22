@@ -611,7 +611,7 @@ Resultado: evidencia de que la plataforma resuelve el problema planteado (valida
 > - **Sin bot:** la guía de instalación cubre solo la PWA (ADR-004).
 > - **Análisis:** `pnpm piloto:analizar` calcula los tres indicadores del Propósito desde las planillas.
 
-> **Cambios por el ADR-007 (2026-11-22, propuesto; rige cuando el tutor apruebe el perfil de grado v5):**
+> **Cambios por el ADR-007 (2026-11-22, aprobado por el autor; sin tutor asignado):**
 > - **Sin grupo de WhatsApp:** la comparación es interna, entre la vista procesada y la vista base, sobre los mismos
 >   datos y en la misma interfaz. Reemplaza el grupo de comparación y el `pnpm piloto:analizar` del 2026-10-24.
 > - **Hipótesis con costo:** se contrastan H1a a H1d del perfil v5 (oportunidad de localización, redundancia,

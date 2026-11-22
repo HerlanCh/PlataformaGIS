@@ -1,6 +1,7 @@
 // Raíz de composición (roadmap 6.1): el único lugar donde se instancian los adaptadores y se
 // inyectan en los casos de uso. Las rutas HTTP solo reciben los casos de uso ya armados.
 import { randomUUID } from 'node:crypto';
+import { ConsultarEstadoDelRegistro, RepositorioEvaluacionPg } from '@gis/module-evaluation';
 import { ObtenerMapaDeCalor, ConsultaMapaCalorPg } from '@gis/module-heatmap';
 import { RegistrarDispositivo, RepositorioUsuariosPg } from '@gis/module-identity';
 import {
@@ -66,6 +67,12 @@ export interface CasosDeUso {
   readonly avisosPush: AvisosPush | null;
   /** Métricas del piloto (Fase 13): `null` con `metrics` apagado. */
   readonly metricas: Pick<Metricas['consultar'], 'ejecutar'> | null;
+  /** Instrumentos de evaluación (ADR-007): `null` con `evaluation` apagado. */
+  readonly evaluacion: Evaluacion | null;
+}
+
+export interface Evaluacion {
+  readonly estado: Caso<ConsultarEstadoDelRegistro>;
 }
 
 export interface Moderacion {
@@ -192,6 +199,9 @@ export function componerCasosDeUso(infraestructura: Infraestructura): CasosDeUso
       () => new ConsultarDatosAbiertos(new RepositorioDatosAbiertosPg(db)),
     ),
     metricas: metricas?.consultar ?? null,
+    evaluacion: siActivo(interruptores.estaActivo('evaluation'), () => ({
+      estado: new ConsultarEstadoDelRegistro(new RepositorioEvaluacionPg(db)),
+    })),
     moderacion: siActivo(interruptores.estaActivo('moderation'), () => {
       const decision = {
         consultaDeReporte: consultaParaModeracion(reportes),

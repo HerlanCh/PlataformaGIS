@@ -1,6 +1,7 @@
 // Prueba de humo tras cada despliegue (roadmap 12): comprueba de punta a punta que la versión
 // desplegada sirve. Orden: /health → registro del usuario de humo → escucha por WebSocket → crear
-// un reporte → leerlo por HTTP y recibirlo por el socket → rechazarlo como moderador → ya no está.
+// un reporte → leerlo por HTTP y recibirlo por el socket → comprobar que el registro de la
+// evaluación lo anotó, si el módulo está activo → rechazarlo como moderador → ya no está.
 // La API excluye los reportes del usuario de humo de avisos, datos abiertos y reputación
 // (`composicion/humo.ts`). El cliente HTTP y el socket se inyectan para probar el orden sin red.
 
@@ -40,6 +41,8 @@ export interface ClienteDeHumo {
   /** IDs de los reportes vigentes de la ventana. */
   listar(bbox: string): Promise<readonly string[]>;
   rechazar(token: string, idReporte: string, motivo: string): Promise<void>;
+  /** Envíos del registro de la evaluación (ADR-007); `null` si el módulo está apagado (404). */
+  enviosDeEvaluacion(token: string): Promise<number | null>;
 }
 
 export interface OpcionesDeHumo {
@@ -129,6 +132,29 @@ async function esperarQueDesaparezca(
   throw new FalloDeHumo('rechazar', `el reporte ${idReporte} sigue en el mapa`);
 }
 
+/**
+ * ADR-007: con `evaluation` activo, el envío de humo debe sumar uno al registro. Se compara el
+ * conteo, no la hora, para no depender del reloj de quien ejecuta la prueba.
+ */
+async function comprobarEvaluacion(
+  cliente: ClienteDeHumo,
+  token: string,
+  antes: number | null,
+  opciones: OpcionesDeHumo,
+): Promise<string> {
+  if (antes === null) return 'evaluación: módulo apagado, se omite';
+  const plazoMs = opciones.plazoMs ?? 15_000;
+  const dormir = opciones.dormir ?? dormirPorDefecto;
+  const pausaMs = 500;
+  for (let esperado = 0; esperado <= plazoMs; esperado += pausaMs) {
+    if (((await cliente.enviosDeEvaluacion(token)) ?? 0) > antes) {
+      return 'evaluación: registra el envío';
+    }
+    await dormir(pausaMs);
+  }
+  throw new FalloDeHumo('evaluación', 'el registro de la evaluación no anotó el envío');
+}
+
 /** Ejecuta la prueba y devuelve los pasos superados. Lanza `FalloDeHumo` en el primero que falle. */
 export async function ejecutarPruebaDeHumo(
   cliente: ClienteDeHumo,
@@ -150,6 +176,7 @@ export async function ejecutarPruebaDeHumo(
   const bbox = ventanaDe(PUNTO_DE_HUMO);
   const escucha = await cliente.escuchar(credencial.token, bbox);
   try {
+    const enviosAntes = await cliente.enviosDeEvaluacion(credencial.token);
     const idReporte = await crearEnPuntoLibre(cliente, credencial.token, opciones);
     pasos.push(`crear: reporte ${idReporte}`);
 
@@ -159,6 +186,8 @@ export async function ejecutarPruebaDeHumo(
     const recibido = await escucha.recibio(idReporte, opciones.plazoMs ?? 15_000);
     exigir(recibido, 'tiempo real', 'el ReporteCreado no llegó por WebSocket');
     pasos.push('tiempo real: recibido por WebSocket');
+
+    pasos.push(await comprobarEvaluacion(cliente, credencial.token, enviosAntes, opciones));
 
     await cliente.rechazar(credencial.token, idReporte, 'Prueba de humo del despliegue');
     await esperarQueDesaparezca(cliente, bbox, idReporte, opciones);

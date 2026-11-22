@@ -13,6 +13,7 @@ import {
   RepositorioReportesPostgis,
   UnidadDeTrabajoReportePg,
 } from '@gis/module-reports';
+import { RegistrarEventoDeEvaluacion, RepositorioEvaluacionPg } from '@gis/module-evaluation';
 import { RegistrarEventoDeReporte, RepositorioMetricasPg } from '@gis/module-metrics';
 import { ActualizarColaDeModeracion, RepositorioColaPg } from '@gis/module-moderation';
 import { RegistrarDatoAbierto, RepositorioDatosAbiertosPg } from '@gis/module-open-data';
@@ -225,6 +226,15 @@ export function suscribirManejadores(deps: DependenciasManejadores): void {
       RegistrarEventoDeReporte.eventos,
       'metrics.registrar',
       salvoHumo(esDeHumo, (e) => metricas.manejar(e)),
+    );
+  }
+
+  // ADR-007: registro de la evaluación. Sin `salvoHumo`: el reporte de humo se rechaza enseguida y
+  // queda fuera de ambas vistas, y así la prueba de humo comprueba que el módulo registra.
+  if (interruptores.estaActivo('evaluation')) {
+    const evaluacion = new RegistrarEventoDeEvaluacion(new RepositorioEvaluacionPg(db));
+    suscribirA(bus, RegistrarEventoDeEvaluacion.eventos, 'evaluation.registrar', (e) =>
+      evaluacion.manejar(e),
     );
   }
 

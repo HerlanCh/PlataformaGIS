@@ -74,6 +74,15 @@ const cliente: ClienteDeHumo = {
   },
   rechazar: (token, id, motivo) =>
     pedir(`/v1/moderacion/reportes/${id}/rechazar`, enviar({ motivo }, token)),
+  async enviosDeEvaluacion(token) {
+    const respuesta = await fetch(`${BASE_URL}/v1/evaluacion/estado`, {
+      headers: { authorization: `Bearer ${token}` },
+    });
+    // Con `FEATURE_EVALUATION` apagado la ruta no existe.
+    if (respuesta.status === 404) return null;
+    if (!respuesta.ok) throw new Error(`/v1/evaluacion/estado: ${respuesta.status}`);
+    return ((await respuesta.json()) as { enviosRegistrados: number }).enviosRegistrados;
+  },
 };
 
 try {

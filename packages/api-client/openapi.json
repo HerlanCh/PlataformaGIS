@@ -931,6 +931,33 @@
         ],
         "description": "Agregados de los reportes terminados, para los tableros públicos (HU-11)"
       },
+      "EstadoDelRegistroInput": {
+        "type": "object",
+        "properties": {
+          "enviosRegistrados": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "ultimoEnvioEn": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "enviosRegistrados",
+          "ultimoEnvioEn"
+        ],
+        "description": "Envíos registrados por el módulo de evaluación y hora del último, sin datos personales"
+      },
       "Problema": {
         "type": "object",
         "properties": {
@@ -1886,6 +1913,34 @@
         ],
         "additionalProperties": false,
         "description": "Agregados de los reportes terminados, para los tableros públicos (HU-11)"
+      },
+      "EstadoDelRegistro": {
+        "type": "object",
+        "properties": {
+          "enviosRegistrados": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "ultimoEnvioEn": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "enviosRegistrados",
+          "ultimoEnvioEn"
+        ],
+        "additionalProperties": false,
+        "description": "Envíos registrados por el módulo de evaluación y hora del último, sin datos personales"
       }
     }
   },

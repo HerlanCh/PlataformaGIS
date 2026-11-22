@@ -1,5 +1,6 @@
 // Archivo generado por tools/modules/sync-modules.mjs. No editar a mano.
 import { classifierModulo } from '@gis/module-classifier';
+import { evaluationModulo } from '@gis/module-evaluation';
 import { heatmapModulo } from '@gis/module-heatmap';
 import { identityModulo } from '@gis/module-identity';
 import { metricsModulo } from '@gis/module-metrics';
@@ -13,6 +14,7 @@ import type { DefinicionDeModulo } from '@gis/platform';
 
 export const modulos: readonly DefinicionDeModulo[] = [
   classifierModulo,
+  evaluationModulo,
   heatmapModulo,
   identityModulo,
   metricsModulo,

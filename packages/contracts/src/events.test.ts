@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
   CLAVES_REPORTE_CREADO,
+  envioDuplicadoRegistradoV1,
   eventosDeIntegracion,
   leerReporteCreado,
   reporteCreadoV1,
@@ -41,8 +42,18 @@ describe('catálogo de eventos de integración', () => {
       'DescripcionAgregada.v1',
       'ReporteClasificado.v1',
       'ReporteCreado.v2',
+      'EnvioDuplicadoRegistrado.v1',
     ]);
     expect(new Set(claves).size).toBe(claves.length);
+  });
+
+  it('HU-14: EnvioDuplicadoRegistrado.v1 no lleva autor ni ubicación real', () => {
+    const prohibidos = ['location', 'authorId', 'idReportante', 'ubicacionReportante'];
+
+    expect(
+      campos(envioDuplicadoRegistradoV1.contenido).filter((c) => prohibidos.includes(c)),
+    ).toEqual([]);
+    expect(envioDuplicadoRegistradoV1.audiencia).toBe('interno');
   });
 
   it('RNF-14: ningún evento público lleva ubicación real, autor, otro usuario ni descripción', () => {
