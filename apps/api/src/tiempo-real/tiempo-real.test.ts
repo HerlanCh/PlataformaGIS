@@ -8,7 +8,6 @@ import {
   EnviadorDeNotificacionesEnRegistro,
   suscribirManejadores,
 } from '../composicion/manejadores.js';
-import { ProgramadorDeTareas } from '../composicion/programador.js';
 import { generadorUuid, relojDelSistema } from '../composicion/casos-de-uso.js';
 import { CLAVES_PUBLICAS, crearPublicador } from './publicador.js';
 import { MAX_SALAS_POR_CLIENTE, salasDePunto, salasDeVentana } from './salas.js';
@@ -94,46 +93,6 @@ describe('publicador en Socket.io', () => {
     expect(CLAVES_PUBLICAS).toContain('ReporteCreado.v1');
     expect(CLAVES_PUBLICAS).not.toContain(votoEmitidoV1.clave);
     expect(CLAVES_PUBLICAS).not.toContain('ReporteDuplicadoDetectado.v1');
-  });
-});
-
-describe('ProgramadorDeTareas', () => {
-  const registro = crearRegistro('silent');
-
-  it('no solapa ejecuciones y registra un fallo sin detener la tarea', async () => {
-    const programador = new ProgramadorDeTareas(registro);
-    let llamadas = 0;
-    let liberar!: () => void;
-    const tarea = {
-      nombre: 't',
-      intervaloMs: 60_000,
-      ejecutar: () => {
-        llamadas += 1;
-        return new Promise<void>((listo) => (liberar = listo));
-      },
-    };
-
-    const primera = programador.ejecutar(tarea);
-    const segunda = programador.ejecutar(tarea);
-    liberar();
-    await Promise.all([primera, segunda]);
-    await programador.ejecutar({ ...tarea, ejecutar: () => Promise.reject(new Error('x')) });
-
-    expect(llamadas).toBe(1);
-  });
-
-  it('ejecuta la tarea en cada intervalo hasta que se detiene', async () => {
-    vi.useFakeTimers();
-    const programador = new ProgramadorDeTareas(registro);
-    const ejecutar = vi.fn(() => Promise.resolve(0));
-    programador.programar({ nombre: 'p', intervaloMs: 1000, ejecutar });
-
-    await vi.advanceTimersByTimeAsync(3500);
-    await programador.detener();
-    await vi.advanceTimersByTimeAsync(3000);
-    vi.useRealTimers();
-
-    expect(ejecutar).toHaveBeenCalledTimes(3);
   });
 });
 

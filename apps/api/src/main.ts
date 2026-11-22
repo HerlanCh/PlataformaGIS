@@ -17,7 +17,10 @@ import { construirApp } from './app.js';
 import { componerCasosDeUso, generadorUuid, relojDelSistema } from './composicion/casos-de-uso.js';
 import { LimitadorDeFrecuenciaEnProceso } from './composicion/limitador.js';
 import { suscribirManejadores } from './composicion/manejadores.js';
-import { ProgramadorDeTareas } from './composicion/programador.js';
+import {
+  ProgramadorDeTareas,
+  suscribirReprogramacionDeCaducidad,
+} from './composicion/programador.js';
 import { cargarConfigHttp } from './http/config-http.js';
 import { ServicioDeTokens } from './http/tokens.js';
 import { modulos } from './modules.generated.js';
@@ -86,12 +89,14 @@ const caducar = new CaducarReportes({
   reloj: relojDelSistema,
   ids: generadorUuid,
 });
+// HU-04: corre en la caducidad más próxima, no cada minuto (RSK-02).
 const programador = new ProgramadorDeTareas(registro);
 programador.programar({
   nombre: 'caducar-reportes',
-  intervaloMs: configHttp.caducidadIntervaloS * 1000,
-  ejecutar: () => caducar.ejecutar(),
+  respaldoMs: configHttp.caducidadIntervaloS * 1000,
+  ejecutar: async () => (await caducar.ejecutar()).proximaCaducidad,
 });
+suscribirReprogramacionDeCaducidad(bus, programador, 'caducar-reportes');
 
 const apagar = crearApagado({
   registro,

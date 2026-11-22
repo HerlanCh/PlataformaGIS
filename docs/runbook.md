@@ -44,7 +44,8 @@ Ambas APIs se definen en el Blueprint **GIS** de Render (`render.yaml`).
    2. **API:** pide a Render el commit exacto y espera a que `/health` lo sirva (hasta 20 min; el plan gratuito
       tarda en arrancar).
    3. **Web:** ajusta la CSP a la API de producción (`tools/despliegue/csp.mjs`), construye y publica en Vercel.
-   4. **Prueba de humo** (`pnpm humo`): `/health`, crear un reporte, leerlo, recibirlo por WebSocket y rechazarlo.
+   4. **Prueba de humo** (`pnpm humo`): `/health/base`, crear un reporte, leerlo, recibirlo por WebSocket y
+      rechazarlo.
 4. El resumen de la ejecución muestra la versión, la API y la web.
 
 Si falla un paso, los siguientes no corren. Una migración que falla deja la versión anterior funcionando: por eso
@@ -145,10 +146,14 @@ contra la base del entorno elegido. En producción pide aprobación.
 ## Monitoreo
 
 - **UptimeRobot** (plan gratuito, cada 5 min, alerta por correo):
-  - `https://plataforma-gis-api-produccion.onrender.com/health`, que responde `503` si la base no está disponible;
+  - `https://plataforma-gis-api-produccion.onrender.com/health`;
   - `https://plataforma-gis-produccion.vercel.app`.
 
-  El ping a la API también evita que Render la duerma (RSK-01).
+  El ping a la API también evita que Render la duerma (RSK-01). `/health` **no consulta la base**: si lo hiciera, Neon
+  nunca suspendería su cómputo y se agotaría el plan gratuito (RSK-02). El estado de la base está en `/health/base`
+  (`503` si no responde), que usa la prueba de humo; una caída de la base también llega a GlitchTip como 5xx.
+- **Fuera del piloto**, pausar el monitor de la API en UptimeRobot: la API se duerme sin tráfico y no gasta horas de
+  Render. Reactivarlo una semana antes del ensayo general.
 - **Errores de la aplicación:** GlitchTip (app.glitchtip.com, plan gratuito de 1.000 eventos al mes).
   - Proyecto `api`: recibe los 5xx inesperados y las promesas rechazadas sin manejar. El DSN va en `SENTRY_DSN` de
     Render.
@@ -163,9 +168,17 @@ contra la base del entorno elegido. En producción pide aprobación.
 
 | Proveedor | Señal | Qué hacer |
 | :-- | :-- | :-- |
-| **Render** | El servicio queda *suspended* o no arranca a fin de mes. Las horas de instancia gratuitas se comparten entre staging y producción, y el ping de UptimeRobot mantiene despierta la de producción. | Suspender el servicio de **staging** en el panel hasta el mes siguiente: producción tiene prioridad. Si se repite, plantear un ADR para mover la API a Oracle Cloud Always Free. |
-| **Neon** | Errores de conexión o *compute time exceeded*; la API responde `503` en `/health`. | Revisar en Neon el consumo del mes. Bajar el uso de staging (suspender su API). Si no basta, restaurar el último respaldo en otro proyecto de Neon o en otro proveedor gratuito con PostGIS, y seguir [Restaurar un respaldo](#restaurar-un-respaldo). |
+| **Render** | El servicio responde *Service Suspended*. El plan da **750 h de instancia y 5 GB de ancho de banda al mes por workspace**, compartidos entre staging y producción; agotar cualquiera de los dos suspende todos los servicios gratuitos hasta el mes siguiente. Ver el uso en *Workspace → Billing → Monthly Included Usage*. | Si son horas: suspender el servicio de **staging** hasta el mes siguiente; producción tiene prioridad. Si es ancho de banda «Service-Initiated», buscar qué consulta la base sin parar (ver abajo). Si se repite, plantear un ADR para mover la API a Oracle Cloud Always Free. |
+| **Neon** | Errores de conexión o SQLSTATE `53000`; la API responde `503` en `/health/base`. El plan da **100 CU-h y 5 GB de transferencia al mes por proyecto**, y suspende el cómputo hasta el mes siguiente al superarlos. | Revisar en Neon el consumo de cada proyecto. Bajar el uso de staging (suspender su API). Si no basta, restaurar el último respaldo en otro proyecto de Neon o en otro proveedor gratuito con PostGIS, y seguir [Restaurar un respaldo](#restaurar-un-respaldo). |
 | **Vercel** | Despliegues bloqueados o la web no carga. | La web es estática: se puede publicar `apps/web/dist` en otro hosting gratuito (por ejemplo, Cloudflare Pages) con un ADR, y actualizar `CORS_ORIGIN` y `WEB_URL`. |
 | **GitHub Actions** | Sin minutos o sin servicio. | El repositorio es público: los minutos son ilimitados. Si GitHub cae, no se despliega; para urgencias, ver [Revertir](#revertir-a-la-versión-anterior). |
 
 En todos los casos se deja registro en `docs/bitacora.md` y, si cambia un proveedor, un ADR nuevo en `docs/adr/`.
+
+**Nada debe consultar la base a intervalos cortos.** Neon suspende el cómputo tras 5 min sin actividad; a 0,25 CU,
+una base despierta las 24 h gasta unas 180 CU-h al mes, casi el doble del plan. En noviembre de 2026 el despachador
+del outbox la consultaba cada 250 ms, la caducidad cada minuto y `/health` en cada ping: se agotaron los 5 GB de
+Render y ambas APIs quedaron suspendidas. Hoy el despachador despierta con un aviso al guardar eventos, la caducidad
+se programa para el próximo vencimiento y `/health` no toca la base; sus respaldos (`DESPACHO_INTERVALO_MS`,
+`CADUCIDAD_INTERVALO_S`) son de 6 h. Antes de bajar esos valores o de agregar una tarea periódica, calcular su
+consumo.

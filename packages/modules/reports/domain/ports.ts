@@ -52,6 +52,12 @@ export interface RepositorioDeReportes {
   buscarCaducados(ahora: Date, limite: number): Promise<readonly Reporte[]>;
 
   /**
+   * Caducidad más próxima entre los reportes vigentes (`ACTIVO` o `CONFIRMADO`), o `null` si no
+   * hay ninguno. Con ella se programa la siguiente ejecución de la caducidad (HU-04, RSK-02).
+   */
+  proximaCaducidad(): Promise<Date | null>;
+
+  /**
    * Reportes del autor creados entre `desde` y `hasta` (ambos incluidos), en cualquier estado.
    * Lo usa el clasificador para detectar a quien reporta en ráfaga (HU-10).
    */

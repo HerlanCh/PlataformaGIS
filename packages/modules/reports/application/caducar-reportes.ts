@@ -13,14 +13,21 @@ export interface DependenciasCaducarReportes {
   readonly ids: GeneradorDeId;
 }
 
+export interface ResultadoDeCaducidad {
+  readonly caducados: number;
+  /** Caducidad más próxima de los vigentes: cuándo conviene la siguiente ejecución. */
+  readonly proximaCaducidad: Date | null;
+}
+
 /**
  * HU-04: pasa a `CADUCADO` los reportes vigentes cuya caducidad ya pasó y emite
- * `ReporteCaducado.v1` por cada uno. Lo ejecuta una tarea periódica.
+ * `ReporteCaducado.v1` por cada uno. La ejecuta una tarea programada para la caducidad más
+ * próxima, sin consultar la base a intervalos cortos (RSK-02).
  */
 export class CaducarReportes {
   constructor(private readonly deps: DependenciasCaducarReportes) {}
 
-  async ejecutar(): Promise<{ readonly caducados: number }> {
+  async ejecutar(): Promise<ResultadoDeCaducidad> {
     const ahora = this.deps.reloj.ahora();
     const { tamano, maxLotes } = LOTE_DE_CADUCIDAD;
     let caducados = 0;
@@ -38,6 +45,6 @@ export class CaducarReportes {
       // Un lote incompleto significa que ya no quedan vencidos.
       if (vencidos.length < tamano) break;
     }
-    return { caducados };
+    return { caducados, proximaCaducidad: await this.deps.reportes.proximaCaducidad() };
   }
 }

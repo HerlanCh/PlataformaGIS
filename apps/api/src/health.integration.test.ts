@@ -14,7 +14,7 @@ const hayDocker = spawnSync('docker', ['info'], { stdio: 'ignore' }).status === 
 const ejecutar = hayDocker || process.env.CI === 'true';
 if (!ejecutar) console.warn('Docker no disponible: se omite la prueba de integración de /health');
 
-describe.skipIf(!ejecutar)('GET /health contra PostGIS real', () => {
+describe.skipIf(!ejecutar)('GET /health/base contra PostGIS real', () => {
   let contenedor: StartedPostgreSqlContainer;
   let db: Pool;
 
@@ -43,7 +43,7 @@ describe.skipIf(!ejecutar)('GET /health contra PostGIS real', () => {
     });
 
   it('informa la base de datos arriba', async () => {
-    const respuesta = await (await crear()).inject({ method: 'GET', url: '/health' });
+    const respuesta = await (await crear()).inject({ method: 'GET', url: '/health/base' });
 
     expect(respuesta.statusCode).toBe(200);
     expect(respuesta.json()).toMatchObject({ status: 'ok', database: 'up' });
@@ -59,7 +59,7 @@ describe.skipIf(!ejecutar)('GET /health contra PostGIS real', () => {
     const app = await crear();
     await contenedor.stop();
 
-    const respuesta = await app.inject({ method: 'GET', url: '/health' });
+    const respuesta = await app.inject({ method: 'GET', url: '/health/base' });
 
     expect(respuesta.statusCode).toBe(503);
     expect(respuesta.json()).toMatchObject({ status: 'degraded', database: 'down' });

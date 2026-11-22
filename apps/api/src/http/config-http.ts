@@ -27,8 +27,17 @@ const esquema = z
       .min(60)
       .default(24 * 60 * 60),
     LIMITE_POR_MINUTO: z.coerce.number().int().min(1).default(300),
-    DESPACHO_INTERVALO_MS: z.coerce.number().int().min(10).default(250),
-    CADUCIDAD_INTERVALO_S: z.coerce.number().int().min(1).default(60),
+    // Respaldos de 6 h: las entregas y caducidades normales no los esperan (RSK-02).
+    DESPACHO_INTERVALO_MS: z.coerce
+      .number()
+      .int()
+      .min(10)
+      .default(6 * 60 * 60 * 1000),
+    CADUCIDAD_INTERVALO_S: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .default(6 * 60 * 60),
     /** Claves VAPID de Web Push (HU-08). Sin ellas los avisos solo quedan en el log. */
     VAPID_PUBLIC_KEY: opcional,
     VAPID_PRIVATE_KEY: opcional,
@@ -68,9 +77,9 @@ export interface ConfigHttp {
   readonly jwt: ConfigJwt;
   /** Solicitudes por minuto y por IP en toda la API. */
   readonly limitePorMinuto: number;
-  /** Pausa del despachador del outbox cuando no hay pendientes. */
+  /** Pausa de respaldo del despachador del outbox: las entregas normales las despierta un aviso. */
   readonly despachoIntervaloMs: number;
-  /** Cada cuánto se caducan los reportes vencidos. */
+  /** Pausa máxima entre caducidades: la tarea corre en la caducidad más próxima. */
   readonly caducidadIntervaloS: number;
   /** `null` si faltan las claves: no se envían avisos push. */
   readonly vapid: ConfigVapid | null;

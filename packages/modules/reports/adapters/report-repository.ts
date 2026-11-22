@@ -1,7 +1,7 @@
 import type { Ejecutor } from '@gis/platform';
 import { codigoCategoria, PuntoGeo, idReporte, idUsuario } from '@gis/shared-kernel';
 import type { CajaGeografica, CodigoCategoria, IdReporte, IdUsuario } from '@gis/shared-kernel';
-import { and, asc, between, count, desc, eq, gt, inArray, lt, sql } from 'drizzle-orm';
+import { and, asc, between, count, desc, eq, gt, inArray, lt, min, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import type { Categoria } from '../domain/category.js';
 import type { RepositorioDeReportes } from '../domain/ports.js';
@@ -191,6 +191,14 @@ export class RepositorioReportesPostgis implements RepositorioDeReportes {
       .orderBy(asc(reportes.caducaEn), asc(reportes.id))
       .limit(limite);
     return filas.map(aAgregado);
+  }
+
+  async proximaCaducidad(): Promise<Date | null> {
+    const [fila] = await this.db
+      .select({ proxima: min(reportes.caducaEn) })
+      .from(reportes)
+      .where(inArray(reportes.estado, [...ESTADOS_VIGENTES]));
+    return fila?.proxima ?? null;
   }
 
   async contarDelAutor(idAutor: IdUsuario, desde: Date, hasta: Date): Promise<number> {

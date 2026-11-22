@@ -38,10 +38,23 @@ function crear({ db = dbArriba, env = {}, modules = [], lineas = [] }: Opciones 
 }
 
 describe('GET /health', () => {
+  it('RSK-02: responde 200 con la versión sin consultar la base, para no despertarla', async () => {
+    const query = vi.fn(dbCaida.query);
+    const app = await crear({ db: { query } });
+
+    const respuesta = await app.inject({ method: 'GET', url: '/health' });
+
+    expect(respuesta.statusCode).toBe(200);
+    expect(respuesta.json()).toEqual({ status: 'ok', version: '1.2.3' });
+    expect(query).not.toHaveBeenCalled();
+  });
+});
+
+describe('GET /health/base', () => {
   it('responde 200 con la versión cuando la base de datos responde', async () => {
     const app = await crear();
 
-    const respuesta = await app.inject({ method: 'GET', url: '/health' });
+    const respuesta = await app.inject({ method: 'GET', url: '/health/base' });
 
     expect(respuesta.statusCode).toBe(200);
     expect(respuesta.json()).toEqual({ status: 'ok', version: '1.2.3', database: 'up' });
@@ -50,7 +63,7 @@ describe('GET /health', () => {
   it('responde 503 sin filtrar el error cuando la base de datos está caída', async () => {
     const app = await crear({ db: dbCaida });
 
-    const respuesta = await app.inject({ method: 'GET', url: '/health' });
+    const respuesta = await app.inject({ method: 'GET', url: '/health/base' });
 
     expect(respuesta.statusCode).toBe(503);
     expect(respuesta.json()).toEqual({ status: 'degraded', version: '1.2.3', database: 'down' });
