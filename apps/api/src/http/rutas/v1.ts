@@ -5,6 +5,7 @@ import type { AvisosPush, CasosDeUso, Moderacion } from '../../composicion/casos
 import { exigirToken, identidadDe, SEGURIDAD_BEARER } from '../autenticacion.js';
 import type { ServicioDeTokens } from '../tokens.js';
 import { aCasoHttp, aReporteHttp, aZonaHttp, ERRORES } from './comun.js';
+import { registrarRutasDeEvaluacion } from './evaluacion.js';
 
 export interface DependenciasRutas {
   readonly casos: CasosDeUso;
@@ -138,10 +139,7 @@ export const rutasV1 =
     }
 
     const { obtenerMapaDeCalor, suscribirZona, eliminarZona, listarZonas } = casos;
-    if (casos.avisosPush) registrarRutasDeAvisos(app, casos.avisosPush, conToken);
-    if (casos.moderacion) registrarRutasDeModeracion(app, casos.moderacion, conToken);
-    if (casos.datosAbiertos) registrarRutasDeDatosAbiertos(app, casos.datosAbiertos);
-    if (casos.metricas) registrarRutaDeMetricas(app, casos.metricas, conToken);
+    registrarRutasOpcionales(app, casos, conToken);
 
     if (obtenerMapaDeCalor) {
       app.get(
@@ -229,6 +227,19 @@ export const rutasV1 =
       );
     }
   };
+
+/** Rutas de los módulos opcionales que viven en su propia función: solo las de los activos. */
+function registrarRutasOpcionales(
+  app: Parameters<FastifyPluginAsyncZod>[0],
+  casos: CasosDeUso,
+  conToken: { preHandler: ReturnType<typeof exigirToken> },
+): void {
+  if (casos.avisosPush) registrarRutasDeAvisos(app, casos.avisosPush, conToken);
+  if (casos.moderacion) registrarRutasDeModeracion(app, casos.moderacion, conToken);
+  if (casos.datosAbiertos) registrarRutasDeDatosAbiertos(app, casos.datosAbiertos);
+  if (casos.metricas) registrarRutaDeMetricas(app, casos.metricas, conToken);
+  if (casos.evaluacion) registrarRutasDeEvaluacion(app, casos.evaluacion, conToken);
+}
 
 /** Avisos Web Push (HU-08): la clave pública y alta o baja de la suscripción del dispositivo. */
 function registrarRutasDeAvisos(

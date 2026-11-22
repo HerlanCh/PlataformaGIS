@@ -162,6 +162,7 @@ Valores iniciales, ajustables durante el piloto mediante configuración.
 | **RF-16** | El sistema publica y exporta datos históricos anonimizados. | Deseable | HU-11 |
 | **RF-17** | El sistema permite a un moderador rechazar reportes y deja auditoría. | Deseable | HU-12 |
 | **RF-18** | El sistema permite a un moderador publicar incidentes de una fuente oficial, identificados como tales en el mapa. | Deseable | HU-13 |
+| **RF-19** | El sistema registra sin datos personales cada envío, cambio de estado y voto, y permite a un moderador comparar la vista procesada con la vista base de los mismos datos (ADR-007). | Deseable | HU-14 |
 
 ---
 
@@ -441,6 +442,32 @@ Valores iniciales, ajustables durante el piloto mediante configuración.
     - **Dado** un reporte comunitario vigente de la misma categoría cerca,
     - **Cuando** el moderador publica el incidente oficial,
     - **Entonces** se crea igual: lo oficial no se convierte en confirmación de otro reporte. El límite de 5 reportes en 10 minutos no se aplica.
+
+#### HU-14: Modo de evaluación
+- **Como** investigador del proyecto, con rol `MODERADOR`.
+- **Quiero** comparar lo que mostró el mapa (vista procesada) con cada envío de las últimas 24 h como un punto propio
+  (vista base), sobre los mismos datos y en la misma interfaz.
+- **Para** atribuir las diferencias a la verificación ponderada, la deduplicación espacial y la caducidad por tipo
+  (ADR-007).
+- **Criterios de Aceptación:**
+  - **Escenario 1: Registro sin datos personales**
+    - **Dado** el módulo `evaluation` activo,
+    - **Cuando** se crea un reporte, llega un duplicado, cambia un estado o alguien vota,
+    - **Entonces** se registra el envío con su ubicación pública, la transición con su nueva caducidad o el voto con su
+      peso y decisión, y nunca el autor, el votante ni la ubicación real.
+  - **Escenario 2: Acceso restringido**
+    - **Dado** un usuario sin rol `MODERADOR`,
+    - **Cuando** pide una ruta `/v1/evaluacion/*`,
+    - **Entonces** el sistema la deniega (403).
+  - **Escenario 3: Dos vistas en un instante**
+    - **Dado** un instante `t` y una zona,
+    - **Cuando** se reconstruyen las vistas,
+    - **Entonces** la procesada coincide con lo que mostraba el mapa en `t` y la base muestra cada envío de
+      `(t − 24 h, t]` como un punto propio; ambas excluyen lo rechazado por moderación e incluyen lo oficial.
+  - **Escenario 4: Instantáneas y herramientas**
+    - **Dado** una instantánea congelada de una zona en un instante,
+    - **Cuando** se aplica una tarea cronometrada, se etiquetan los envíos o se verifica un reporte,
+    - **Entonces** la instantánea no cambia y se guardan las respuestas con un código anónimo.
 
 ---
 

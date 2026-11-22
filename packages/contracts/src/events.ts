@@ -109,6 +109,24 @@ export const reporteDuplicadoDetectadoV1 = definirEvento(
   }),
 );
 
+/**
+ * ADR-007: el mismo envío duplicado, sin autor ni ubicación real, para la vista base del módulo
+ * `evaluation`. `reports` lo emite junto a `ReporteDuplicadoDetectado.v1`; `publicLocation` es la
+ * de `PoliticaDePrivacidad` (centro de la celda de 200 m en las categorías sensibles).
+ */
+export const envioDuplicadoRegistradoV1 = definirEvento(
+  'EnvioDuplicadoRegistrado',
+  1,
+  'interno',
+  z.object({
+    idEnvio: z.uuid(),
+    idReporteExistente: z.uuid(),
+    codigoCategoria: esquemaCodigoCategoria,
+    publicLocation: esquemaPuntoGeo,
+    recibidoEn: z.iso.datetime(),
+  }),
+);
+
 export const votoEmitidoV1 = definirEvento(
   'VotoEmitido',
   1,
@@ -171,6 +189,7 @@ export const eventosDeIntegracion: readonly DefinicionDeEvento[] = [
   descripcionAgregadaV1,
   reporteClasificadoV1,
   reporteCreadoV2,
+  envioDuplicadoRegistradoV1,
 ];
 
 /**

@@ -304,6 +304,58 @@ Al empezar un día, las huellas de los anteriores se reducen a su conteo en `met
 | `dia` | `date` | PK | Día de Bolivia |
 | `usuarios_activos` | `integer` | NOT NULL, `CHECK` ≥ 0 | Personas distintas que reportaron o votaron ese día |
 
+## `evaluation` (opcional)
+
+Registro de los instrumentos de evaluación (Fase 13, ADR-007): lo necesario para reconstruir la vista procesada y la
+vista base en cualquier instante. Ninguna tabla tiene columnas para el autor, el votante, quien reportó un duplicado
+ni la ubicación real: no los pueden guardar. Solo registra desde que se activa `FEATURE_EVALUATION`. Cada fila se
+escribe una sola vez (`on conflict do nothing`): un evento repetido no cuenta dos veces.
+
+### `evaluacion_envios`
+
+Un envío por reporte creado (`CREADO`) y uno por cada duplicado que `reports` absorbió (`DUPLICADO`).
+
+| Columna | Tipo | Restricción | Descripción |
+| :--- | :--- | :--- | :--- |
+| `id_envio` | `uuid` | PK | En un envío `CREADO`, el ID del reporte; en uno `DUPLICADO`, el `idEnvio` de `EnvioDuplicadoRegistrado.v1` |
+| `tipo` | `text` | NOT NULL, `CHECK` en (`CREADO`, `DUPLICADO`) | Si llegó a ser reporte o se absorbió |
+| `id_reporte` | `uuid` | NOT NULL. Referencia lógica a `reportes.id` | El reporte creado o el que absorbió al duplicado |
+| `codigo_categoria` | `text` | NOT NULL | Categoría |
+| `ubicacion_publica` | `geometry(Point, 4326)` | NOT NULL | Ubicación pública: centro de la celda de 200 m en las categorías sensibles |
+| `fuente_oficial` | `text` | Nulo, `CHECK` del catálogo de HU-13 | Fuente de un incidente oficial |
+| `recibido_en` | `timestamptz` | NOT NULL | Cuándo llegó el envío |
+
+**Índices:** `evaluacion_envios_ubicacion_publica_idx` (GiST, zona de la vista), `evaluacion_envios_recibido_en_idx`
+(ventana de 24 h) y `evaluacion_envios_id_reporte_idx`.
+
+### `evaluacion_transiciones`
+
+Cada cambio de estado de un reporte, con la hora del evento. La creación es la primera; una extensión deja
+`CONFIRMADO` con otra caducidad.
+
+| Columna | Tipo | Restricción | Descripción |
+| :--- | :--- | :--- | :--- |
+| `id_evento` | `uuid` | PK | Evento de integración que la produjo |
+| `id_reporte` | `uuid` | NOT NULL. Referencia lógica a `reportes.id` | Reporte |
+| `estado` | `text` | NOT NULL, `CHECK` de los cinco estados | Estado que deja |
+| `caduca_en` | `timestamptz` | Nulo si y solo si el estado es final (`CHECK`) | Caducidad que deja |
+| `ocurrido_en` | `timestamptz` | NOT NULL | Hora del evento |
+
+**Índices:** `evaluacion_transiciones_reporte_idx`, B-tree sobre (`id_reporte`, `ocurrido_en`).
+
+### `evaluacion_votos`
+
+| Columna | Tipo | Restricción | Descripción |
+| :--- | :--- | :--- | :--- |
+| `id_evento` | `uuid` | PK | `VotoEmitido.v1` que lo registró |
+| `id_reporte` | `uuid` | NOT NULL. Referencia lógica a `reportes.id` | Reporte votado |
+| `valor` | `text` | NOT NULL, `CHECK` en (`CONFIRMACION`, `NEGACION`) | Sentido del voto |
+| `peso` | `double precision` | NOT NULL, `CHECK` entre 0 y 5 | Reputación con la que contó |
+| `decision` | `text` | NOT NULL, `CHECK` en (`NINGUNA`, `CONFIRMAR`, `EXTENDER`, `RESOLVER`) | Lo que pidió aplicar |
+| `ocurrido_en` | `timestamptz` | NOT NULL | Hora del voto |
+
+**Índices:** `evaluacion_votos_reporte_idx`, B-tree sobre (`id_reporte`, `ocurrido_en`).
+
 ## Migraciones
 
 | Conjunto | Migración | Contenido |
@@ -325,10 +377,12 @@ Al empezar un día, las huellas de los anteriores se reducen a su conteo en `met
 | `classifier` | `0000_clasificaciones` | `clasificaciones` y su índice |
 | `open-data` | `0000_datos_abiertos` | `datos_abiertos_reportes` y su índice |
 | `metrics` | `0000_metricas_piloto` | `metricas_reportes`, `metricas_actividad`, `metricas_diarias` (Fase 13) |
+| `evaluation` | `0000_registro_evaluacion` | `evaluacion_envios`, `evaluacion_transiciones`, `evaluacion_votos` y sus índices (ADR-007) |
 
 Cada migración tiene su reversa escrita a mano en `<nombre>.down.sql`, porque Drizzle Kit solo genera el avance. Las pruebas de integración aplican, revierten y vuelven a aplicar cada conjunto contra PostGIS real.
 
-Dos migraciones se corrigieron a mano tras generarlas, y lo indican en su primera línea:
+Tres migraciones se corrigieron a mano tras generarlas, y lo indican en su primera línea:
 
-- `reports/0000_categorias_reportes`: Drizzle Kit escribe `geometry(point)` sin SRID; se fijó `geometry(Point, 4326)`.
+- `reports/0000_categorias_reportes` y `evaluation/0000_registro_evaluacion`: Drizzle Kit escribe `geometry(point)`
+  sin SRID; se fijó `geometry(Point, 4326)`.
 - `subscriptions/0000_zonas_suscritas`: Drizzle Kit entrecomilla el tipo personalizado; `geography(Point, 4326)` va sin comillas.

@@ -26,6 +26,9 @@
       "path": "packages/modules/classifier"
     },
     {
+      "path": "packages/modules/evaluation"
+    },
+    {
       "path": "packages/modules/heatmap"
     },
     {

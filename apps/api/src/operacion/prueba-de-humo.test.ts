@@ -8,6 +8,7 @@ const VERSION = 'abc123';
 /** API sana: crea, lista hasta que se rechaza y entrega por WebSocket. */
 const apiSana = (cambios: Partial<ClienteDeHumo> = {}) => {
   const vigentes = new Set<string>();
+  let envios = 4;
   const cerrar = vi.fn();
   const cliente: ClienteDeHumo = {
     salud: () => Promise.resolve({ status: 'ok', version: VERSION }),
@@ -15,6 +16,7 @@ const apiSana = (cambios: Partial<ClienteDeHumo> = {}) => {
     escuchar: () => Promise.resolve({ recibio: (id) => Promise.resolve(vigentes.has(id)), cerrar }),
     crearReporte: () => {
       vigentes.add(ID);
+      envios += 1;
       return Promise.resolve({ resultado: 'CREADO', idReporte: ID });
     },
     listar: () => Promise.resolve([...vigentes]),
@@ -22,6 +24,7 @@ const apiSana = (cambios: Partial<ClienteDeHumo> = {}) => {
       vigentes.delete(id);
       return Promise.resolve();
     },
+    enviosDeEvaluacion: () => Promise.resolve(envios),
     ...cambios,
   };
   return { cliente, cerrar };
@@ -42,7 +45,7 @@ const falla = (cliente: ClienteDeHumo, paso: string) =>
   });
 
 describe('Prueba de humo del despliegue (roadmap 12)', () => {
-  it('RNF-05: recorre salud, registro, crear, leer, tiempo real y rechazo', async () => {
+  it('RNF-05: recorre salud, registro, crear, leer, tiempo real, evaluación y rechazo', async () => {
     const { cliente, cerrar } = apiSana();
 
     const pasos = await ejecutarPruebaDeHumo(cliente, opciones);
@@ -53,6 +56,7 @@ describe('Prueba de humo del despliegue (roadmap 12)', () => {
       'crear',
       'leer',
       'tiempo real',
+      'evaluación',
       'rechazar',
     ]);
     expect(cerrar).toHaveBeenCalledOnce();
@@ -107,6 +111,20 @@ describe('Prueba de humo del despliegue (roadmap 12)', () => {
     await falla(cliente, 'tiempo real');
   });
 
+  it('HU-14: falla si el registro de la evaluación no anota el envío', async () => {
+    const { cliente } = apiSana({ enviosDeEvaluacion: () => Promise.resolve(4) });
+
+    await falla(cliente, 'evaluación');
+  });
+
+  it('HU-14: con el módulo de evaluación apagado omite el paso', async () => {
+    const { cliente } = apiSana({ enviosDeEvaluacion: () => Promise.resolve(null) });
+
+    const pasos = await ejecutarPruebaDeHumo(cliente, opciones);
+
+    expect(pasos).toContain('evaluación: módulo apagado, se omite');
+  });
+
   it('HU-12: falla si el reporte rechazado sigue en el mapa', async () => {
     const { cliente } = apiSana({ rechazar: () => Promise.resolve() });
 
@@ -118,7 +136,7 @@ describe('Prueba de humo del despliegue (roadmap 12)', () => {
 
     await expect(
       ejecutarPruebaDeHumo(cliente, { ...opciones, versionEsperada: undefined }),
-    ).resolves.toHaveLength(6);
+    ).resolves.toHaveLength(7);
   });
 
   it('la ventana rodea el punto de prueba, dentro de La Paz y El Alto', () => {

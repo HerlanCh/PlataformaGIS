@@ -1,0 +1,287 @@
+{
+  "id": "7038dfc3-7ebf-46d6-a0eb-bceb3979e526",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.evaluacion_envios": {
+      "name": "evaluacion_envios",
+      "schema": "",
+      "columns": {
+        "id_envio": {
+          "name": "id_envio",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id_reporte": {
+          "name": "id_reporte",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "codigo_categoria": {
+          "name": "codigo_categoria",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ubicacion_publica": {
+          "name": "ubicacion_publica",
+          "type": "geometry(point)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fuente_oficial": {
+          "name": "fuente_oficial",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recibido_en": {
+          "name": "recibido_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "evaluacion_envios_ubicacion_publica_idx": {
+          "name": "evaluacion_envios_ubicacion_publica_idx",
+          "columns": [
+            {
+              "expression": "ubicacion_publica",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gist",
+          "with": {}
+        },
+        "evaluacion_envios_recibido_en_idx": {
+          "name": "evaluacion_envios_recibido_en_idx",
+          "columns": [
+            {
+              "expression": "recibido_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "evaluacion_envios_id_reporte_idx": {
+          "name": "evaluacion_envios_id_reporte_idx",
+          "columns": [
+            {
+              "expression": "id_reporte",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "evaluacion_envios_tipo_check": {
+          "name": "evaluacion_envios_tipo_check",
+          "value": "\"evaluacion_envios\".\"tipo\" in ('CREADO', 'DUPLICADO')"
+        },
+        "evaluacion_envios_fuente_oficial_check": {
+          "name": "evaluacion_envios_fuente_oficial_check",
+          "value": "\"evaluacion_envios\".\"fuente_oficial\" is null or \"evaluacion_envios\".\"fuente_oficial\" in ('TRANSITO', 'ABC', 'MI_TELEFERICO', 'OTRA')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.evaluacion_transiciones": {
+      "name": "evaluacion_transiciones",
+      "schema": "",
+      "columns": {
+        "id_evento": {
+          "name": "id_evento",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "id_reporte": {
+          "name": "id_reporte",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "caduca_en": {
+          "name": "caduca_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ocurrido_en": {
+          "name": "ocurrido_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "evaluacion_transiciones_reporte_idx": {
+          "name": "evaluacion_transiciones_reporte_idx",
+          "columns": [
+            {
+              "expression": "id_reporte",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "ocurrido_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "evaluacion_transiciones_estado_check": {
+          "name": "evaluacion_transiciones_estado_check",
+          "value": "\"evaluacion_transiciones\".\"estado\" in ('ACTIVO', 'CONFIRMADO', 'RESUELTO', 'CADUCADO', 'RECHAZADO')"
+        },
+        "evaluacion_transiciones_caducidad_check": {
+          "name": "evaluacion_transiciones_caducidad_check",
+          "value": "(\"evaluacion_transiciones\".\"caduca_en\" is null) = (\"evaluacion_transiciones\".\"estado\" in ('RESUELTO', 'CADUCADO', 'RECHAZADO'))"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.evaluacion_votos": {
+      "name": "evaluacion_votos",
+      "schema": "",
+      "columns": {
+        "id_evento": {
+          "name": "id_evento",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "id_reporte": {
+          "name": "id_reporte",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "valor": {
+          "name": "valor",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "peso": {
+          "name": "peso",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "decision": {
+          "name": "decision",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ocurrido_en": {
+          "name": "ocurrido_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "evaluacion_votos_reporte_idx": {
+          "name": "evaluacion_votos_reporte_idx",
+          "columns": [
+            {
+              "expression": "id_reporte",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "ocurrido_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "evaluacion_votos_valor_check": {
+          "name": "evaluacion_votos_valor_check",
+          "value": "\"evaluacion_votos\".\"valor\" in ('CONFIRMACION', 'NEGACION')"
+        },
+        "evaluacion_votos_peso_check": {
+          "name": "evaluacion_votos_peso_check",
+          "value": "\"evaluacion_votos\".\"peso\" between 0 and 5"
+        },
+        "evaluacion_votos_decision_check": {
+          "name": "evaluacion_votos_decision_check",
+          "value": "\"evaluacion_votos\".\"decision\" in ('NINGUNA', 'CONFIRMAR', 'EXTENDER', 'RESOLVER')"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

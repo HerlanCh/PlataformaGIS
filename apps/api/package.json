@@ -30,6 +30,7 @@
     "@gis/errores-remotos": "workspace:*",
     "@gis/event-bus": "workspace:*",
     "@gis/module-classifier": "workspace:*",
+    "@gis/module-evaluation": "workspace:*",
     "@gis/module-heatmap": "workspace:*",
     "@gis/module-identity": "workspace:*",
     "@gis/module-metrics": "workspace:*",
