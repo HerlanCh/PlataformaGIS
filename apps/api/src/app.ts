@@ -79,7 +79,15 @@ export async function construirApp(dependencias: DependenciasApp): Promise<Fasti
     reply.header(CABECERA_CORRELACION, request.id);
   });
 
-  app.get('/health', { schema: { hide: true } }, async (request, reply) => {
+  // Liviano: lo llaman Render y UptimeRobot cada pocos minutos. Si consultara la base, Neon nunca
+  // suspendería su cómputo y se agotaría el plan gratuito (RSK-02).
+  app.get('/health', { schema: { hide: true } }, async () => ({
+    status: 'ok',
+    version: config.version,
+  }));
+
+  // Completo, con la base: lo usan la prueba de humo y el diagnóstico.
+  app.get('/health/base', { schema: { hide: true } }, async (request, reply) => {
     const database = await verificarBaseDeDatos(db);
     if (!database.ok) request.log.error({ err: database.error }, 'base de datos no disponible');
 

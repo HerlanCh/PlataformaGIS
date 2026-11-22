@@ -316,4 +316,22 @@ describeIntegration('consultas espaciales de reports', () => {
       await expect(reportes.buscarCaducados(creado, limite)).rejects.toThrow(RangeError);
     });
   });
+
+  describe('proximaCaducidad', () => {
+    it('HU-04: devuelve la caducidad más próxima de los vigentes e ignora los terminados', async () => {
+      const resuelto = nuevoReporte('jauria', plazaMurillo, creado); // caducaría a los 120 min
+      resuelto.marcarResuelto(minutosDespues(5));
+      const accidente = nuevoReporte('accidente', desplazar(plazaMurillo, 500, 0), creado); // 180 min
+      const bloqueo = nuevoReporte('bloqueo', desplazar(plazaMurillo, 900, 0), creado); // 360 min
+      for (const reporte of [resuelto, accidente, bloqueo]) await reportes.guardar(reporte);
+
+      const proxima = await reportes.proximaCaducidad();
+
+      expect(proxima?.getTime()).toBe(accidente.caducaEn.getTime());
+    });
+
+    it('sin reportes vigentes devuelve null', async () => {
+      expect(await reportes.proximaCaducidad()).toBeNull();
+    });
+  });
 });

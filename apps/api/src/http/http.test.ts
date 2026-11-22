@@ -125,12 +125,12 @@ describe('aProblema', () => {
 });
 
 describe('cargarConfigHttp', () => {
-  it('en desarrollo usa valores por defecto', () => {
+  it('en desarrollo usa valores por defecto; los respaldos del despachador y la caducidad son de 6 h (RSK-02)', () => {
     expect(cargarConfigHttp({ JWT_SECRET: '', JWT_SECRET_ANTERIOR: '' })).toMatchObject({
       jwt: { secretoAnterior: null, duracionS: 86_400 },
       limitePorMinuto: 300,
-      despachoIntervaloMs: 250,
-      caducidadIntervaloS: 60,
+      despachoIntervaloMs: 21_600_000,
+      caducidadIntervaloS: 21_600,
       vapid: null,
       idUsuarioDeHumo: null,
       errores: null,
@@ -153,8 +153,8 @@ describe('cargarConfigHttp', () => {
         duracionS: 600,
       },
       limitePorMinuto: 60,
-      despachoIntervaloMs: 250,
-      caducidadIntervaloS: 60,
+      despachoIntervaloMs: 21_600_000,
+      caducidadIntervaloS: 21_600,
       vapid: null,
       idUsuarioDeHumo: null,
       errores: null,

@@ -283,9 +283,10 @@ describeIntegration('tiempo real: difusión por celdas con el despachador del ou
 
     await programador.ejecutar({
       nombre: 'caducar-reportes',
-      intervaloMs: 60_000,
-      ejecutar: () => caducar.ejecutar(),
+      respaldoMs: 60_000,
+      ejecutar: async () => (await caducar.ejecutar()).proximaCaducidad,
     });
+    await programador.detener();
 
     await esperarEvento(mirando, 'ReporteCaducado', reporte.id);
   });

@@ -2,6 +2,7 @@ import { claveDeEvento } from '@gis/contracts';
 import type { EventoDeIntegracion } from '@gis/contracts';
 import type { BusDeEventos, Desuscribir, ManejadorDeEvento } from '@gis/event-bus';
 import { and, asc, eq, inArray, isNull, lte, or, sql } from 'drizzle-orm';
+import { escucharSalida } from './aviso-de-salida.js';
 import type { Db, Ejecutor } from './database.js';
 import type { Registro } from './logger.js';
 import { agregarASalida } from './outbox.js';
@@ -39,7 +40,10 @@ export class BusDeEventosConSalida implements BusDeEventos {
 
 export interface OpcionesDelDespachador {
   readonly registro: Registro;
-  /** Pausa entre pasadas cuando no quedan pendientes. */
+  /**
+   * Pausa de respaldo entre pasadas cuando no hay avisos ni reintentos pendientes. Las entregas
+   * normales no la esperan: las despierta `agregarASalida`.
+   */
   readonly intervaloMs?: number;
   /** Eventos por pasada. */
   readonly lote?: number;
@@ -53,6 +57,21 @@ type Fila = typeof eventosSalida.$inferSelect;
 
 /** Espera antes del reintento `n`: 2^n segundos, hasta 5 minutos. */
 export const esperaDeReintentoS = (intentos: number): number => Math.min(300, 2 ** intentos);
+
+/**
+ * Pausa de respaldo por defecto: 6 h. Una consulta más frecuente mantiene despierto el cómputo de
+ * Neon, que se suspende tras 5 min sin actividad, y agota el plan gratuito (RSK-02).
+ */
+export const INTERVALO_DE_RESPALDO_MS = 6 * 60 * 60 * 1000;
+
+/**
+ * Pasadas extra tras un aviso que no encontró nada: el aviso puede llegar antes del COMMIT de la
+ * transacción que guardó los eventos.
+ */
+export const ESPERAS_DE_CONFIRMACION_MS = [50, 200, 1000, 3000] as const;
+
+/** Margen sobre la hora de un reintento, por si el reloj de la base va un poco atrasado. */
+const MARGEN_DE_REINTENTO_MS = 500;
 
 const mensajeDe = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
@@ -93,6 +112,9 @@ async function enParalelo<T>(
  * `FOR UPDATE SKIP LOCKED` (dos procesos nunca entregan el mismo evento a la vez) y los pasa a
  * cada manejador que todavía no lo procesó según `eventos_procesados`. Un evento queda publicado
  * cuando todos sus manejadores terminaron; si alguno falla, se reintenta con espera exponencial.
+ *
+ * No consulta la base sin parar: hace una pasada al iniciar, otra cada vez que `agregarASalida`
+ * avisa, las de los reintentos y una de respaldo cada `intervaloMs` (RSK-02).
  */
 export class DespachadorDeSalida {
   private readonly intervaloMs: number;
@@ -102,13 +124,19 @@ export class DespachadorDeSalida {
   private temporizador: NodeJS.Timeout | null = null;
   private pasada: Promise<unknown> = Promise.resolve();
   private activo = false;
+  private enCurso = false;
+  private despertarPendiente = false;
+  private esperasDeConfirmacion: number[] = [];
+  /** Momento (ms) del reintento más próximo programado en esta instancia. */
+  private reintentoEn: number | null = null;
+  private dejarDeEscuchar: (() => void) | null = null;
 
   constructor(
     private readonly db: Db,
     private readonly bus: BusDeEventosConSalida,
     private readonly opciones: OpcionesDelDespachador,
   ) {
-    this.intervaloMs = opciones.intervaloMs ?? 250;
+    this.intervaloMs = opciones.intervaloMs ?? INTERVALO_DE_RESPALDO_MS;
     this.lote = opciones.lote ?? 100;
     this.maxIntentos = opciones.maxIntentos ?? 10;
     this.concurrencia = opciones.concurrencia ?? 8;
@@ -117,15 +145,30 @@ export class DespachadorDeSalida {
   iniciar(): void {
     if (this.activo) return;
     this.activo = true;
+    this.dejarDeEscuchar = escucharSalida(() => this.despertar());
     this.programar(0);
   }
 
   /** Deja de programar pasadas y espera a que termine la que está en curso. */
   async detener(): Promise<void> {
     this.activo = false;
+    this.dejarDeEscuchar?.();
+    this.dejarDeEscuchar = null;
     if (this.temporizador) clearTimeout(this.temporizador);
     this.temporizador = null;
     await this.pasada;
+  }
+
+  /** Hay eventos nuevos: pasada ahora y, si no encuentra nada, unas pocas más en seguida. */
+  despertar(): void {
+    if (!this.activo) return;
+    this.esperasDeConfirmacion = [...ESPERAS_DE_CONFIRMACION_MS];
+    if (this.enCurso) {
+      this.despertarPendiente = true;
+      return;
+    }
+    if (this.temporizador) clearTimeout(this.temporizador);
+    this.programar(0);
   }
 
   /** Una pasada: entrega hasta un lote de pendientes. Devuelve cuántos tomó. */
@@ -165,14 +208,36 @@ export class DespachadorDeSalida {
   private programar(esperaMs: number): void {
     if (!this.activo) return;
     this.temporizador = setTimeout(() => {
+      this.temporizador = null;
+      this.enCurso = true;
+      // Esta pasada atiende los reintentos que ya vencieron; los nuevos fallos fijan otro.
+      if (this.reintentoEn !== null && this.reintentoEn <= Date.now()) this.reintentoEn = null;
       const pasada = this.despacharPendientes().catch((error: unknown) => {
         this.opciones.registro.error({ err: error }, 'falló una pasada del despachador');
         return 0;
       });
       this.pasada = pasada;
-      // Si el lote vino lleno quedan más pendientes: se sigue sin esperar.
-      void pasada.then((tomados) => this.programar(tomados >= this.lote ? 0 : this.intervaloMs));
+      void pasada.then((tomados) => {
+        this.enCurso = false;
+        this.programar(this.siguienteEspera(tomados));
+      });
     }, esperaMs);
+  }
+
+  /** Espera hasta la próxima pasada: la más corta entre ventana, reintento y respaldo. */
+  private siguienteEspera(tomados: number): number {
+    if (this.despertarPendiente) {
+      this.despertarPendiente = false;
+      return 0;
+    }
+    // Si el lote vino lleno quedan más pendientes: se sigue sin esperar.
+    if (tomados >= this.lote) return 0;
+    // Entregó algo: el aviso ya se atendió y la ventana termina.
+    if (tomados > 0) this.esperasDeConfirmacion = [];
+    const ventana = tomados === 0 ? this.esperasDeConfirmacion.shift() : undefined;
+    const reintento =
+      this.reintentoEn === null ? Infinity : Math.max(0, this.reintentoEn - Date.now());
+    return Math.min(ventana ?? Infinity, reintento, this.intervaloMs);
   }
 
   /** Pasa el evento a cada manejador que aún no lo procesó. Devuelve los errores. */
@@ -213,6 +278,8 @@ export class DespachadorDeSalida {
       this.opciones.registro.error(contexto, 'evento descartado tras agotar los reintentos');
     } else {
       this.opciones.registro.warn(contexto, 'falló la entrega de un evento; se reintentará');
+      const en = Date.now() + esperaDeReintentoS(intentos) * 1000 + MARGEN_DE_REINTENTO_MS;
+      this.reintentoEn = Math.min(this.reintentoEn ?? Infinity, en);
     }
     await tx
       .update(eventosSalida)

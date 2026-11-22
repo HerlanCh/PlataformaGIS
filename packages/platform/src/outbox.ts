@@ -1,11 +1,12 @@
 import { claveDeEvento } from '@gis/contracts';
 import type { EventoDeIntegracion } from '@gis/contracts';
+import { avisarSalida } from './aviso-de-salida.js';
 import type { Ejecutor } from './database.js';
 import { eventosSalida } from './schema.js';
 
 /**
  * Guarda eventos de integración en el outbox. Debe llamarse con la misma transacción
- * que guarda el agregado: o se guardan ambos o ninguno.
+ * que guarda el agregado: o se guardan ambos o ninguno. Luego despierta al despachador.
  */
 export async function agregarASalida(
   ejecutor: Ejecutor,
@@ -20,4 +21,5 @@ export async function agregarASalida(
       creadoEn: new Date(evento.ocurridoEn),
     })),
   );
+  avisarSalida();
 }

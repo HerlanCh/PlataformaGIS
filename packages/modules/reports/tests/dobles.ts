@@ -114,6 +114,11 @@ export class RepositorioReportesEnMemoria implements RepositorioDeReportes {
     );
   }
 
+  proximaCaducidad(): Promise<Date | null> {
+    const fechas = this.vigentes().map((r) => r.caducaEn.getTime());
+    return Promise.resolve(fechas.length > 0 ? new Date(Math.min(...fechas)) : null);
+  }
+
   contarDelAutor(idAutor: IdUsuario, desde: Date, hasta: Date): Promise<number> {
     return Promise.resolve(
       this.todos().filter(

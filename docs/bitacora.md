@@ -786,3 +786,29 @@ reales durante semanas, y ninguno se registra antes de medirlo.
 ### Pendiente
 - Aprobar la matriz de marco lógico y ejecutar el piloto según `docs/piloto/protocolo.md`.
 - Al cierre: análisis, clasificador con IA (Fase 10, paso 3), `docs/informe-validacion.md` y criterio de salida.
+
+## [2026-11-22] — Mantenimiento correctivo: suspensión de Render por consumo de la base
+
+### Qué pasó
+- Las dos APIs de Render respondían *Service Suspended*. No eran las horas (552,7 de 750): se agotaron los **5 GB de
+  ancho de banda** del mes, casi todo tráfico iniciado por la API (5,7 GB; las respuestas HTTP sumaban 8 MB). Neon
+  marcaba 140 CU-h entre ambos proyectos desde el 1 de noviembre.
+- Causa: tres cosas consultaban la base más seguido que los 5 min que Neon necesita para suspender su cómputo: el
+  despachador del outbox (cada 250 ms), la caducidad (cada minuto) y `/health` (en cada ping de UptimeRobot). Con la
+  base despierta las 24 h, el piloto habría agotado las 100 CU-h de Neon hacia el día 17.
+
+### Decisiones
+- **Despachador con aviso:** `agregarASalida` avisa en el proceso y el despachador hace una pasada enseguida; si no
+  encuentra nada (el aviso puede llegar antes del COMMIT), repite a los 50, 200, 1000 y 3000 ms. Los reintentos se
+  programan para su hora y el sondeo queda como respaldo de 6 h. Supone una sola instancia de la API, como en el
+  plan gratuito.
+- **Caducidad por fecha:** la tarea corre al arrancar y en la caducidad más próxima (`proximaCaducidad` en el
+  repositorio de `reports`); un reporte creado, confirmado o extendido que vence antes la adelanta. Respaldo de 6 h.
+  El mapa ya filtraba los vencidos en la consulta, así que nadie ve un reporte caducado mientras tanto.
+- **`/health` liviano y `/health/base` completo:** Render y UptimeRobot no despiertan la base; la prueba de humo sí la
+  comprueba.
+- Se descartó crear otra cuenta de Render: no ataca la causa y cambia URLs y secretos.
+
+### Pendiente
+- Las APIs vuelven el 1 de diciembre. Desplegar esta corrección antes.
+- Pausar el monitor de UptimeRobot hasta una semana antes del ensayo general del piloto.

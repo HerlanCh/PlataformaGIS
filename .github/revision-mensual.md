@@ -17,7 +17,7 @@ Cada hallazgo se abre como incidencia con su plantilla; esta se cierra cuando la
 - [ ] **UptimeRobot**: disponibilidad del mes ≥ 95 % (RNF-05). Anotar el valor.
 - [ ] **GlitchTip**: errores nuevos de la API y de la web, cada uno con incidencia correctiva o descartado con motivo.
 - [ ] **Respaldo**: el workflow `Respaldo` restauró con éxito en el mes (RNF-07).
-- [ ] **Planes gratuitos** (Neon, Render, Vercel): uso por debajo de los límites y sin avisos de cambios de condiciones (RSK-01, RSK-02).
+- [ ] **Planes gratuitos** (Neon, Render, Vercel): uso por debajo de los límites y sin avisos de cambios de condiciones (RSK-01, RSK-02). Render: horas de instancia (750) y ancho de banda (5 GB) del workspace. Neon: CU-h (100) y transferencia (5 GB) de **cada** proyecto. Si el uso a mitad de mes supera la mitad del límite, buscar qué mantiene despierta la base ([runbook](../docs/runbook.md#si-un-plan-gratuito-se-suspende-o-se-agota-rsk-02)).
 - [ ] **Secretos**: ninguno vence en el mes siguiente (token de Vercel, API key de Render).
 
 ## Métricas del piloto (mientras dure)

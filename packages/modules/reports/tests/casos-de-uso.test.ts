@@ -125,7 +125,7 @@ describe('CaducarReportes', () => {
 
     const resultado = await new CaducarReportes(deps).ejecutar();
 
-    expect(resultado).toEqual({ caducados: 1 });
+    expect(resultado).toEqual({ caducados: 1, proximaCaducidad: null });
     expect((await reportes.buscarPorId(viejo.id))?.estado).toBe('CADUCADO');
     expect(unidadDeTrabajo.eventos).toMatchObject([
       { tipo: 'ReporteCaducado', version: 1, contenido: { idReporte: viejo.id } },
@@ -136,8 +136,21 @@ describe('CaducarReportes', () => {
     const { deps, reportes, sembrar } = escenario();
     const reciente = await sembrar('accidente', 179);
 
-    expect(await new CaducarReportes(deps).ejecutar()).toEqual({ caducados: 0 });
+    expect(await new CaducarReportes(deps).ejecutar()).toMatchObject({ caducados: 0 });
     expect((await reportes.buscarPorId(reciente.id))?.estado).toBe('ACTIVO');
+  });
+
+  it('HU-04: informa la caducidad más próxima de los vigentes, para programar la siguiente ejecución', async () => {
+    const { deps, sembrar } = escenario();
+    // Accidente: vence a los 180 min; jauría, a los 120 min.
+    const accidente = await sembrar('accidente', 100);
+    await sembrar('accidente', 10, 'ACTIVO', desplazar(laPaz, 500, 0));
+    const jauria = await sembrar('jauria', 30, 'ACTIVO', desplazar(laPaz, 0, 500));
+
+    const { proximaCaducidad } = await new CaducarReportes(deps).ejecutar();
+
+    const masProxima = Math.min(accidente.caducaEn.getTime(), jauria.caducaEn.getTime());
+    expect(proximaCaducidad?.getTime()).toBe(masProxima);
   });
 
   it('HU-04: un reporte CONFIRMADO también caduca cuando su caducidad extendida pasa', async () => {
@@ -157,7 +170,7 @@ describe('CaducarReportes', () => {
     const cantidad = LOTE_DE_CADUCIDAD.tamano + 5;
     for (let i = 0; i < cantidad; i += 1) await sembrar('jauria', 200);
 
-    expect(await new CaducarReportes(deps).ejecutar()).toEqual({ caducados: cantidad });
+    expect(await new CaducarReportes(deps).ejecutar()).toMatchObject({ caducados: cantidad });
   });
 });
 

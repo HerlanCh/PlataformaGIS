@@ -56,7 +56,7 @@ async function escuchar(token: string, bbox: string): Promise<Escucha> {
 }
 
 const cliente: ClienteDeHumo = {
-  salud: () => pedir('/health'),
+  salud: () => pedir('/health/base'),
   registrar: (hash) => pedir('/v1/dispositivos', enviar({ hashDispositivo: hash })),
   escuchar,
   async crearReporte(token, punto, clave) {
