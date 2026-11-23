@@ -1,3 +1,15 @@
+# [2.20.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.19.0...v2.20.0) (2026-11-23)
+
+
+### Bug Fixes
+
+* **evaluation:** ordenar las categorías del sorteo con localeCompare ([a3a129e](https://github.com/HerlanCh/PlataformaGIS/commit/a3a129e110dc96a393f1db711369930ee0b2b449))
+
+
+### Features
+
+* **evaluation:** pantalla /evaluacion con tarea cronometrada, etiquetado y verificación (ADR-007) ([54edfba](https://github.com/HerlanCh/PlataformaGIS/commit/54edfba0b30827ab1ee8b1c79b4731a50c8f5643))
+
 # [2.19.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.18.0...v2.19.0) (2026-11-23)
 
 
