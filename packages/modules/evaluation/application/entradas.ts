@@ -50,3 +50,17 @@ export function exigirPasado(instante: Date, ahora: Date): void {
     );
   }
 }
+
+/** Un periodo de etiquetado o de sorteo no pasa de dos meses: el piloto dura cuatro a seis semanas. */
+export const MAX_DIAS_DE_PERIODO = 62;
+
+export const esquemaPeriodo = z
+  .object({ desde: esquemaInstante, hasta: esquemaInstante })
+  .refine(
+    ({ desde, hasta }) =>
+      desde.getTime() < hasta.getTime() &&
+      hasta.getTime() - desde.getTime() <= MAX_DIAS_DE_PERIODO * 86_400_000,
+    {
+      message: `El periodo debe ir de "desde" a "hasta" y durar como mucho ${MAX_DIAS_DE_PERIODO} días`,
+    },
+  );

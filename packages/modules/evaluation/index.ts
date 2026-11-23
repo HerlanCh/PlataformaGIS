@@ -30,7 +30,31 @@ export type {
   EntradaListarInstantaneas,
   EntradaObtenerInstantanea,
 } from './application/instantaneas.js';
+export { CrearSesion, IniciarTarea, ListarSesiones, TerminarTarea } from './application/tareas.js';
+export type {
+  DependenciasDeTareas,
+  EntradaCrearSesion,
+  EntradaTerminarTarea,
+  TareaEnCurso,
+} from './application/tareas.js';
+export {
+  GuardarEtiquetas,
+  ListarEnviosParaEtiquetar,
+  MedirAcuerdo,
+} from './application/etiquetado.js';
+export type { EntradaGuardarEtiquetas, EnviosParaEtiquetar } from './application/etiquetado.js';
+export {
+  ListarVerificaciones,
+  RegistrarVerificacion,
+  SortearReportes,
+} from './application/verificacion.js';
+export type { EntradaRegistrarVerificacion } from './application/verificacion.js';
 export { RepositorioEvaluacionPg } from './adapters/repositorio-evaluacion-pg.js';
+export {
+  RepositorioEtiquetasPg,
+  RepositorioSesionesPg,
+  RepositorioVerificacionesPg,
+} from './adapters/repositorio-herramientas-pg.js';
 export { RepositorioInstantaneasPg } from './adapters/repositorio-instantaneas-pg.js';
 export type { RepositorioDeEvaluacion, RepositorioDeInstantaneas } from './domain/ports.js';
 export { MAX_NOMBRE_DE_INSTANTANEA } from './domain/instantanea.js';
@@ -38,3 +62,8 @@ export type { Instantanea, ResumenDeInstantanea } from './domain/instantanea.js'
 export { reconstruirVistas, VENTANA_BASE_MS } from './domain/vistas.js';
 export type { Caja, PuntoBase, PuntoProcesado, Vistas } from './domain/vistas.js';
 export type { Envio, EstadoDelRegistro, Transicion, VotoRegistrado } from './domain/registro.js';
+export { DURACION_DE_TAREA_MS, SECUENCIAS } from './domain/tarea.js';
+export type { Marca, Sesion, Tarea, Vista } from './domain/tarea.js';
+export { KAPPA_MINIMO } from './domain/etiquetado.js';
+export type { Acuerdo, EnvioEtiquetable, Etiqueta, Evaluador } from './domain/etiquetado.js';
+export type { ReporteVerificable, Sorteo, Verificacion } from './domain/verificacion.js';

@@ -470,3 +470,177 @@ export const esquemaListaDeInstantaneas = conId(
   'ListaDeInstantaneas',
   'Instantáneas congeladas, de la más reciente a la más antigua, sin sus puntos',
 );
+
+const esquemaVista = z.enum(['PROCESADA', 'BASE']);
+
+export const esquemaNuevaSesion = conId(
+  z.object({
+    codigoParticipante: z.string().meta({ example: 'P07' }),
+    secuencia: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+  }),
+  'NuevaSesion',
+  'Código anónimo del participante (P y dos o tres dígitos) y su secuencia contrabalanceada',
+);
+
+const esquemaMarca = z.object({ idPunto: esquemaUuid, msDesdeInicio: z.number().int() });
+
+export const esquemaTarea = conId(
+  z.object({
+    id: esquemaUuid,
+    orden: z.union([z.literal(1), z.literal(2)]),
+    vista: esquemaVista,
+    escenario: z.enum(['E1', 'E2']),
+    idInstantanea: esquemaUuid,
+    iniciadaEn: esquemaFecha.nullable(),
+    terminadaEn: esquemaFecha.nullable(),
+    duracionMs: z.number().int().nullable(),
+    agotada: z.boolean().nullable(),
+    marcas: z.array(esquemaMarca),
+  }),
+  'Tarea',
+  'Una tarea cronometrada: vista, escenario, tiempo usado (máximo 180 s) y puntos marcados',
+);
+
+export const esquemaSesion = conId(
+  z.object({
+    id: esquemaUuid,
+    codigoParticipante: z.string(),
+    secuencia: z.number().int(),
+    creadaEn: esquemaFecha,
+    tareas: z.array(esquemaTarea),
+  }),
+  'Sesion',
+  'Sesión de un participante con sus dos tareas',
+);
+
+export const esquemaListaDeSesiones = conId(
+  z.object({ sesiones: z.array(esquemaSesion) }),
+  'ListaDeSesiones',
+  'Sesiones de la tarea cronometrada, de la más reciente a la más antigua',
+);
+
+/** El participante no ve qué vista le tocó: solo los puntos, la zona y el tiempo. */
+export const esquemaTareaEnCurso = conId(
+  z.object({
+    idTarea: esquemaUuid,
+    orden: z.union([z.literal(1), z.literal(2)]),
+    iniciadaEn: esquemaFecha,
+    duracionMaximaMs: z.number().int(),
+    caja: esquemaCaja,
+    puntos: z.array(
+      z.object({
+        idPunto: esquemaUuid,
+        codigoCategoria: esquemaCodigoCategoria,
+        publicLocation: esquemaPuntoGeo,
+        estado: z.enum(['ACTIVO', 'CONFIRMADO']).nullable(),
+        fuenteOficial: esquemaFuenteOficial.nullable(),
+      }),
+    ),
+  }),
+  'TareaEnCurso',
+  'Lo que ve el participante: los puntos de la instantánea, sin decir qué vista es',
+);
+
+export const esquemaFinDeTarea = conId(
+  z.object({ marcas: z.array(esquemaMarca).max(1000) }),
+  'FinDeTarea',
+  'Puntos marcados, con los milisegundos desde el inicio de la tarea',
+);
+
+export const esquemaConsultaPeriodo = z.object({ desde: esquemaFecha, hasta: esquemaFecha });
+
+const esquemaEvaluador = z.enum(['A', 'B', 'CONSENSO']);
+
+export const esquemaConsultaEtiquetado = esquemaConsultaPeriodo.extend({
+  evaluador: esquemaEvaluador,
+});
+
+const esquemaEnvioEtiquetable = z.object({
+  idEnvio: esquemaUuid,
+  codigoCategoria: esquemaCodigoCategoria,
+  publicLocation: esquemaPuntoGeo,
+  recibidoEn: esquemaFecha,
+});
+
+export const esquemaEnviosParaEtiquetar = conId(
+  z.object({
+    envios: z.array(esquemaEnvioEtiquetable),
+    etiquetas: z.array(
+      z.object({ evaluador: esquemaEvaluador, idEnvio: esquemaUuid, grupo: z.string() }),
+    ),
+  }),
+  'EnviosParaEtiquetar',
+  'Envíos de la comunidad del periodo, sin el reporte al que los asignó la plataforma, y las etiquetas propias',
+);
+
+export const esquemaAsignaciones = conId(
+  z.object({
+    evaluador: esquemaEvaluador,
+    asignaciones: z
+      .array(z.object({ idEnvio: esquemaUuid, grupo: z.string().max(40).nullable() }))
+      .min(1)
+      .max(2000),
+  }),
+  'Asignaciones',
+  'Evaluador y grupo (incidente) de cada envío; un grupo nulo quita la etiqueta',
+);
+
+export const esquemaAcuerdo = conId(
+  z.object({
+    kappa: z.number().nullable(),
+    kappaMinimo: z.number(),
+    paresCandidatos: z.number().int(),
+    paresEvaluados: z.number().int(),
+    acuerdoObservado: z.number().nullable(),
+    desacuerdos: z.array(
+      z.object({
+        idEnvioA: esquemaUuid,
+        idEnvioB: esquemaUuid,
+        mismoSegunA: z.boolean(),
+        mismoSegunB: z.boolean(),
+      }),
+    ),
+  }),
+  'Acuerdo',
+  'Kappa de Cohen entre los evaluadores A y B sobre los pares candidatos',
+);
+
+const esquemaReporteVerificable = z.object({
+  idReporte: esquemaUuid,
+  codigoCategoria: esquemaCodigoCategoria,
+  publicLocation: esquemaPuntoGeo,
+  creadoEn: esquemaFecha,
+  confirmado: z.boolean(),
+});
+
+export const esquemaSorteo = conId(
+  z.object({
+    confirmados: z.array(esquemaReporteVerificable),
+    noConfirmados: z.array(esquemaReporteVerificable),
+  }),
+  'Sorteo',
+  'Hasta 5 alertas confirmadas y 5 reportes no confirmados por categoría, al azar',
+);
+
+export const esquemaNuevaVerificacion = conId(
+  z.object({
+    resultado: z.enum(['REAL', 'FALSO', 'NO_VERIFICABLE']),
+    finEn: esquemaFecha.nullable(),
+    fuente: z.enum(['CAMPO', 'SECUNDARIA']),
+    detalleFuente: z.string().max(200).nullable(),
+  }),
+  'NuevaVerificacion',
+  'Resultado, hora de fin (solo si fue real) y fuente. El detalle nunca describe a personas',
+);
+
+export const esquemaVerificacion = conId(
+  esquemaNuevaVerificacion.extend({ idReporte: esquemaUuid, registradaEn: esquemaFecha }),
+  'Verificacion',
+  'Referencia independiente de veracidad y hora de fin de un reporte',
+);
+
+export const esquemaListaDeVerificaciones = conId(
+  z.object({ verificaciones: z.array(esquemaVerificacion) }),
+  'ListaDeVerificaciones',
+  'Verificaciones registradas, de la más reciente a la más antigua',
+);

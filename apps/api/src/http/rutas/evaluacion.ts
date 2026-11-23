@@ -5,6 +5,7 @@ import type { z } from 'zod';
 import type { Evaluacion } from '../../composicion/casos-de-uso.js';
 import { exigirToken, identidadDe, SEGURIDAD_BEARER } from '../autenticacion.js';
 import { ERRORES } from './comun.js';
+import { registrarRutasDeHerramientas } from './evaluacion-herramientas.js';
 
 type App = Parameters<FastifyPluginAsyncZod>[0];
 type ConToken = { preHandler: ReturnType<typeof exigirToken> };
@@ -144,4 +145,6 @@ export function registrarRutasDeEvaluacion(
       return aInstantaneaHttp(instantanea);
     },
   );
+
+  registrarRutasDeHerramientas(app, evaluacion, conToken);
 }

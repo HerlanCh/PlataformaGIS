@@ -94,7 +94,7 @@ describeIntegration('API REST /v1', () => {
 
   /** Hace la solicitud y la guarda para las pruebas de contrato y de privacidad. */
   async function pedir(opciones: {
-    method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     url: string;
     token?: string;
     payload?: unknown;
@@ -761,6 +761,144 @@ describeIntegration('API REST /v1', () => {
         404,
         'INSTANTANEA_NO_ENCONTRADA',
       ]);
+    });
+
+    it('HU-14: recorre una sesión, el etiquetado ciego, el kappa y la verificación', async () => {
+      const usuario = await registrar();
+      const { token } = await tokens.firmar({ idUsuario: usuario.idUsuario, rol: 'MODERADOR' });
+      const lugar = PuntoGeo.crear(-16.56, -68.09);
+      const recibido = new Date(Date.now() - 20 * 60_000);
+      const registro = new RepositorioEvaluacionPg(db);
+      const ids = ['6f1c2f0e-3b7a-4d2a-9c58-0000000f0001', '6f1c2f0e-3b7a-4d2a-9c58-0000000f0002'];
+      for (const [i, idEnvio] of ids.entries()) {
+        await registro.registrarEnvio({
+          idEnvio,
+          tipo: i === 0 ? 'CREADO' : 'DUPLICADO',
+          idReporte: ids[0]!,
+          codigoCategoria: 'bloqueo',
+          publicLocation: { latitud: lugar.latitud + i * 0.0002, longitud: lugar.longitud },
+          fuenteOficial: null,
+          recibidoEn: new Date(recibido.getTime() + i * 60_000),
+        });
+      }
+      const instante = new Date().toISOString();
+      for (const nombre of ['E1', 'E2']) {
+        await pedir({
+          method: 'POST',
+          url: '/v1/evaluacion/instantaneas',
+          token,
+          payload: { nombre, instante, bbox: bbox(lugar, 0.003) },
+        });
+      }
+      // Solo los envíos de esta prueba: otras dejan los suyos en la misma base.
+      const periodo = `desde=${new Date(recibido.getTime() - 1000).toISOString()}&hasta=${instante}`;
+
+      const sesion = await pedir({
+        method: 'POST',
+        url: '/v1/evaluacion/sesiones',
+        token,
+        payload: { codigoParticipante: 'P01', secuencia: 1 },
+      });
+      const [primera, segunda] = sesion.json().tareas as { id: string }[];
+      const inicio = await pedir({
+        method: 'POST',
+        url: `/v1/evaluacion/tareas/${primera!.id}/inicio`,
+        token,
+      });
+      const fin = await pedir({
+        method: 'POST',
+        url: `/v1/evaluacion/tareas/${primera!.id}/fin`,
+        token,
+        payload: { marcas: [{ idPunto: ids[1], msDesdeInicio: 0 }] },
+      });
+      const antesDeTiempo = await pedir({
+        method: 'POST',
+        url: `/v1/evaluacion/tareas/${segunda!.id}/fin`,
+        token,
+        payload: { marcas: [] },
+      });
+      const sesiones = await pedir({ method: 'GET', url: '/v1/evaluacion/sesiones', token });
+      for (const evaluador of ['A', 'B']) {
+        await pedir({
+          method: 'PUT',
+          url: '/v1/evaluacion/etiquetado',
+          token,
+          payload: { evaluador, asignaciones: ids.map((idEnvio) => ({ idEnvio, grupo: '1' })) },
+        });
+      }
+      const paraA = await pedir({
+        method: 'GET',
+        url: `/v1/evaluacion/etiquetado?evaluador=A&${periodo}`,
+        token,
+      });
+      const acuerdo = await pedir({
+        method: 'GET',
+        url: `/v1/evaluacion/acuerdo?${periodo}`,
+        token,
+      });
+      const sorteo = await pedir({
+        method: 'GET',
+        url: `/v1/evaluacion/verificacion/sorteo?${periodo}`,
+        token,
+      });
+      const verificada = await pedir({
+        method: 'PUT',
+        url: `/v1/evaluacion/verificaciones/${ids[0]}`,
+        token,
+        payload: { resultado: 'REAL', finEn: instante, fuente: 'CAMPO', detalleFuente: null },
+      });
+      const verificaciones = await pedir({
+        method: 'GET',
+        url: '/v1/evaluacion/verificaciones',
+        token,
+      });
+
+      expect(sesion.statusCode).toBe(201);
+      // Secuencia 1: primero la vista base de E1, sin decir cuál es.
+      expect(inicio.json()).not.toHaveProperty('vista');
+      expect(
+        inicio
+          .json()
+          .puntos.map((p: { idPunto: string }) => p.idPunto)
+          .toSorted(),
+      ).toEqual(ids);
+      expect(fin.json()).toMatchObject({
+        vista: 'BASE',
+        agotada: false,
+        marcas: [{ idPunto: ids[1] }],
+      });
+      expect([antesDeTiempo.statusCode, antesDeTiempo.json().codigo]).toEqual([
+        409,
+        'TAREA_NO_INICIADA',
+      ]);
+      expect(sesiones.json().sesiones[0].tareas[0].terminadaEn).not.toBeNull();
+      expect(paraA.json().envios.map((e: { idEnvio: string }) => e.idEnvio)).toEqual(ids);
+      expect(paraA.json().etiquetas.every((e: { evaluador: string }) => e.evaluador === 'A')).toBe(
+        true,
+      );
+      expect(acuerdo.json()).toMatchObject({ paresEvaluados: 1, kappaMinimo: 0.61 });
+      expect(sorteo.json().noConfirmados.map((r: { idReporte: string }) => r.idReporte)).toEqual([
+        ids[0],
+      ]);
+      expect(verificada.json()).toMatchObject({ idReporte: ids[0], resultado: 'REAL' });
+      expect(verificaciones.json().verificaciones).toHaveLength(1);
+    });
+
+    it('HU-14: un ciudadano recibe 403 en las herramientas de evaluación', async () => {
+      const { token } = await registrar();
+      const periodo = 'desde=2026-11-01T00:00:00.000Z&hasta=2026-11-02T00:00:00.000Z';
+      const id = '6f1c2f0e-3b7a-4d2a-9c58-0000000f0999';
+
+      const respuestas = await Promise.all([
+        pedir({ method: 'GET', url: '/v1/evaluacion/sesiones', token }),
+        pedir({ method: 'POST', url: `/v1/evaluacion/tareas/${id}/inicio`, token }),
+        pedir({ method: 'GET', url: `/v1/evaluacion/etiquetado?evaluador=A&${periodo}`, token }),
+        pedir({ method: 'GET', url: `/v1/evaluacion/acuerdo?${periodo}`, token }),
+        pedir({ method: 'GET', url: `/v1/evaluacion/verificacion/sorteo?${periodo}`, token }),
+        pedir({ method: 'GET', url: '/v1/evaluacion/verificaciones', token }),
+      ]);
+
+      expect(respuestas.map((r) => r.statusCode)).toEqual([403, 403, 403, 403, 403, 403]);
     });
   });
 

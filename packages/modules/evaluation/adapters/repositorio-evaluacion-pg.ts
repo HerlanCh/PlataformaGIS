@@ -1,5 +1,6 @@
 import type { Ejecutor } from '@gis/platform';
-import { and, count, inArray, lte, max, sql } from 'drizzle-orm';
+import { and, asc, count, eq, gte, inArray, isNull, lt, lte, max, sql } from 'drizzle-orm';
+import type { EnvioEtiquetable } from '../domain/etiquetado.js';
 import type { RepositorioDeEvaluacion } from '../domain/ports.js';
 import type {
   EstadoDelRegistro,
@@ -9,12 +10,37 @@ import type {
   Transicion,
   VotoRegistrado,
 } from '../domain/registro.js';
+import type { ReporteVerificable } from '../domain/verificacion.js';
 import { VENTANA_BASE_MS } from '../domain/vistas.js';
 import type { Caja, RegistroParaVistas } from '../domain/vistas.js';
 import { evaluacionEnvios, evaluacionTransiciones, evaluacionVotos } from './schema.js';
 
 const envios = evaluacionEnvios;
 const transiciones = evaluacionTransiciones;
+
+const latitud = sql<number>`st_y(${envios.publicLocation})`;
+const longitud = sql<number>`st_x(${envios.publicLocation})`;
+
+/**
+ * Subconsultas correlacionadas con el envío. Las columnas van con su tabla escrita a mano: dentro de
+ * un `select` de una sola tabla Drizzle las escribe sin ella, y `id_reporte = id_reporte` se
+ * resolvería contra la tabla interna (siempre verdadero).
+ */
+const ID_REPORTE_DEL_ENVIO = sql.raw('"evaluacion_envios"."id_reporte"');
+
+/** El reporte del envío tuvo en algún momento esta transición. */
+const tuvo = (estado: string) =>
+  sql<boolean>`exists (select 1 from evaluacion_transiciones t
+    where t.id_reporte = ${ID_REPORTE_DEL_ENVIO} and t.estado = ${estado})`;
+
+/** Envíos de la comunidad (sin fuente oficial) recibidos en el periodo y no rechazados. */
+const deLaComunidadEn = (desde: Date, hasta: Date) =>
+  and(
+    isNull(envios.fuenteOficial),
+    gte(envios.recibidoEn, desde),
+    lt(envios.recibidoEn, hasta),
+    sql`not ${tuvo('RECHAZADO')}`,
+  );
 
 /** `&&` con la caja usa el índice GiST de `ubicacion_publica`; un punto en el borde queda dentro. */
 export const dentroDeLaCaja = (columna: typeof envios.publicLocation, caja: Caja) =>
@@ -83,10 +109,10 @@ export class RepositorioEvaluacionPg implements RepositorioDeEvaluacion {
           dentroDeLaCaja(envios.publicLocation, caja),
           lte(envios.recibidoEn, instante),
           sql`(${envios.recibidoEn} > ${desde} or exists (
-            select 1 from ${transiciones}
-            where ${transiciones.idReporte} = ${envios.idReporte}
-              and ${transiciones.ocurridoEn} <= ${instante}
-              and ${transiciones.caducaEn} >= ${instante}))`,
+            select 1 from evaluacion_transiciones t
+            where t.id_reporte = ${ID_REPORTE_DEL_ENVIO}
+              and t.ocurrido_en <= ${instante}
+              and t.caduca_en >= ${instante}))`,
         ),
       );
     const idsDeReportes = [...new Set(filas.map((f) => f.idReporte))];
@@ -110,5 +136,45 @@ export class RepositorioEvaluacionPg implements RepositorioDeEvaluacion {
       })),
       transiciones: cambios.map((t) => ({ ...t, estado: t.estado as EstadoRegistrado })),
     };
+  }
+
+  async buscarEnviosEtiquetables(desde: Date, hasta: Date): Promise<readonly EnvioEtiquetable[]> {
+    const filas = await this.db
+      .select({
+        idEnvio: envios.idEnvio,
+        codigoCategoria: envios.codigoCategoria,
+        latitud,
+        longitud,
+        recibidoEn: envios.recibidoEn,
+      })
+      .from(envios)
+      .where(deLaComunidadEn(desde, hasta))
+      .orderBy(asc(envios.recibidoEn), asc(envios.idEnvio));
+    return filas.map(({ latitud: lat, longitud: lon, ...resto }) => ({
+      ...resto,
+      publicLocation: { latitud: lat, longitud: lon },
+    }));
+  }
+
+  async buscarReportesVerificables(
+    desde: Date,
+    hasta: Date,
+  ): Promise<readonly ReporteVerificable[]> {
+    const filas = await this.db
+      .select({
+        idReporte: envios.idReporte,
+        codigoCategoria: envios.codigoCategoria,
+        latitud,
+        longitud,
+        creadoEn: envios.recibidoEn,
+        confirmado: tuvo('CONFIRMADO'),
+      })
+      .from(envios)
+      .where(and(eq(envios.tipo, 'CREADO'), deLaComunidadEn(desde, hasta)))
+      .orderBy(asc(envios.recibidoEn), asc(envios.idReporte));
+    return filas.map(({ latitud: lat, longitud: lon, ...resto }) => ({
+      ...resto,
+      publicLocation: { latitud: lat, longitud: lon },
+    }));
   }
 }

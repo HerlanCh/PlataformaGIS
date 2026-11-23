@@ -14,6 +14,12 @@ const PantallaDeDatosAbiertos = lazy(() =>
   })),
 );
 
+const PantallaDeEvaluacion = lazy(() =>
+  import('./features/evaluacion/PantallaDeEvaluacion.js').then((m) => ({
+    default: m.PantallaDeEvaluacion,
+  })),
+);
+
 const PantallaDePrivacidad = lazy(() =>
   import('./features/legal/PantallasLegales.js').then((m) => ({
     default: m.PantallaDePrivacidad,
@@ -30,6 +36,7 @@ const PantallaDeTerminos = lazy(() =>
 export const PANTALLAS = {
   '/moderacion': PantallaDeModeracion,
   '/datos-abiertos': PantallaDeDatosAbiertos,
+  '/evaluacion': PantallaDeEvaluacion,
   '/privacidad': PantallaDePrivacidad,
   '/terminos': PantallaDeTerminos,
 } as const;
