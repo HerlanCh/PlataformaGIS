@@ -379,3 +379,94 @@ export const esquemaEstadoDelRegistro = conId(
   'EstadoDelRegistro',
   'Envíos registrados por el módulo de evaluación y hora del último, sin datos personales',
 );
+
+export const esquemaConsultaVistas = z.object({
+  instante: esquemaFecha.meta({
+    description: 'Instante de la reconstrucción; no puede ser futuro',
+  }),
+  bbox: esquemaBbox,
+});
+
+export const esquemaNuevaInstantanea = conId(
+  z.object({
+    nombre: z.string().trim().min(1).max(40).meta({ example: 'E1' }),
+    instante: esquemaFecha,
+    bbox: esquemaBbox,
+  }),
+  'NuevaInstantanea',
+  'Nombre único, instante (no futuro) y zona de la instantánea que se congela',
+);
+
+const esquemaCaja = conId(
+  z.object({
+    latitudMin: z.number(),
+    latitudMax: z.number(),
+    longitudMin: z.number(),
+    longitudMax: z.number(),
+  }),
+  'Caja',
+  'Zona de las vistas',
+);
+
+export const esquemaPuntoProcesado = conId(
+  z.object({
+    idReporte: esquemaUuid,
+    codigoCategoria: esquemaCodigoCategoria,
+    publicLocation: esquemaPuntoGeo,
+    estado: z.enum(['ACTIVO', 'CONFIRMADO']),
+    caducaEn: esquemaFecha,
+    fuenteOficial: esquemaFuenteOficial.nullable(),
+  }),
+  'PuntoProcesado',
+  'Un reporte que el mapa mostraba en el instante, con su estado',
+);
+
+export const esquemaPuntoBase = conId(
+  z.object({
+    idEnvio: esquemaUuid,
+    idReporte: esquemaUuid,
+    codigoCategoria: esquemaCodigoCategoria,
+    publicLocation: esquemaPuntoGeo,
+    recibidoEn: esquemaFecha,
+    fuenteOficial: esquemaFuenteOficial.nullable(),
+  }),
+  'PuntoBase',
+  'Un envío como punto propio, sin estado ni caducidad',
+);
+
+const camposDeVistas = {
+  instante: esquemaFecha,
+  caja: esquemaCaja,
+  procesada: z.array(esquemaPuntoProcesado),
+  base: z.array(esquemaPuntoBase),
+};
+
+export const esquemaVistas = conId(
+  z.object(camposDeVistas),
+  'Vistas',
+  'Vista procesada y vista base de una zona en un instante (ADR-007). Solo ubicaciones públicas',
+);
+
+export const esquemaInstantanea = conId(
+  z.object({ id: esquemaUuid, nombre: z.string(), creadaEn: esquemaFecha, ...camposDeVistas }),
+  'Instantanea',
+  'Instantánea congelada: el contenido de ambas vistas, inmutable',
+);
+
+export const esquemaListaDeInstantaneas = conId(
+  z.object({
+    instantaneas: z.array(
+      z.object({
+        id: esquemaUuid,
+        nombre: z.string(),
+        instante: esquemaFecha,
+        caja: esquemaCaja,
+        creadaEn: esquemaFecha,
+        puntosProcesada: z.number().int(),
+        puntosBase: z.number().int(),
+      }),
+    ),
+  }),
+  'ListaDeInstantaneas',
+  'Instantáneas congeladas, de la más reciente a la más antigua, sin sus puntos',
+);

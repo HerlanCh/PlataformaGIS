@@ -1,10 +1,10 @@
 import { validarEntrada } from '@gis/contracts';
-import { ErrorProhibido } from '@gis/shared-kernel';
 import { z } from 'zod';
 import type { RepositorioDeEvaluacion } from '../domain/ports.js';
 import type { EstadoDelRegistro } from '../domain/registro.js';
+import { esquemaRol, exigirModerador } from './entradas.js';
 
-const esquemaEntrada = z.object({ rolActor: z.enum(['CIUDADANO', 'MODERADOR']) });
+const esquemaEntrada = z.object({ rolActor: esquemaRol });
 
 export type EntradaConsultarEstadoDelRegistro = z.input<typeof esquemaEntrada>;
 
@@ -16,13 +16,7 @@ export class ConsultarEstadoDelRegistro {
   constructor(private readonly registro: RepositorioDeEvaluacion) {}
 
   async ejecutar(entrada: EntradaConsultarEstadoDelRegistro): Promise<EstadoDelRegistro> {
-    const { rolActor } = validarEntrada(esquemaEntrada, entrada);
-    if (rolActor !== 'MODERADOR') {
-      throw new ErrorProhibido(
-        'ROL_INSUFICIENTE',
-        'Solo un moderador puede consultar el registro de la evaluación',
-      );
-    }
+    exigirModerador(validarEntrada(esquemaEntrada, entrada).rolActor);
     return this.registro.estado();
   }
 }

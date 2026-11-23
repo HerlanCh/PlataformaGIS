@@ -13,10 +13,28 @@ export const evaluationModulo: DefinicionDeModulo = {
   },
 };
 
-// Interfaz pública para la raíz de composición: manejador, casos de uso y adaptador (ADR-007).
+// Interfaz pública para la raíz de composición: manejador, casos de uso y adaptadores (ADR-007).
 export { RegistrarEventoDeEvaluacion } from './application/registrar-evento-de-evaluacion.js';
 export { ConsultarEstadoDelRegistro } from './application/consultar-estado-del-registro.js';
 export type { EntradaConsultarEstadoDelRegistro } from './application/consultar-estado-del-registro.js';
+export { ConsultarVistas } from './application/consultar-vistas.js';
+export type { EntradaConsultarVistas } from './application/consultar-vistas.js';
+export {
+  CongelarInstantanea,
+  ListarInstantaneas,
+  ObtenerInstantanea,
+} from './application/instantaneas.js';
+export type {
+  DependenciasDeInstantaneas,
+  EntradaCongelarInstantanea,
+  EntradaListarInstantaneas,
+  EntradaObtenerInstantanea,
+} from './application/instantaneas.js';
 export { RepositorioEvaluacionPg } from './adapters/repositorio-evaluacion-pg.js';
-export type { RepositorioDeEvaluacion } from './domain/ports.js';
+export { RepositorioInstantaneasPg } from './adapters/repositorio-instantaneas-pg.js';
+export type { RepositorioDeEvaluacion, RepositorioDeInstantaneas } from './domain/ports.js';
+export { MAX_NOMBRE_DE_INSTANTANEA } from './domain/instantanea.js';
+export type { Instantanea, ResumenDeInstantanea } from './domain/instantanea.js';
+export { reconstruirVistas, VENTANA_BASE_MS } from './domain/vistas.js';
+export type { Caja, PuntoBase, PuntoProcesado, Vistas } from './domain/vistas.js';
 export type { Envio, EstadoDelRegistro, Transicion, VotoRegistrado } from './domain/registro.js';

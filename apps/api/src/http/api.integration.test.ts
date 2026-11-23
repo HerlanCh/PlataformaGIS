@@ -1,5 +1,5 @@
 import { BusDeEventosEnMemoria } from '@gis/event-bus';
-import { evaluationModulo } from '@gis/module-evaluation';
+import { evaluationModulo, RepositorioEvaluacionPg } from '@gis/module-evaluation';
 import { heatmapModulo } from '@gis/module-heatmap';
 import { identityModulo } from '@gis/module-identity';
 import { moderationModulo } from '@gis/module-moderation';
@@ -648,6 +648,119 @@ describeIntegration('API REST /v1', () => {
       await sinEvaluacion.close();
 
       expect(respuesta.statusCode).toBe(404);
+    });
+
+    it('HU-14: un moderador ve las vistas, congela una instantánea y la vuelve a leer igual', async () => {
+      const usuario = await registrar();
+      const moderador = await tokens.firmar({ idUsuario: usuario.idUsuario, rol: 'MODERADOR' });
+      const lugar = PuntoGeo.crear(-16.53, -68.08);
+      const idReporte = '6f1c2f0e-3b7a-4d2a-9c58-0000000e0001';
+      const recibido = new Date(Date.now() - 30 * 60_000);
+      const registro = new RepositorioEvaluacionPg(db);
+      await registro.registrarEnvio({
+        idEnvio: idReporte,
+        tipo: 'CREADO',
+        idReporte,
+        codigoCategoria: 'bloqueo',
+        publicLocation: { latitud: lugar.latitud, longitud: lugar.longitud },
+        fuenteOficial: null,
+        recibidoEn: recibido,
+      });
+      await registro.registrarTransicion({
+        idEvento: '6f1c2f0e-3b7a-4d2a-9c58-0000000e0101',
+        idReporte,
+        estado: 'ACTIVO',
+        caducaEn: new Date(recibido.getTime() + 360 * 60_000),
+        ocurridoEn: recibido,
+      });
+      const instante = new Date().toISOString();
+      const ventana = encodeURIComponent(bbox(lugar, 0.002));
+      const nombre = `E1-${Date.now()}`;
+
+      const vistas = await pedir({
+        method: 'GET',
+        url: `/v1/evaluacion/vistas?instante=${instante}&bbox=${ventana}`,
+        token: moderador.token,
+      });
+      const congelada = await pedir({
+        method: 'POST',
+        url: '/v1/evaluacion/instantaneas',
+        token: moderador.token,
+        payload: { nombre, instante, bbox: bbox(lugar, 0.002) },
+      });
+      const repetida = await pedir({
+        method: 'POST',
+        url: '/v1/evaluacion/instantaneas',
+        token: moderador.token,
+        payload: { nombre, instante, bbox: bbox(lugar, 0.002) },
+      });
+      const leida = await pedir({
+        method: 'GET',
+        url: `/v1/evaluacion/instantaneas/${congelada.json().id}`,
+        token: moderador.token,
+      });
+      const lista = await pedir({
+        method: 'GET',
+        url: '/v1/evaluacion/instantaneas',
+        token: moderador.token,
+      });
+
+      expect(vistas.statusCode).toBe(200);
+      expect(vistas.json().procesada).toEqual([
+        expect.objectContaining({ idReporte, estado: 'ACTIVO' }),
+      ]);
+      expect(vistas.json().base).toEqual([expect.objectContaining({ idEnvio: idReporte })]);
+      expect(congelada.statusCode).toBe(201);
+      expect(congelada.json()).toMatchObject({ nombre, procesada: vistas.json().procesada });
+      expect([repetida.statusCode, repetida.json().codigo]).toEqual([409, 'NOMBRE_REPETIDO']);
+      expect(leida.json()).toEqual(congelada.json());
+      expect(lista.json().instantaneas).toContainEqual(
+        expect.objectContaining({ nombre, puntosProcesada: 1, puntosBase: 1 }),
+      );
+    });
+
+    it('HU-14: un ciudadano recibe 403 en las vistas y las instantáneas; un instante futuro es 422', async () => {
+      const usuario = await registrar();
+      const moderador = await tokens.firmar({ idUsuario: usuario.idUsuario, rol: 'MODERADOR' });
+      const ventana = encodeURIComponent(bbox(plaza));
+      const futuro = new Date(Date.now() + 3_600_000).toISOString();
+
+      const respuestas = await Promise.all([
+        pedir({
+          method: 'GET',
+          url: `/v1/evaluacion/vistas?instante=${futuro}&bbox=${ventana}`,
+          token: usuario.token,
+        }),
+        pedir({ method: 'GET', url: '/v1/evaluacion/instantaneas', token: usuario.token }),
+        pedir({
+          method: 'GET',
+          url: '/v1/evaluacion/instantaneas/6f1c2f0e-3b7a-4d2a-9c58-0000000e0999',
+          token: usuario.token,
+        }),
+        pedir({
+          method: 'POST',
+          url: '/v1/evaluacion/instantaneas',
+          token: usuario.token,
+          payload: { nombre: 'E9', instante: futuro, bbox: bbox(plaza) },
+        }),
+      ]);
+      const futura = await pedir({
+        method: 'GET',
+        url: `/v1/evaluacion/vistas?instante=${futuro}&bbox=${ventana}`,
+        token: moderador.token,
+      });
+      const inexistente = await pedir({
+        method: 'GET',
+        url: '/v1/evaluacion/instantaneas/6f1c2f0e-3b7a-4d2a-9c58-0000000e0999',
+        token: moderador.token,
+      });
+
+      expect(respuestas.map((r) => r.statusCode)).toEqual([403, 403, 403, 403]);
+      expect([futura.statusCode, futura.json().codigo]).toEqual([422, 'INSTANTE_FUTURO']);
+      expect([inexistente.statusCode, inexistente.json().codigo]).toEqual([
+        404,
+        'INSTANTANEA_NO_ENCONTRADA',
+      ]);
     });
   });
 

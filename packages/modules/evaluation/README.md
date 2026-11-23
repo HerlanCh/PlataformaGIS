@@ -24,6 +24,10 @@ excepción del ADR-003. Solo registra lo que ocurre desde que se activa.
 | :---------------------------- | :------------------------------------------------------------------------------------------------------- |
 | `RegistrarEventoDeEvaluacion` | Manejador de los eventos del reporte y de los votos: registra cada envío, transición y voto una sola vez |
 | `ConsultarEstadoDelRegistro`  | Envíos registrados y hora del último (rol `MODERADOR`). La prueba de humo lo usa                         |
+| `ConsultarVistas`             | Reconstruye la vista procesada y la base de una zona en un instante no futuro (`reconstruirVistas`)      |
+| `CongelarInstantanea`         | Guarda ambas vistas de una zona en un instante como una instantánea inmutable, con nombre único          |
+| `ListarInstantaneas`          | Las instantáneas, con cuántos puntos tiene cada vista                                                    |
+| `ObtenerInstantanea`          | Una instantánea con sus puntos, tal como se congeló                                                      |
 
 ## Eventos que emite
 
@@ -42,12 +46,21 @@ _Ninguno._
 ## Interfaz pública
 
 `evaluationModulo`, los casos de uso y `RepositorioEvaluacionPg` en `index.ts`. Ningún otro módulo la importa: solo la
-raíz de composición (`apps/*`), que expone `GET /v1/evaluacion/estado`.
+raíz de composición (`apps/*`), que expone `/v1/evaluacion/estado`, `/v1/evaluacion/vistas` y
+`/v1/evaluacion/instantaneas` (todas con rol `MODERADOR`).
 
 ## Tablas propias
 
-`evaluacion_envios`, `evaluacion_transiciones` y `evaluacion_votos`. Detalle en
+`evaluacion_envios`, `evaluacion_transiciones`, `evaluacion_votos`, `evaluacion_instantaneas` y
+`evaluacion_puntos_instantanea` (inmutables por un disparador). Detalle en
 [`docs/diccionario-datos.md`](../../../docs/diccionario-datos.md).
+
+## Las dos vistas
+
+- **Procesada:** los reportes `ACTIVO` o `CONFIRMADO` con `caducaEn ≥ t`, como la consulta del mapa.
+- **Base:** cada envío de la comunidad recibido en `(t − 24 h, t]`, como un punto propio.
+- **Iguales en ambas:** fuera lo rechazado por moderación desde el rechazo, con sus duplicados; los incidentes
+  oficiales vigentes aparecen en las dos.
 
 ## Privacidad
 
