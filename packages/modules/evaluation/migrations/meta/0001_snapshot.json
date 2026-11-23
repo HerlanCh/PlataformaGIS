@@ -1,0 +1,470 @@
+{
+  "id": "babe005d-27d6-48b9-9b9a-4b8d593e4db2",
+  "prevId": "7038dfc3-7ebf-46d6-a0eb-bceb3979e526",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.evaluacion_envios": {
+      "name": "evaluacion_envios",
+      "schema": "",
+      "columns": {
+        "id_envio": {
+          "name": "id_envio",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id_reporte": {
+          "name": "id_reporte",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "codigo_categoria": {
+          "name": "codigo_categoria",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ubicacion_publica": {
+          "name": "ubicacion_publica",
+          "type": "geometry(point)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fuente_oficial": {
+          "name": "fuente_oficial",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recibido_en": {
+          "name": "recibido_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "evaluacion_envios_ubicacion_publica_idx": {
+          "name": "evaluacion_envios_ubicacion_publica_idx",
+          "columns": [
+            {
+              "expression": "ubicacion_publica",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gist",
+          "with": {}
+        },
+        "evaluacion_envios_recibido_en_idx": {
+          "name": "evaluacion_envios_recibido_en_idx",
+          "columns": [
+            {
+              "expression": "recibido_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "evaluacion_envios_id_reporte_idx": {
+          "name": "evaluacion_envios_id_reporte_idx",
+          "columns": [
+            {
+              "expression": "id_reporte",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "evaluacion_envios_tipo_check": {
+          "name": "evaluacion_envios_tipo_check",
+          "value": "\"evaluacion_envios\".\"tipo\" in ('CREADO', 'DUPLICADO')"
+        },
+        "evaluacion_envios_fuente_oficial_check": {
+          "name": "evaluacion_envios_fuente_oficial_check",
+          "value": "\"evaluacion_envios\".\"fuente_oficial\" is null or \"evaluacion_envios\".\"fuente_oficial\" in ('TRANSITO', 'ABC', 'MI_TELEFERICO', 'OTRA')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.evaluacion_instantaneas": {
+      "name": "evaluacion_instantaneas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "instante": {
+          "name": "instante",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "latitud_min": {
+          "name": "latitud_min",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "latitud_max": {
+          "name": "latitud_max",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "longitud_min": {
+          "name": "longitud_min",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "longitud_max": {
+          "name": "longitud_max",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creada_en": {
+          "name": "creada_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "evaluacion_instantaneas_nombre_unique": {
+          "name": "evaluacion_instantaneas_nombre_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "nombre"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "evaluacion_instantaneas_nombre_check": {
+          "name": "evaluacion_instantaneas_nombre_check",
+          "value": "char_length(\"evaluacion_instantaneas\".\"nombre\") between 1 and 40"
+        },
+        "evaluacion_instantaneas_caja_check": {
+          "name": "evaluacion_instantaneas_caja_check",
+          "value": "\"evaluacion_instantaneas\".\"latitud_min\" < \"evaluacion_instantaneas\".\"latitud_max\" and \"evaluacion_instantaneas\".\"longitud_min\" < \"evaluacion_instantaneas\".\"longitud_max\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.evaluacion_puntos_instantanea": {
+      "name": "evaluacion_puntos_instantanea",
+      "schema": "",
+      "columns": {
+        "id_instantanea": {
+          "name": "id_instantanea",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vista": {
+          "name": "vista",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id_punto": {
+          "name": "id_punto",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id_reporte": {
+          "name": "id_reporte",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "codigo_categoria": {
+          "name": "codigo_categoria",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ubicacion_publica": {
+          "name": "ubicacion_publica",
+          "type": "geometry(point)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "caduca_en": {
+          "name": "caduca_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recibido_en": {
+          "name": "recibido_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fuente_oficial": {
+          "name": "fuente_oficial",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "evaluacion_puntos_instantanea_id_instantanea_evaluacion_instantaneas_id_fk": {
+          "name": "evaluacion_puntos_instantanea_id_instantanea_evaluacion_instantaneas_id_fk",
+          "tableFrom": "evaluacion_puntos_instantanea",
+          "tableTo": "evaluacion_instantaneas",
+          "columnsFrom": [
+            "id_instantanea"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "evaluacion_puntos_instantanea_id_instantanea_vista_id_punto_pk": {
+          "name": "evaluacion_puntos_instantanea_id_instantanea_vista_id_punto_pk",
+          "columns": [
+            "id_instantanea",
+            "vista",
+            "id_punto"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "evaluacion_puntos_vista_check": {
+          "name": "evaluacion_puntos_vista_check",
+          "value": "\"evaluacion_puntos_instantanea\".\"vista\" in ('PROCESADA', 'BASE')"
+        },
+        "evaluacion_puntos_campos_check": {
+          "name": "evaluacion_puntos_campos_check",
+          "value": "(\"evaluacion_puntos_instantanea\".\"vista\" = 'PROCESADA' and \"evaluacion_puntos_instantanea\".\"estado\" in ('ACTIVO', 'CONFIRMADO') and \"evaluacion_puntos_instantanea\".\"caduca_en\" is not null and \"evaluacion_puntos_instantanea\".\"recibido_en\" is null)\n        or (\"evaluacion_puntos_instantanea\".\"vista\" = 'BASE' and \"evaluacion_puntos_instantanea\".\"estado\" is null and \"evaluacion_puntos_instantanea\".\"caduca_en\" is null and \"evaluacion_puntos_instantanea\".\"recibido_en\" is not null)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.evaluacion_transiciones": {
+      "name": "evaluacion_transiciones",
+      "schema": "",
+      "columns": {
+        "id_evento": {
+          "name": "id_evento",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "id_reporte": {
+          "name": "id_reporte",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "caduca_en": {
+          "name": "caduca_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ocurrido_en": {
+          "name": "ocurrido_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "evaluacion_transiciones_reporte_idx": {
+          "name": "evaluacion_transiciones_reporte_idx",
+          "columns": [
+            {
+              "expression": "id_reporte",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "ocurrido_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "evaluacion_transiciones_estado_check": {
+          "name": "evaluacion_transiciones_estado_check",
+          "value": "\"evaluacion_transiciones\".\"estado\" in ('ACTIVO', 'CONFIRMADO', 'RESUELTO', 'CADUCADO', 'RECHAZADO')"
+        },
+        "evaluacion_transiciones_caducidad_check": {
+          "name": "evaluacion_transiciones_caducidad_check",
+          "value": "(\"evaluacion_transiciones\".\"caduca_en\" is null) = (\"evaluacion_transiciones\".\"estado\" in ('RESUELTO', 'CADUCADO', 'RECHAZADO'))"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.evaluacion_votos": {
+      "name": "evaluacion_votos",
+      "schema": "",
+      "columns": {
+        "id_evento": {
+          "name": "id_evento",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "id_reporte": {
+          "name": "id_reporte",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "valor": {
+          "name": "valor",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "peso": {
+          "name": "peso",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "decision": {
+          "name": "decision",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ocurrido_en": {
+          "name": "ocurrido_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "evaluacion_votos_reporte_idx": {
+          "name": "evaluacion_votos_reporte_idx",
+          "columns": [
+            {
+              "expression": "id_reporte",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "ocurrido_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "evaluacion_votos_valor_check": {
+          "name": "evaluacion_votos_valor_check",
+          "value": "\"evaluacion_votos\".\"valor\" in ('CONFIRMACION', 'NEGACION')"
+        },
+        "evaluacion_votos_peso_check": {
+          "name": "evaluacion_votos_peso_check",
+          "value": "\"evaluacion_votos\".\"peso\" between 0 and 5"
+        },
+        "evaluacion_votos_decision_check": {
+          "name": "evaluacion_votos_decision_check",
+          "value": "\"evaluacion_votos\".\"decision\" in ('NINGUNA', 'CONFIRMAR', 'EXTENDER', 'RESOLVER')"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

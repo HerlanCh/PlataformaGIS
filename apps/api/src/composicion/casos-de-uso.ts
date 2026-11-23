@@ -1,7 +1,6 @@
 // Raíz de composición (roadmap 6.1): el único lugar donde se instancian los adaptadores y se
 // inyectan en los casos de uso. Las rutas HTTP solo reciben los casos de uso ya armados.
 import { randomUUID } from 'node:crypto';
-import { ConsultarEstadoDelRegistro, RepositorioEvaluacionPg } from '@gis/module-evaluation';
 import { ObtenerMapaDeCalor, ConsultaMapaCalorPg } from '@gis/module-heatmap';
 import { RegistrarDispositivo, RepositorioUsuariosPg } from '@gis/module-identity';
 import {
@@ -41,6 +40,8 @@ import {
 } from '@gis/module-verification';
 import type { Db, InterruptoresDeFunciones } from '@gis/platform';
 import type { GeneradorDeId, LimitadorDeFrecuencia, Reloj } from '@gis/shared-kernel';
+import { componerEvaluacion } from './evaluacion.js';
+import type { Evaluacion } from './evaluacion.js';
 import { componerMetricas, conActividad } from './metricas.js';
 import type { Metricas } from './metricas.js';
 import { consultaParaModeracion, consultaParaVerificacion, reputacionDelAutor } from './puentes.js';
@@ -71,9 +72,7 @@ export interface CasosDeUso {
   readonly evaluacion: Evaluacion | null;
 }
 
-export interface Evaluacion {
-  readonly estado: Caso<ConsultarEstadoDelRegistro>;
-}
+export type { Evaluacion } from './evaluacion.js';
 
 export interface Moderacion {
   readonly rechazar: Caso<RechazarReporte>;
@@ -199,9 +198,9 @@ export function componerCasosDeUso(infraestructura: Infraestructura): CasosDeUso
       () => new ConsultarDatosAbiertos(new RepositorioDatosAbiertosPg(db)),
     ),
     metricas: metricas?.consultar ?? null,
-    evaluacion: siActivo(interruptores.estaActivo('evaluation'), () => ({
-      estado: new ConsultarEstadoDelRegistro(new RepositorioEvaluacionPg(db)),
-    })),
+    evaluacion: siActivo(interruptores.estaActivo('evaluation'), () =>
+      componerEvaluacion(db, reloj, ids),
+    ),
     moderacion: siActivo(interruptores.estaActivo('moderation'), () => {
       const decision = {
         consultaDeReporte: consultaParaModeracion(reportes),

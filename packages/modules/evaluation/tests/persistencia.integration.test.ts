@@ -5,6 +5,7 @@ import type { TestDatabase } from '@gis/testing';
 import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { RepositorioEvaluacionPg } from '../adapters/repositorio-evaluacion-pg.js';
+import { RepositorioInstantaneasPg } from '../adapters/repositorio-instantaneas-pg.js';
 import { evaluationModulo } from '../index.js';
 
 const migraciones = evaluationModulo.migraciones!;
@@ -98,11 +99,127 @@ describeIntegration('registro de la evaluación en PostGIS', () => {
     ).rejects.toThrow();
   });
 
-  it('la migración se revierte sin dejar tablas', async () => {
+  it('HU-14: para las vistas trae los envíos de la zona que caben en alguna y las transiciones hasta el instante', async () => {
+    const t = minutos(2000);
+    const envio = (n: number, recibido: number, latitud = -16.5) => ({
+      idEnvio: id(n),
+      tipo: 'CREADO' as const,
+      idReporte: id(n),
+      codigoCategoria: 'infraestructura',
+      publicLocation: { latitud, longitud: -68.15 },
+      fuenteOficial: null,
+      recibidoEn: minutos(recibido),
+    });
+    const transicion = (evento: number, n: number, en: number, caduca: number) => ({
+      idEvento: id(evento),
+      idReporte: id(n),
+      estado: 'ACTIVO' as const,
+      caducaEn: minutos(caduca),
+      ocurridoEn: minutos(en),
+    });
+    // 40: reciente. 41: viejo pero vigente en t. 42: viejo y vencido. 43: fuera de la zona.
+    // 44: posterior al instante.
+    for (const e of [
+      envio(40, 1990),
+      envio(41, 100),
+      envio(42, 100),
+      envio(43, 1990, -16.9),
+      envio(44, 2010),
+    ]) {
+      await registro.registrarEnvio(e);
+    }
+    await registro.registrarTransicion(transicion(140, 41, 100, 2100));
+    await registro.registrarTransicion(transicion(141, 42, 100, 1500));
+    await registro.registrarTransicion(transicion(142, 41, 2050, 2200));
+
+    const caja = {
+      latitudMin: -16.51,
+      latitudMax: -16.49,
+      longitudMin: -68.16,
+      longitudMax: -68.14,
+    };
+    const { envios, transiciones } = await registro.buscarParaVistas(t, caja);
+
+    expect(envios.map((e) => e.idEnvio).toSorted()).toEqual([id(40), id(41)]);
+    expect(envios.find((e) => e.idEnvio === id(41))?.publicLocation).toEqual({
+      latitud: -16.5,
+      longitud: -68.15,
+    });
+    expect(transiciones.map((x) => x.idEvento)).toEqual([id(140)]);
+  });
+
+  it('HU-14: una instantánea se guarda con sus puntos, no admite otra con su nombre y no se puede modificar ni borrar', async () => {
+    const instantaneas = new RepositorioInstantaneasPg(db);
+    const caja = {
+      latitudMin: -16.51,
+      latitudMax: -16.49,
+      longitudMin: -68.16,
+      longitudMax: -68.14,
+    };
+    const punto = { latitud: -16.5, longitud: -68.15 };
+    const e1 = {
+      id: id(500),
+      nombre: 'E1',
+      instante: minutos(60),
+      caja,
+      creadaEn: minutos(90),
+      procesada: [
+        {
+          idReporte: id(1),
+          codigoCategoria: 'bloqueo',
+          publicLocation: punto,
+          estado: 'CONFIRMADO' as const,
+          caducaEn: minutos(540),
+          fuenteOficial: null,
+        },
+      ],
+      base: [
+        {
+          idEnvio: id(2),
+          idReporte: id(1),
+          codigoCategoria: 'bloqueo',
+          publicLocation: punto,
+          recibidoEn: minutos(5),
+          fuenteOficial: null,
+        },
+        {
+          idEnvio: id(1),
+          idReporte: id(1),
+          codigoCategoria: 'bloqueo',
+          publicLocation: punto,
+          recibidoEn: minutos(0),
+          fuenteOficial: null,
+        },
+      ],
+    };
+
+    await instantaneas.guardar(e1);
+
+    expect(await instantaneas.buscarPorId(e1.id)).toEqual(e1);
+    expect(await instantaneas.buscarPorId(id(501))).toBeNull();
+    expect(await instantaneas.listar()).toEqual([
+      expect.objectContaining({ id: e1.id, nombre: 'E1', puntosProcesada: 1, puntosBase: 2 }),
+    ]);
+    await expect(
+      instantaneas.guardar({ ...e1, id: id(502), procesada: [], base: [] }),
+    ).rejects.toMatchObject({ tipo: 'CONFLICTO', codigo: 'NOMBRE_REPETIDO' });
+    for (const sentencia of [
+      sql`update evaluacion_instantaneas set nombre = 'otra'`,
+      sql`delete from evaluacion_puntos_instantanea`,
+      sql`delete from evaluacion_instantaneas`,
+    ]) {
+      await expect(db.execute(sentencia)).rejects.toThrow();
+    }
+    expect((await instantaneas.buscarPorId(e1.id))?.base).toHaveLength(2);
+  });
+
+  it('las migraciones se revierten sin dejar tablas ni la función del disparador', async () => {
+    expect(await revertirUltima(db, migraciones)).toBe('0001_instantaneas');
     expect(await revertirUltima(db, migraciones)).toBe('0000_registro_evaluacion');
 
     const { rows } = await bd.pool.query(
-      `select 1 from information_schema.tables where table_name like 'evaluacion\\_%'`,
+      `select 1 from information_schema.tables where table_name like 'evaluacion\\_%'
+       union all select 1 from pg_proc where proname = 'evaluacion_instantanea_inmutable'`,
     );
     expect(rows).toEqual([]);
     await migrarTodo(db, [migracionesDePlataforma, migraciones]);

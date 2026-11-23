@@ -2178,6 +2178,91 @@ export interface components {
       enviosRegistrados: number;
       ultimoEnvioEn: string | null;
     };
+    /** @description Nombre único, instante (no futuro) y zona de la instantánea que se congela */
+    NuevaInstantaneaInput: {
+      /** @example E1 */
+      nombre: string;
+      /** Format: date-time */
+      instante: string;
+      /**
+       * @description Ventana como lonMin,latMin,lonMax,latMax
+       * @example -68.16,-16.51,-68.14,-16.49
+       */
+      bbox: string;
+    };
+    /** @description Zona de las vistas */
+    CajaInput: {
+      latitudMin: number;
+      latitudMax: number;
+      longitudMin: number;
+      longitudMax: number;
+    };
+    /** @description Un reporte que el mapa mostraba en el instante, con su estado */
+    PuntoProcesadoInput: {
+      /** Format: uuid */
+      idReporte: string;
+      codigoCategoria: string;
+      publicLocation: {
+        latitud: number;
+        longitud: number;
+      };
+      /** @enum {string} */
+      estado: 'ACTIVO' | 'CONFIRMADO';
+      /** Format: date-time */
+      caducaEn: string;
+      fuenteOficial: ('TRANSITO' | 'ABC' | 'MI_TELEFERICO' | 'OTRA') | null;
+    };
+    /** @description Un envío como punto propio, sin estado ni caducidad */
+    PuntoBaseInput: {
+      /** Format: uuid */
+      idEnvio: string;
+      /** Format: uuid */
+      idReporte: string;
+      codigoCategoria: string;
+      publicLocation: {
+        latitud: number;
+        longitud: number;
+      };
+      /** Format: date-time */
+      recibidoEn: string;
+      fuenteOficial: ('TRANSITO' | 'ABC' | 'MI_TELEFERICO' | 'OTRA') | null;
+    };
+    /** @description Vista procesada y vista base de una zona en un instante (ADR-007). Solo ubicaciones públicas */
+    VistasInput: {
+      /** Format: date-time */
+      instante: string;
+      caja: components['schemas']['CajaInput'];
+      procesada: components['schemas']['PuntoProcesadoInput'][];
+      base: components['schemas']['PuntoBaseInput'][];
+    };
+    /** @description Instantánea congelada: el contenido de ambas vistas, inmutable */
+    InstantaneaInput: {
+      /** Format: uuid */
+      id: string;
+      nombre: string;
+      /** Format: date-time */
+      creadaEn: string;
+      /** Format: date-time */
+      instante: string;
+      caja: components['schemas']['CajaInput'];
+      procesada: components['schemas']['PuntoProcesadoInput'][];
+      base: components['schemas']['PuntoBaseInput'][];
+    };
+    /** @description Instantáneas congeladas, de la más reciente a la más antigua, sin sus puntos */
+    ListaDeInstantaneasInput: {
+      instantaneas: {
+        /** Format: uuid */
+        id: string;
+        nombre: string;
+        /** Format: date-time */
+        instante: string;
+        caja: components['schemas']['CajaInput'];
+        /** Format: date-time */
+        creadaEn: string;
+        puntosProcesada: number;
+        puntosBase: number;
+      }[];
+    };
     /** @description Error en formato RFC 7807 */
     Problema: {
       type: string;
@@ -2414,6 +2499,91 @@ export interface components {
     EstadoDelRegistro: {
       enviosRegistrados: number;
       ultimoEnvioEn: string | null;
+    };
+    /** @description Nombre único, instante (no futuro) y zona de la instantánea que se congela */
+    NuevaInstantanea: {
+      /** @example E1 */
+      nombre: string;
+      /** Format: date-time */
+      instante: string;
+      /**
+       * @description Ventana como lonMin,latMin,lonMax,latMax
+       * @example -68.16,-16.51,-68.14,-16.49
+       */
+      bbox: unknown;
+    };
+    /** @description Zona de las vistas */
+    Caja: {
+      latitudMin: number;
+      latitudMax: number;
+      longitudMin: number;
+      longitudMax: number;
+    };
+    /** @description Un reporte que el mapa mostraba en el instante, con su estado */
+    PuntoProcesado: {
+      /** Format: uuid */
+      idReporte: string;
+      codigoCategoria: string;
+      publicLocation: {
+        latitud: number;
+        longitud: number;
+      };
+      /** @enum {string} */
+      estado: 'ACTIVO' | 'CONFIRMADO';
+      /** Format: date-time */
+      caducaEn: string;
+      fuenteOficial: ('TRANSITO' | 'ABC' | 'MI_TELEFERICO' | 'OTRA') | null;
+    };
+    /** @description Un envío como punto propio, sin estado ni caducidad */
+    PuntoBase: {
+      /** Format: uuid */
+      idEnvio: string;
+      /** Format: uuid */
+      idReporte: string;
+      codigoCategoria: string;
+      publicLocation: {
+        latitud: number;
+        longitud: number;
+      };
+      /** Format: date-time */
+      recibidoEn: string;
+      fuenteOficial: ('TRANSITO' | 'ABC' | 'MI_TELEFERICO' | 'OTRA') | null;
+    };
+    /** @description Vista procesada y vista base de una zona en un instante (ADR-007). Solo ubicaciones públicas */
+    Vistas: {
+      /** Format: date-time */
+      instante: string;
+      caja: components['schemas']['Caja'];
+      procesada: components['schemas']['PuntoProcesado'][];
+      base: components['schemas']['PuntoBase'][];
+    };
+    /** @description Instantánea congelada: el contenido de ambas vistas, inmutable */
+    Instantanea: {
+      /** Format: uuid */
+      id: string;
+      nombre: string;
+      /** Format: date-time */
+      creadaEn: string;
+      /** Format: date-time */
+      instante: string;
+      caja: components['schemas']['Caja'];
+      procesada: components['schemas']['PuntoProcesado'][];
+      base: components['schemas']['PuntoBase'][];
+    };
+    /** @description Instantáneas congeladas, de la más reciente a la más antigua, sin sus puntos */
+    ListaDeInstantaneas: {
+      instantaneas: {
+        /** Format: uuid */
+        id: string;
+        nombre: string;
+        /** Format: date-time */
+        instante: string;
+        caja: components['schemas']['Caja'];
+        /** Format: date-time */
+        creadaEn: string;
+        puntosProcesada: number;
+        puntosBase: number;
+      }[];
     };
   };
   responses: never;

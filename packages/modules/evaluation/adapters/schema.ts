@@ -5,6 +5,7 @@ import {
   geometry,
   index,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uuid,
@@ -87,5 +88,68 @@ export const evaluacionVotos = pgTable(
       sql`${tabla.decision} in ('NINGUNA', 'CONFIRMAR', 'EXTENDER', 'RESOLVER')`,
     ),
     index('evaluacion_votos_reporte_idx').on(tabla.idReporte, tabla.ocurridoEn),
+  ],
+);
+
+/**
+ * Instantáneas congeladas (ADR-007). Inmutables: un disparador impide modificarlas o borrarlas
+ * (migración `0001_instantaneas`).
+ */
+export const evaluacionInstantaneas = pgTable(
+  'evaluacion_instantaneas',
+  {
+    id: uuid('id').primaryKey(),
+    nombre: text('nombre').notNull().unique(),
+    instante: timestamp('instante', { withTimezone: true }).notNull(),
+    latitudMin: doublePrecision('latitud_min').notNull(),
+    latitudMax: doublePrecision('latitud_max').notNull(),
+    longitudMin: doublePrecision('longitud_min').notNull(),
+    longitudMax: doublePrecision('longitud_max').notNull(),
+    creadaEn: timestamp('creada_en', { withTimezone: true }).notNull(),
+  },
+  (tabla) => [
+    check(
+      'evaluacion_instantaneas_nombre_check',
+      sql`char_length(${tabla.nombre}) between 1 and 40`,
+    ),
+    check(
+      'evaluacion_instantaneas_caja_check',
+      sql`${tabla.latitudMin} < ${tabla.latitudMax} and ${tabla.longitudMin} < ${tabla.longitudMax}`,
+    ),
+  ],
+);
+
+/**
+ * Los puntos de cada vista de una instantánea. En la procesada, `id_punto` es el reporte y lleva
+ * estado y caducidad; en la base, es el envío y lleva su hora de recepción.
+ */
+export const evaluacionPuntosInstantanea = pgTable(
+  'evaluacion_puntos_instantanea',
+  {
+    idInstantanea: uuid('id_instantanea')
+      .notNull()
+      .references(() => evaluacionInstantaneas.id),
+    vista: text('vista').notNull(),
+    idPunto: uuid('id_punto').notNull(),
+    idReporte: uuid('id_reporte').notNull(),
+    codigoCategoria: text('codigo_categoria').notNull(),
+    publicLocation: geometry('ubicacion_publica', {
+      type: 'point',
+      mode: 'xy',
+      srid: 4326,
+    }).notNull(),
+    estado: text('estado'),
+    caducaEn: timestamp('caduca_en', { withTimezone: true }),
+    recibidoEn: timestamp('recibido_en', { withTimezone: true }),
+    fuenteOficial: text('fuente_oficial'),
+  },
+  (tabla) => [
+    primaryKey({ columns: [tabla.idInstantanea, tabla.vista, tabla.idPunto] }),
+    check('evaluacion_puntos_vista_check', sql`${tabla.vista} in ('PROCESADA', 'BASE')`),
+    check(
+      'evaluacion_puntos_campos_check',
+      sql`(${tabla.vista} = 'PROCESADA' and ${tabla.estado} in ('ACTIVO', 'CONFIRMADO') and ${tabla.caducaEn} is not null and ${tabla.recibidoEn} is null)
+        or (${tabla.vista} = 'BASE' and ${tabla.estado} is null and ${tabla.caducaEn} is null and ${tabla.recibidoEn} is not null)`,
+    ),
   ],
 );

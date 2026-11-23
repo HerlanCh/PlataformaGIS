@@ -356,6 +356,38 @@ Cada cambio de estado de un reporte, con la hora del evento. La creación es la 
 
 **Índices:** `evaluacion_votos_reporte_idx`, B-tree sobre (`id_reporte`, `ocurrido_en`).
 
+### `evaluacion_instantaneas`
+
+Una zona en un instante, congelada por un moderador (escenarios E1 y E2). Un disparador
+(`evaluacion_instantanea_inmutable`) rechaza todo `UPDATE` o `DELETE` en esta tabla y en la de sus puntos.
+
+| Columna | Tipo | Restricción | Descripción |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | PK | Instantánea |
+| `nombre` | `text` | NOT NULL, UNIQUE, `CHECK` de 1 a 40 caracteres | `E1`, `E2`... |
+| `instante` | `timestamptz` | NOT NULL | Instante reconstruido |
+| `latitud_min`, `latitud_max`, `longitud_min`, `longitud_max` | `double precision` | NOT NULL, `CHECK` mínimo < máximo | Zona |
+| `creada_en` | `timestamptz` | NOT NULL | Cuándo se congeló |
+
+### `evaluacion_puntos_instantanea`
+
+Los puntos de ambas vistas de una instantánea. La clave foránea a `evaluacion_instantaneas` es interna del módulo.
+
+| Columna | Tipo | Restricción | Descripción |
+| :--- | :--- | :--- | :--- |
+| `id_instantanea` | `uuid` | PK compuesta, FK a `evaluacion_instantaneas.id` | Instantánea |
+| `vista` | `text` | PK compuesta, `CHECK` en (`PROCESADA`, `BASE`) | Vista del punto |
+| `id_punto` | `uuid` | PK compuesta | El reporte (procesada) o el envío (base) |
+| `id_reporte` | `uuid` | NOT NULL. Referencia lógica a `reportes.id` | Reporte del punto |
+| `codigo_categoria` | `text` | NOT NULL | Categoría |
+| `ubicacion_publica` | `geometry(Point, 4326)` | NOT NULL | Ubicación pública |
+| `estado` | `text` | Solo en la procesada (`ACTIVO` o `CONFIRMADO`) | Estado en el instante |
+| `caduca_en` | `timestamptz` | Solo en la procesada | Caducidad en el instante |
+| `recibido_en` | `timestamptz` | Solo en la base | Hora del envío |
+| `fuente_oficial` | `text` | Nulo | Fuente de un incidente oficial |
+
+Un `CHECK` (`evaluacion_puntos_campos_check`) exige los campos de cada vista y prohíbe los de la otra.
+
 ## Migraciones
 
 | Conjunto | Migración | Contenido |
@@ -378,11 +410,13 @@ Cada cambio de estado de un reporte, con la hora del evento. La creación es la 
 | `open-data` | `0000_datos_abiertos` | `datos_abiertos_reportes` y su índice |
 | `metrics` | `0000_metricas_piloto` | `metricas_reportes`, `metricas_actividad`, `metricas_diarias` (Fase 13) |
 | `evaluation` | `0000_registro_evaluacion` | `evaluacion_envios`, `evaluacion_transiciones`, `evaluacion_votos` y sus índices (ADR-007) |
+| `evaluation` | `0001_instantaneas` | `evaluacion_instantaneas`, `evaluacion_puntos_instantanea` y el disparador que las hace inmutables |
 
 Cada migración tiene su reversa escrita a mano en `<nombre>.down.sql`, porque Drizzle Kit solo genera el avance. Las pruebas de integración aplican, revierten y vuelven a aplicar cada conjunto contra PostGIS real.
 
-Tres migraciones se corrigieron a mano tras generarlas, y lo indican en su primera línea:
+Cuatro migraciones se corrigieron a mano tras generarlas, y lo indican en su primera línea:
 
-- `reports/0000_categorias_reportes` y `evaluation/0000_registro_evaluacion`: Drizzle Kit escribe `geometry(point)`
-  sin SRID; se fijó `geometry(Point, 4326)`.
+- `reports/0000_categorias_reportes`, `evaluation/0000_registro_evaluacion` y `evaluation/0001_instantaneas`:
+  Drizzle Kit escribe `geometry(point)` sin SRID; se fijó `geometry(Point, 4326)`. La última agrega a mano el
+  disparador de inmutabilidad.
 - `subscriptions/0000_zonas_suscritas`: Drizzle Kit entrecomilla el tipo personalizado; `geography(Point, 4326)` va sin comillas.

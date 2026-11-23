@@ -958,6 +958,325 @@
         ],
         "description": "Envíos registrados por el módulo de evaluación y hora del último, sin datos personales"
       },
+      "NuevaInstantaneaInput": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "example": "E1"
+          },
+          "instante": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "bbox": {
+            "description": "Ventana como lonMin,latMin,lonMax,latMax",
+            "example": "-68.16,-16.51,-68.14,-16.49",
+            "type": "string",
+            "pattern": "^-?\\d+(\\.\\d+)?(,-?\\d+(\\.\\d+)?){3}$"
+          }
+        },
+        "required": [
+          "nombre",
+          "instante",
+          "bbox"
+        ],
+        "description": "Nombre único, instante (no futuro) y zona de la instantánea que se congela"
+      },
+      "CajaInput": {
+        "type": "object",
+        "properties": {
+          "latitudMin": {
+            "type": "number"
+          },
+          "latitudMax": {
+            "type": "number"
+          },
+          "longitudMin": {
+            "type": "number"
+          },
+          "longitudMax": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "latitudMin",
+          "latitudMax",
+          "longitudMin",
+          "longitudMax"
+        ],
+        "description": "Zona de las vistas"
+      },
+      "PuntoProcesadoInput": {
+        "type": "object",
+        "properties": {
+          "idReporte": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "codigoCategoria": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "publicLocation": {
+            "type": "object",
+            "properties": {
+              "latitud": {
+                "type": "number"
+              },
+              "longitud": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "latitud",
+              "longitud"
+            ]
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "ACTIVO",
+              "CONFIRMADO"
+            ]
+          },
+          "caducaEn": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "fuenteOficial": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "TRANSITO",
+                  "ABC",
+                  "MI_TELEFERICO",
+                  "OTRA"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "idReporte",
+          "codigoCategoria",
+          "publicLocation",
+          "estado",
+          "caducaEn",
+          "fuenteOficial"
+        ],
+        "description": "Un reporte que el mapa mostraba en el instante, con su estado"
+      },
+      "PuntoBaseInput": {
+        "type": "object",
+        "properties": {
+          "idEnvio": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "idReporte": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "codigoCategoria": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "publicLocation": {
+            "type": "object",
+            "properties": {
+              "latitud": {
+                "type": "number"
+              },
+              "longitud": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "latitud",
+              "longitud"
+            ]
+          },
+          "recibidoEn": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "fuenteOficial": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "TRANSITO",
+                  "ABC",
+                  "MI_TELEFERICO",
+                  "OTRA"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "idEnvio",
+          "idReporte",
+          "codigoCategoria",
+          "publicLocation",
+          "recibidoEn",
+          "fuenteOficial"
+        ],
+        "description": "Un envío como punto propio, sin estado ni caducidad"
+      },
+      "VistasInput": {
+        "type": "object",
+        "properties": {
+          "instante": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "caja": {
+            "$ref": "#/components/schemas/CajaInput"
+          },
+          "procesada": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PuntoProcesadoInput"
+            }
+          },
+          "base": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PuntoBaseInput"
+            }
+          }
+        },
+        "required": [
+          "instante",
+          "caja",
+          "procesada",
+          "base"
+        ],
+        "description": "Vista procesada y vista base de una zona en un instante (ADR-007). Solo ubicaciones públicas"
+      },
+      "InstantaneaInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "creadaEn": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "instante": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "caja": {
+            "$ref": "#/components/schemas/CajaInput"
+          },
+          "procesada": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PuntoProcesadoInput"
+            }
+          },
+          "base": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PuntoBaseInput"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "creadaEn",
+          "instante",
+          "caja",
+          "procesada",
+          "base"
+        ],
+        "description": "Instantánea congelada: el contenido de ambas vistas, inmutable"
+      },
+      "ListaDeInstantaneasInput": {
+        "type": "object",
+        "properties": {
+          "instantaneas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nombre": {
+                  "type": "string"
+                },
+                "instante": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                },
+                "caja": {
+                  "$ref": "#/components/schemas/CajaInput"
+                },
+                "creadaEn": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                },
+                "puntosProcesada": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "puntosBase": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "id",
+                "nombre",
+                "instante",
+                "caja",
+                "creadaEn",
+                "puntosProcesada",
+                "puntosBase"
+              ]
+            }
+          }
+        },
+        "required": [
+          "instantaneas"
+        ],
+        "description": "Instantáneas congeladas, de la más reciente a la más antigua, sin sus puntos"
+      },
       "Problema": {
         "type": "object",
         "properties": {
@@ -1941,6 +2260,333 @@
         ],
         "additionalProperties": false,
         "description": "Envíos registrados por el módulo de evaluación y hora del último, sin datos personales"
+      },
+      "NuevaInstantanea": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "example": "E1"
+          },
+          "instante": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "bbox": {
+            "description": "Ventana como lonMin,latMin,lonMax,latMax",
+            "example": "-68.16,-16.51,-68.14,-16.49"
+          }
+        },
+        "required": [
+          "nombre",
+          "instante",
+          "bbox"
+        ],
+        "additionalProperties": false,
+        "description": "Nombre único, instante (no futuro) y zona de la instantánea que se congela"
+      },
+      "Caja": {
+        "type": "object",
+        "properties": {
+          "latitudMin": {
+            "type": "number"
+          },
+          "latitudMax": {
+            "type": "number"
+          },
+          "longitudMin": {
+            "type": "number"
+          },
+          "longitudMax": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "latitudMin",
+          "latitudMax",
+          "longitudMin",
+          "longitudMax"
+        ],
+        "additionalProperties": false,
+        "description": "Zona de las vistas"
+      },
+      "PuntoProcesado": {
+        "type": "object",
+        "properties": {
+          "idReporte": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "codigoCategoria": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "publicLocation": {
+            "type": "object",
+            "properties": {
+              "latitud": {
+                "type": "number"
+              },
+              "longitud": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "latitud",
+              "longitud"
+            ],
+            "additionalProperties": false
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "ACTIVO",
+              "CONFIRMADO"
+            ]
+          },
+          "caducaEn": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "fuenteOficial": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "TRANSITO",
+                  "ABC",
+                  "MI_TELEFERICO",
+                  "OTRA"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "idReporte",
+          "codigoCategoria",
+          "publicLocation",
+          "estado",
+          "caducaEn",
+          "fuenteOficial"
+        ],
+        "additionalProperties": false,
+        "description": "Un reporte que el mapa mostraba en el instante, con su estado"
+      },
+      "PuntoBase": {
+        "type": "object",
+        "properties": {
+          "idEnvio": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "idReporte": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "codigoCategoria": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "publicLocation": {
+            "type": "object",
+            "properties": {
+              "latitud": {
+                "type": "number"
+              },
+              "longitud": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "latitud",
+              "longitud"
+            ],
+            "additionalProperties": false
+          },
+          "recibidoEn": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "fuenteOficial": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "TRANSITO",
+                  "ABC",
+                  "MI_TELEFERICO",
+                  "OTRA"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "idEnvio",
+          "idReporte",
+          "codigoCategoria",
+          "publicLocation",
+          "recibidoEn",
+          "fuenteOficial"
+        ],
+        "additionalProperties": false,
+        "description": "Un envío como punto propio, sin estado ni caducidad"
+      },
+      "Vistas": {
+        "type": "object",
+        "properties": {
+          "instante": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "caja": {
+            "$ref": "#/components/schemas/Caja"
+          },
+          "procesada": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PuntoProcesado"
+            }
+          },
+          "base": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PuntoBase"
+            }
+          }
+        },
+        "required": [
+          "instante",
+          "caja",
+          "procesada",
+          "base"
+        ],
+        "additionalProperties": false,
+        "description": "Vista procesada y vista base de una zona en un instante (ADR-007). Solo ubicaciones públicas"
+      },
+      "Instantanea": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "creadaEn": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "instante": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "caja": {
+            "$ref": "#/components/schemas/Caja"
+          },
+          "procesada": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PuntoProcesado"
+            }
+          },
+          "base": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PuntoBase"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "creadaEn",
+          "instante",
+          "caja",
+          "procesada",
+          "base"
+        ],
+        "additionalProperties": false,
+        "description": "Instantánea congelada: el contenido de ambas vistas, inmutable"
+      },
+      "ListaDeInstantaneas": {
+        "type": "object",
+        "properties": {
+          "instantaneas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nombre": {
+                  "type": "string"
+                },
+                "instante": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                },
+                "caja": {
+                  "$ref": "#/components/schemas/Caja"
+                },
+                "creadaEn": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                },
+                "puntosProcesada": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "puntosBase": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "id",
+                "nombre",
+                "instante",
+                "caja",
+                "creadaEn",
+                "puntosProcesada",
+                "puntosBase"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "instantaneas"
+        ],
+        "additionalProperties": false,
+        "description": "Instantáneas congeladas, de la más reciente a la más antigua, sin sus puntos"
       }
     }
   },
