@@ -54,7 +54,9 @@ function tomarAlAzar<T>(elementos: readonly T[], cantidad: number, azar: () => n
  * confirmados, al azar. `azar` devuelve un número en `[0, 1)`.
  */
 export function sortear(reportes: readonly ReporteVerificable[], azar: () => number): Sorteo {
-  const categorias = [...new Set(reportes.map((r) => r.codigoCategoria))].toSorted();
+  const categorias = [...new Set(reportes.map((r) => r.codigoCategoria))].toSorted((a, b) =>
+    a.localeCompare(b),
+  );
   const confirmados: ReporteVerificable[] = [];
   const noConfirmados: ReporteVerificable[] = [];
   for (const categoria of categorias) {
