@@ -1,3 +1,10 @@
+# [2.19.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.18.0...v2.19.0) (2026-11-23)
+
+
+### Features
+
+* **evaluation:** vistas reconstruidas e instantáneas inmutables (ADR-007) ([cb72ced](https://github.com/HerlanCh/PlataformaGIS/commit/cb72cede76cbf1d521ad4ba1b1da16b30d6b5d39))
+
 # [2.18.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.17.1...v2.18.0) (2026-11-22)
 
 
