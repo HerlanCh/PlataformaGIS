@@ -15,6 +15,13 @@
       "when": 1795384546768,
       "tag": "0001_instantaneas",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795472294310,
+      "tag": "0002_herramientas",
+      "breakpoints": true
     }
   ]
 }

@@ -2263,6 +2263,176 @@ export interface components {
         puntosBase: number;
       }[];
     };
+    /** @description Código anónimo del participante (P y dos o tres dígitos) y su secuencia contrabalanceada */
+    NuevaSesionInput: {
+      /** @example P07 */
+      codigoParticipante: string;
+      secuencia: 1 | 2 | 3 | 4;
+    };
+    /** @description Una tarea cronometrada: vista, escenario, tiempo usado (máximo 180 s) y puntos marcados */
+    TareaInput: {
+      /** Format: uuid */
+      id: string;
+      orden: 1 | 2;
+      /** @enum {string} */
+      vista: 'PROCESADA' | 'BASE';
+      /** @enum {string} */
+      escenario: 'E1' | 'E2';
+      /** Format: uuid */
+      idInstantanea: string;
+      iniciadaEn: string | null;
+      terminadaEn: string | null;
+      duracionMs: number | null;
+      agotada: boolean | null;
+      marcas: {
+        /** Format: uuid */
+        idPunto: string;
+        msDesdeInicio: number;
+      }[];
+    };
+    /** @description Sesión de un participante con sus dos tareas */
+    SesionInput: {
+      /** Format: uuid */
+      id: string;
+      codigoParticipante: string;
+      secuencia: number;
+      /** Format: date-time */
+      creadaEn: string;
+      tareas: components['schemas']['TareaInput'][];
+    };
+    /** @description Sesiones de la tarea cronometrada, de la más reciente a la más antigua */
+    ListaDeSesionesInput: {
+      sesiones: components['schemas']['SesionInput'][];
+    };
+    /** @description Lo que ve el participante: los puntos de la instantánea, sin decir qué vista es */
+    TareaEnCursoInput: {
+      /** Format: uuid */
+      idTarea: string;
+      orden: 1 | 2;
+      /** Format: date-time */
+      iniciadaEn: string;
+      duracionMaximaMs: number;
+      caja: components['schemas']['CajaInput'];
+      puntos: {
+        /** Format: uuid */
+        idPunto: string;
+        codigoCategoria: string;
+        publicLocation: {
+          latitud: number;
+          longitud: number;
+        };
+        estado: ('ACTIVO' | 'CONFIRMADO') | null;
+        fuenteOficial: ('TRANSITO' | 'ABC' | 'MI_TELEFERICO' | 'OTRA') | null;
+      }[];
+    };
+    /** @description Puntos marcados, con los milisegundos desde el inicio de la tarea */
+    FinDeTareaInput: {
+      marcas: {
+        /** Format: uuid */
+        idPunto: string;
+        msDesdeInicio: number;
+      }[];
+    };
+    /** @description Envíos de la comunidad del periodo, sin el reporte al que los asignó la plataforma, y las etiquetas propias */
+    EnviosParaEtiquetarInput: {
+      envios: {
+        /** Format: uuid */
+        idEnvio: string;
+        codigoCategoria: string;
+        publicLocation: {
+          latitud: number;
+          longitud: number;
+        };
+        /** Format: date-time */
+        recibidoEn: string;
+      }[];
+      etiquetas: {
+        /** @enum {string} */
+        evaluador: 'A' | 'B' | 'CONSENSO';
+        /** Format: uuid */
+        idEnvio: string;
+        grupo: string;
+      }[];
+    };
+    /** @description Evaluador y grupo (incidente) de cada envío; un grupo nulo quita la etiqueta */
+    AsignacionesInput: {
+      /** @enum {string} */
+      evaluador: 'A' | 'B' | 'CONSENSO';
+      asignaciones: {
+        /** Format: uuid */
+        idEnvio: string;
+        grupo: string | null;
+      }[];
+    };
+    /** @description Kappa de Cohen entre los evaluadores A y B sobre los pares candidatos */
+    AcuerdoInput: {
+      kappa: number | null;
+      kappaMinimo: number;
+      paresCandidatos: number;
+      paresEvaluados: number;
+      acuerdoObservado: number | null;
+      desacuerdos: {
+        /** Format: uuid */
+        idEnvioA: string;
+        /** Format: uuid */
+        idEnvioB: string;
+        mismoSegunA: boolean;
+        mismoSegunB: boolean;
+      }[];
+    };
+    /** @description Hasta 5 alertas confirmadas y 5 reportes no confirmados por categoría, al azar */
+    SorteoInput: {
+      confirmados: {
+        /** Format: uuid */
+        idReporte: string;
+        codigoCategoria: string;
+        publicLocation: {
+          latitud: number;
+          longitud: number;
+        };
+        /** Format: date-time */
+        creadoEn: string;
+        confirmado: boolean;
+      }[];
+      noConfirmados: {
+        /** Format: uuid */
+        idReporte: string;
+        codigoCategoria: string;
+        publicLocation: {
+          latitud: number;
+          longitud: number;
+        };
+        /** Format: date-time */
+        creadoEn: string;
+        confirmado: boolean;
+      }[];
+    };
+    /** @description Resultado, hora de fin (solo si fue real) y fuente. El detalle nunca describe a personas */
+    NuevaVerificacionInput: {
+      /** @enum {string} */
+      resultado: 'REAL' | 'FALSO' | 'NO_VERIFICABLE';
+      finEn: string | null;
+      /** @enum {string} */
+      fuente: 'CAMPO' | 'SECUNDARIA';
+      detalleFuente: string | null;
+    };
+    /** @description Referencia independiente de veracidad y hora de fin de un reporte */
+    VerificacionInput: {
+      /** @enum {string} */
+      resultado: 'REAL' | 'FALSO' | 'NO_VERIFICABLE';
+      finEn: string | null;
+      /** @enum {string} */
+      fuente: 'CAMPO' | 'SECUNDARIA';
+      detalleFuente: string | null;
+      /** Format: uuid */
+      idReporte: string;
+      /** Format: date-time */
+      registradaEn: string;
+    };
+    /** @description Verificaciones registradas, de la más reciente a la más antigua */
+    ListaDeVerificacionesInput: {
+      verificaciones: components['schemas']['VerificacionInput'][];
+    };
     /** @description Error en formato RFC 7807 */
     Problema: {
       type: string;
@@ -2584,6 +2754,176 @@ export interface components {
         puntosProcesada: number;
         puntosBase: number;
       }[];
+    };
+    /** @description Código anónimo del participante (P y dos o tres dígitos) y su secuencia contrabalanceada */
+    NuevaSesion: {
+      /** @example P07 */
+      codigoParticipante: string;
+      secuencia: 1 | 2 | 3 | 4;
+    };
+    /** @description Una tarea cronometrada: vista, escenario, tiempo usado (máximo 180 s) y puntos marcados */
+    Tarea: {
+      /** Format: uuid */
+      id: string;
+      orden: 1 | 2;
+      /** @enum {string} */
+      vista: 'PROCESADA' | 'BASE';
+      /** @enum {string} */
+      escenario: 'E1' | 'E2';
+      /** Format: uuid */
+      idInstantanea: string;
+      iniciadaEn: string | null;
+      terminadaEn: string | null;
+      duracionMs: number | null;
+      agotada: boolean | null;
+      marcas: {
+        /** Format: uuid */
+        idPunto: string;
+        msDesdeInicio: number;
+      }[];
+    };
+    /** @description Sesión de un participante con sus dos tareas */
+    Sesion: {
+      /** Format: uuid */
+      id: string;
+      codigoParticipante: string;
+      secuencia: number;
+      /** Format: date-time */
+      creadaEn: string;
+      tareas: components['schemas']['Tarea'][];
+    };
+    /** @description Sesiones de la tarea cronometrada, de la más reciente a la más antigua */
+    ListaDeSesiones: {
+      sesiones: components['schemas']['Sesion'][];
+    };
+    /** @description Lo que ve el participante: los puntos de la instantánea, sin decir qué vista es */
+    TareaEnCurso: {
+      /** Format: uuid */
+      idTarea: string;
+      orden: 1 | 2;
+      /** Format: date-time */
+      iniciadaEn: string;
+      duracionMaximaMs: number;
+      caja: components['schemas']['Caja'];
+      puntos: {
+        /** Format: uuid */
+        idPunto: string;
+        codigoCategoria: string;
+        publicLocation: {
+          latitud: number;
+          longitud: number;
+        };
+        estado: ('ACTIVO' | 'CONFIRMADO') | null;
+        fuenteOficial: ('TRANSITO' | 'ABC' | 'MI_TELEFERICO' | 'OTRA') | null;
+      }[];
+    };
+    /** @description Puntos marcados, con los milisegundos desde el inicio de la tarea */
+    FinDeTarea: {
+      marcas: {
+        /** Format: uuid */
+        idPunto: string;
+        msDesdeInicio: number;
+      }[];
+    };
+    /** @description Envíos de la comunidad del periodo, sin el reporte al que los asignó la plataforma, y las etiquetas propias */
+    EnviosParaEtiquetar: {
+      envios: {
+        /** Format: uuid */
+        idEnvio: string;
+        codigoCategoria: string;
+        publicLocation: {
+          latitud: number;
+          longitud: number;
+        };
+        /** Format: date-time */
+        recibidoEn: string;
+      }[];
+      etiquetas: {
+        /** @enum {string} */
+        evaluador: 'A' | 'B' | 'CONSENSO';
+        /** Format: uuid */
+        idEnvio: string;
+        grupo: string;
+      }[];
+    };
+    /** @description Evaluador y grupo (incidente) de cada envío; un grupo nulo quita la etiqueta */
+    Asignaciones: {
+      /** @enum {string} */
+      evaluador: 'A' | 'B' | 'CONSENSO';
+      asignaciones: {
+        /** Format: uuid */
+        idEnvio: string;
+        grupo: string | null;
+      }[];
+    };
+    /** @description Kappa de Cohen entre los evaluadores A y B sobre los pares candidatos */
+    Acuerdo: {
+      kappa: number | null;
+      kappaMinimo: number;
+      paresCandidatos: number;
+      paresEvaluados: number;
+      acuerdoObservado: number | null;
+      desacuerdos: {
+        /** Format: uuid */
+        idEnvioA: string;
+        /** Format: uuid */
+        idEnvioB: string;
+        mismoSegunA: boolean;
+        mismoSegunB: boolean;
+      }[];
+    };
+    /** @description Hasta 5 alertas confirmadas y 5 reportes no confirmados por categoría, al azar */
+    Sorteo: {
+      confirmados: {
+        /** Format: uuid */
+        idReporte: string;
+        codigoCategoria: string;
+        publicLocation: {
+          latitud: number;
+          longitud: number;
+        };
+        /** Format: date-time */
+        creadoEn: string;
+        confirmado: boolean;
+      }[];
+      noConfirmados: {
+        /** Format: uuid */
+        idReporte: string;
+        codigoCategoria: string;
+        publicLocation: {
+          latitud: number;
+          longitud: number;
+        };
+        /** Format: date-time */
+        creadoEn: string;
+        confirmado: boolean;
+      }[];
+    };
+    /** @description Resultado, hora de fin (solo si fue real) y fuente. El detalle nunca describe a personas */
+    NuevaVerificacion: {
+      /** @enum {string} */
+      resultado: 'REAL' | 'FALSO' | 'NO_VERIFICABLE';
+      finEn: string | null;
+      /** @enum {string} */
+      fuente: 'CAMPO' | 'SECUNDARIA';
+      detalleFuente: string | null;
+    };
+    /** @description Referencia independiente de veracidad y hora de fin de un reporte */
+    Verificacion: {
+      /** @enum {string} */
+      resultado: 'REAL' | 'FALSO' | 'NO_VERIFICABLE';
+      finEn: string | null;
+      /** @enum {string} */
+      fuente: 'CAMPO' | 'SECUNDARIA';
+      detalleFuente: string | null;
+      /** Format: uuid */
+      idReporte: string;
+      /** Format: date-time */
+      registradaEn: string;
+    };
+    /** @description Verificaciones registradas, de la más reciente a la más antigua */
+    ListaDeVerificaciones: {
+      verificaciones: components['schemas']['Verificacion'][];
     };
   };
   responses: never;

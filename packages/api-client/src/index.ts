@@ -16,6 +16,19 @@ export type NuevoReporteOficial = components['schemas']['NuevoReporteOficial'];
 export type ResumenDatosAbiertos = components['schemas']['ResumenDatosAbiertos'];
 export type CeldaDeCalor = components['schemas']['MapaDeCalor']['celdas'][number];
 
+// Instrumentos de evaluación (ADR-007, rol MODERADOR).
+type Esquemas = components['schemas'];
+export type Instantanea = Esquemas['Instantanea'];
+export type ResumenDeInstantanea = Esquemas['ListaDeInstantaneas']['instantaneas'][number];
+export type Sesion = Esquemas['Sesion'];
+export type Tarea = Esquemas['Tarea'];
+export type TareaEnCurso = Esquemas['TareaEnCurso'];
+export type EnviosParaEtiquetar = Esquemas['EnviosParaEtiquetar'];
+export type Acuerdo = Esquemas['Acuerdo'];
+export type Sorteo = Esquemas['Sorteo'];
+export type Verificacion = Esquemas['Verificacion'];
+export type NuevaVerificacion = Esquemas['NuevaVerificacion'];
+
 export interface OpcionesClienteApi {
   /** Origen de la API, sin `/v1`: `https://plataforma-gis-api.onrender.com`. */
   readonly urlBase: string;

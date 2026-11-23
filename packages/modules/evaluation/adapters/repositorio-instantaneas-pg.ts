@@ -152,4 +152,12 @@ export class RepositorioInstantaneasPg implements RepositorioDeInstantaneas {
       base,
     };
   }
+
+  async buscarIdPorNombre(nombre: string): Promise<string | null> {
+    const [fila] = await this.db
+      .select({ id: instantaneas.id })
+      .from(instantaneas)
+      .where(eq(instantaneas.nombre, nombre));
+    return fila?.id ?? null;
+  }
 }

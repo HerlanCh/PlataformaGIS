@@ -2,7 +2,7 @@ import L from 'leaflet';
 import 'leaflet.markercluster';
 import { LocateFixed } from 'lucide-react';
 import { useEffect, useRef } from 'react';
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import { categoriaDe } from '../../domain/categorias.js';
 import { nombreDeFuente } from '../../domain/fuentes.js';
 import { AREA_DE_SERVICIO, CENTRO_LA_PAZ, ZOOM_INICIAL } from '../../domain/geo.js';
@@ -37,10 +37,17 @@ const cajaDe = (mapa: L.Map): Caja => {
   };
 };
 
-const iconoDe = (reporte: ReportePublico) =>
+const iconoDe = (reporte: ReportePublico, marcado = false) =>
   L.divIcon({
-    // Un incidente de fuente oficial lleva un marco de tinta (HU-13).
-    className: reporte.fuenteOficial ? 'marcador marcador--oficial' : 'marcador',
+    // Un incidente de fuente oficial lleva un marco de tinta (HU-13); uno marcado en la tarea de
+    // evaluación, un anillo (ADR-007).
+    className: [
+      'marcador',
+      reporte.fuenteOficial ? 'marcador--oficial' : '',
+      marcado ? 'marcador--marcado' : '',
+    ]
+      .filter(Boolean)
+      .join(' '),
     html: estacionSvg(
       categoriaDe(reporte.codigoCategoria).color,
       reporte.estado === 'CONFIRMADO' ? 'CONFIRMADO' : 'ACTIVO',
@@ -74,17 +81,94 @@ export interface Calor {
   readonly fallo: boolean;
 }
 
+/**
+ * Modo de evaluación (ADR-007): el mismo mapa, con la zona de una instantánea fija, sin sus
+ * herramientas y con el toque de cada punto en manos de quien lo usa.
+ */
+export interface ModoDeEvaluacion {
+  readonly caja: Caja;
+  readonly alTocar: (id: string) => void;
+  readonly marcados?: ReadonlySet<string>;
+  /** Texto accesible de cada punto; en la vista base no hay vigencia que anunciar. */
+  readonly etiquetar?: (reporte: ReportePublico) => string;
+}
+
 interface PropsMapa {
   readonly reportes: readonly ReportePublico[];
   readonly calor: Calor;
   readonly zonas: readonly Zona[];
+  readonly evaluacion?: ModoDeEvaluacion;
   /** Lo que flota sobre el mapa además de sus controles. */
   readonly children?: ReactNode;
 }
 
+interface PropsControles {
+  readonly mapaRef: RefObject<L.Map | null>;
+  readonly calor: Calor;
+  readonly conCalor: boolean;
+  readonly editandoZona: boolean;
+}
+
+/** Lo que el mapa normal tiene encima y el de evaluación no: herramientas, historial y ubicarse. */
+function ControlesDelMapa({ mapaRef, calor, conCalor, editandoZona }: PropsControles) {
+  const centrarEnMi = async () => {
+    try {
+      const punto = await leerPosicion();
+      useEstado.getState().fijarPosicion(punto);
+      mapaRef.current?.flyTo([punto.latitud, punto.longitud], 16, { duration: 0.6 });
+    } catch {
+      useEstado.getState().avisar('problema', 'No pudimos obtener tu ubicación.');
+    }
+  };
+  return (
+    <>
+      {!editandoZona && <HerramientasDelMapa />}
+      {editandoZona && <span className="mira" aria-hidden="true" />}
+      {conCalor && (
+        <BarraDeCalor
+          cantidad={calor.celdas?.length ?? null}
+          cargando={calor.cargando}
+          fallo={calor.fallo}
+        />
+      )}
+      <button
+        type="button"
+        className="boton-redondo mapa__ubicarme"
+        onClick={() => void centrarEnMi()}
+      >
+        <LocateFixed aria-hidden="true" size={22} strokeWidth={TRAZO} />
+        <span className="solo-lector">Centrar en mi ubicación</span>
+      </button>
+    </>
+  );
+}
+
+/** Sin modo de evaluación, el mapa sigue la ventana visible; con él, encuadra su zona y no la sigue. */
+function encuadrar(mapa: L.Map, evaluacion: ModoDeEvaluacion | undefined): () => void {
+  if (evaluacion) {
+    const { latitudMin, longitudMin, latitudMax, longitudMax } = evaluacion.caja;
+    mapa.fitBounds([
+      [latitudMin, longitudMin],
+      [latitudMax, longitudMax],
+    ]);
+    return () => undefined;
+  }
+  let espera: ReturnType<typeof setTimeout> | undefined;
+  const avisarVentana = () => {
+    clearTimeout(espera);
+    espera = setTimeout(() => useEstado.getState().fijarVentana(cajaDe(mapa)), ESPERA_MS);
+  };
+  mapa.on('moveend', avisarVentana);
+  useEstado.getState().fijarVentana(cajaDe(mapa));
+  return () => clearTimeout(espera);
+}
+
 /** Mapa de OpenStreetMap con los reportes de la ventana como estaciones de su línea. */
-export function Mapa({ reportes, calor, zonas, children }: PropsMapa) {
+export function Mapa({ reportes, calor, zonas, evaluacion, children }: PropsMapa) {
   const contenedor = useRef<HTMLDivElement>(null);
+  const evaluacionRef = useRef(evaluacion);
+  evaluacionRef.current = evaluacion;
+  const marcadoresRef = useRef(new Map<string, { marcador: L.Marker; reporte: ReportePublico }>());
   const mapaRef = useRef<L.Map | null>(null);
   const grupoRef = useRef<L.MarkerClusterGroup | null>(null);
   const yoRef = useRef<L.CircleMarker | null>(null);
@@ -120,18 +204,12 @@ export function Mapa({ reportes, calor, zonas, children }: PropsMapa) {
       maxClusterRadius: 48,
     }).addTo(mapa);
 
-    let espera: ReturnType<typeof setTimeout> | undefined;
-    const avisarVentana = () => {
-      clearTimeout(espera);
-      espera = setTimeout(() => useEstado.getState().fijarVentana(cajaDe(mapa)), ESPERA_MS);
-    };
-    mapa.on('moveend', avisarVentana);
-    useEstado.getState().fijarVentana(cajaDe(mapa));
+    const dejarDeSeguir = encuadrar(mapa, evaluacionRef.current);
 
     mapaRef.current = mapa;
     grupoRef.current = grupo;
     return () => {
-      clearTimeout(espera);
+      dejarDeSeguir();
       mapa.remove();
       mapaRef.current = null;
       grupoRef.current = null;
@@ -142,19 +220,35 @@ export function Mapa({ reportes, calor, zonas, children }: PropsMapa) {
     const grupo = grupoRef.current;
     if (!grupo) return;
     grupo.clearLayers();
-    grupo.addLayers(
-      reportes.map((r) =>
-        L.marker([r.publicLocation.latitud, r.publicLocation.longitud], {
-          icon: iconoDe(r),
-          title: etiquetaDe(r),
-          alt: etiquetaDe(r),
-          keyboard: true,
-        }).on('click', () => useEstado.getState().abrirDetalle(r.id)),
-      ),
-    );
+    const marcadores = marcadoresRef.current;
+    marcadores.clear();
+    const etiquetar = evaluacionRef.current?.etiquetar ?? etiquetaDe;
+    const tocar = (id: string) => {
+      const modo = evaluacionRef.current;
+      if (modo) modo.alTocar(id);
+      else useEstado.getState().abrirDetalle(id);
+    };
+    for (const r of reportes) {
+      const marcador = L.marker([r.publicLocation.latitud, r.publicLocation.longitud], {
+        icon: iconoDe(r, evaluacionRef.current?.marcados?.has(r.id)),
+        title: etiquetar(r),
+        alt: etiquetar(r),
+        keyboard: true,
+      }).on('click', () => tocar(r.id));
+      marcadores.set(r.id, { marcador, reporte: r });
+    }
+    grupo.addLayers([...marcadores.values()].map((m) => m.marcador));
   }, [reportes]);
 
-  useCapaDeCalor(mapaRef, grupoRef, calor.celdas, conCalor);
+  // Marcar en la tarea cambia solo el icono: el grupo no se rearma ni se cierra el abanico.
+  const marcados = evaluacion?.marcados;
+  useEffect(() => {
+    for (const [id, { marcador, reporte }] of marcadoresRef.current) {
+      marcador.setIcon(iconoDe(reporte, marcados?.has(id)));
+    }
+  }, [marcados]);
+
+  useCapaDeCalor(mapaRef, grupoRef, calor.celdas, conCalor && !evaluacion);
   useCapaDeZonas(mapaRef, zonas);
   useZonaEnEdicion(mapaRef);
   useEnfoque(mapaRef);
@@ -168,16 +262,6 @@ export function Mapa({ reportes, calor, zonas, children }: PropsMapa) {
     yoRef.current.setLatLng(latLng);
   }, [posicion]);
 
-  const centrarEnMi = async () => {
-    try {
-      const punto = await leerPosicion();
-      useEstado.getState().fijarPosicion(punto);
-      mapaRef.current?.flyTo([punto.latitud, punto.longitud], 16, { duration: 0.6 });
-    } catch {
-      useEstado.getState().avisar('problema', 'No pudimos obtener tu ubicación.');
-    }
-  };
-
   return (
     <section className="mapa" aria-label="Mapa de incidentes">
       <div
@@ -186,23 +270,14 @@ export function Mapa({ reportes, calor, zonas, children }: PropsMapa) {
         role="application"
         aria-label="Mapa de incidentes"
       />
-      {!editandoZona && <HerramientasDelMapa />}
-      {editandoZona && <span className="mira" aria-hidden="true" />}
-      {conCalor && (
-        <BarraDeCalor
-          cantidad={calor.celdas?.length ?? null}
-          cargando={calor.cargando}
-          fallo={calor.fallo}
+      {!evaluacion && (
+        <ControlesDelMapa
+          mapaRef={mapaRef}
+          calor={calor}
+          conCalor={conCalor}
+          editandoZona={editandoZona}
         />
       )}
-      <button
-        type="button"
-        className="boton-redondo mapa__ubicarme"
-        onClick={() => void centrarEnMi()}
-      >
-        <LocateFixed aria-hidden="true" size={22} strokeWidth={TRAZO} />
-        <span className="solo-lector">Centrar en mi ubicación</span>
-      </button>
       {children}
     </section>
   );

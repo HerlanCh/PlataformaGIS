@@ -1277,6 +1277,785 @@
         ],
         "description": "Instantáneas congeladas, de la más reciente a la más antigua, sin sus puntos"
       },
+      "NuevaSesionInput": {
+        "type": "object",
+        "properties": {
+          "codigoParticipante": {
+            "type": "string",
+            "example": "P07"
+          },
+          "secuencia": {
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 1
+              },
+              {
+                "type": "number",
+                "const": 2
+              },
+              {
+                "type": "number",
+                "const": 3
+              },
+              {
+                "type": "number",
+                "const": 4
+              }
+            ]
+          }
+        },
+        "required": [
+          "codigoParticipante",
+          "secuencia"
+        ],
+        "description": "Código anónimo del participante (P y dos o tres dígitos) y su secuencia contrabalanceada"
+      },
+      "TareaInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "orden": {
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 1
+              },
+              {
+                "type": "number",
+                "const": 2
+              }
+            ]
+          },
+          "vista": {
+            "type": "string",
+            "enum": [
+              "PROCESADA",
+              "BASE"
+            ]
+          },
+          "escenario": {
+            "type": "string",
+            "enum": [
+              "E1",
+              "E2"
+            ]
+          },
+          "idInstantanea": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "iniciadaEn": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "terminadaEn": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "duracionMs": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "agotada": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "marcas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idPunto": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "msDesdeInicio": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "idPunto",
+                "msDesdeInicio"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "orden",
+          "vista",
+          "escenario",
+          "idInstantanea",
+          "iniciadaEn",
+          "terminadaEn",
+          "duracionMs",
+          "agotada",
+          "marcas"
+        ],
+        "description": "Una tarea cronometrada: vista, escenario, tiempo usado (máximo 180 s) y puntos marcados"
+      },
+      "SesionInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "codigoParticipante": {
+            "type": "string"
+          },
+          "secuencia": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "creadaEn": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "tareas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TareaInput"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "codigoParticipante",
+          "secuencia",
+          "creadaEn",
+          "tareas"
+        ],
+        "description": "Sesión de un participante con sus dos tareas"
+      },
+      "ListaDeSesionesInput": {
+        "type": "object",
+        "properties": {
+          "sesiones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SesionInput"
+            }
+          }
+        },
+        "required": [
+          "sesiones"
+        ],
+        "description": "Sesiones de la tarea cronometrada, de la más reciente a la más antigua"
+      },
+      "TareaEnCursoInput": {
+        "type": "object",
+        "properties": {
+          "idTarea": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "orden": {
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 1
+              },
+              {
+                "type": "number",
+                "const": 2
+              }
+            ]
+          },
+          "iniciadaEn": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "duracionMaximaMs": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "caja": {
+            "$ref": "#/components/schemas/CajaInput"
+          },
+          "puntos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idPunto": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "codigoCategoria": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "publicLocation": {
+                  "type": "object",
+                  "properties": {
+                    "latitud": {
+                      "type": "number"
+                    },
+                    "longitud": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "latitud",
+                    "longitud"
+                  ]
+                },
+                "estado": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "ACTIVO",
+                        "CONFIRMADO"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "fuenteOficial": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "TRANSITO",
+                        "ABC",
+                        "MI_TELEFERICO",
+                        "OTRA"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "idPunto",
+                "codigoCategoria",
+                "publicLocation",
+                "estado",
+                "fuenteOficial"
+              ]
+            }
+          }
+        },
+        "required": [
+          "idTarea",
+          "orden",
+          "iniciadaEn",
+          "duracionMaximaMs",
+          "caja",
+          "puntos"
+        ],
+        "description": "Lo que ve el participante: los puntos de la instantánea, sin decir qué vista es"
+      },
+      "FinDeTareaInput": {
+        "type": "object",
+        "properties": {
+          "marcas": {
+            "maxItems": 1000,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idPunto": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "msDesdeInicio": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "idPunto",
+                "msDesdeInicio"
+              ]
+            }
+          }
+        },
+        "required": [
+          "marcas"
+        ],
+        "description": "Puntos marcados, con los milisegundos desde el inicio de la tarea"
+      },
+      "EnviosParaEtiquetarInput": {
+        "type": "object",
+        "properties": {
+          "envios": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idEnvio": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "codigoCategoria": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "publicLocation": {
+                  "type": "object",
+                  "properties": {
+                    "latitud": {
+                      "type": "number"
+                    },
+                    "longitud": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "latitud",
+                    "longitud"
+                  ]
+                },
+                "recibidoEn": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                }
+              },
+              "required": [
+                "idEnvio",
+                "codigoCategoria",
+                "publicLocation",
+                "recibidoEn"
+              ]
+            }
+          },
+          "etiquetas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "evaluador": {
+                  "type": "string",
+                  "enum": [
+                    "A",
+                    "B",
+                    "CONSENSO"
+                  ]
+                },
+                "idEnvio": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "grupo": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "evaluador",
+                "idEnvio",
+                "grupo"
+              ]
+            }
+          }
+        },
+        "required": [
+          "envios",
+          "etiquetas"
+        ],
+        "description": "Envíos de la comunidad del periodo, sin el reporte al que los asignó la plataforma, y las etiquetas propias"
+      },
+      "AsignacionesInput": {
+        "type": "object",
+        "properties": {
+          "evaluador": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "CONSENSO"
+            ]
+          },
+          "asignaciones": {
+            "minItems": 1,
+            "maxItems": 2000,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idEnvio": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "grupo": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 40
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "idEnvio",
+                "grupo"
+              ]
+            }
+          }
+        },
+        "required": [
+          "evaluador",
+          "asignaciones"
+        ],
+        "description": "Evaluador y grupo (incidente) de cada envío; un grupo nulo quita la etiqueta"
+      },
+      "AcuerdoInput": {
+        "type": "object",
+        "properties": {
+          "kappa": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "kappaMinimo": {
+            "type": "number"
+          },
+          "paresCandidatos": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "paresEvaluados": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "acuerdoObservado": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "desacuerdos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idEnvioA": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "idEnvioB": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "mismoSegunA": {
+                  "type": "boolean"
+                },
+                "mismoSegunB": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "idEnvioA",
+                "idEnvioB",
+                "mismoSegunA",
+                "mismoSegunB"
+              ]
+            }
+          }
+        },
+        "required": [
+          "kappa",
+          "kappaMinimo",
+          "paresCandidatos",
+          "paresEvaluados",
+          "acuerdoObservado",
+          "desacuerdos"
+        ],
+        "description": "Kappa de Cohen entre los evaluadores A y B sobre los pares candidatos"
+      },
+      "SorteoInput": {
+        "type": "object",
+        "properties": {
+          "confirmados": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idReporte": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "codigoCategoria": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "publicLocation": {
+                  "type": "object",
+                  "properties": {
+                    "latitud": {
+                      "type": "number"
+                    },
+                    "longitud": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "latitud",
+                    "longitud"
+                  ]
+                },
+                "creadoEn": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                },
+                "confirmado": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "idReporte",
+                "codigoCategoria",
+                "publicLocation",
+                "creadoEn",
+                "confirmado"
+              ]
+            }
+          },
+          "noConfirmados": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idReporte": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "codigoCategoria": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "publicLocation": {
+                  "type": "object",
+                  "properties": {
+                    "latitud": {
+                      "type": "number"
+                    },
+                    "longitud": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "latitud",
+                    "longitud"
+                  ]
+                },
+                "creadoEn": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                },
+                "confirmado": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "idReporte",
+                "codigoCategoria",
+                "publicLocation",
+                "creadoEn",
+                "confirmado"
+              ]
+            }
+          }
+        },
+        "required": [
+          "confirmados",
+          "noConfirmados"
+        ],
+        "description": "Hasta 5 alertas confirmadas y 5 reportes no confirmados por categoría, al azar"
+      },
+      "NuevaVerificacionInput": {
+        "type": "object",
+        "properties": {
+          "resultado": {
+            "type": "string",
+            "enum": [
+              "REAL",
+              "FALSO",
+              "NO_VERIFICABLE"
+            ]
+          },
+          "finEn": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fuente": {
+            "type": "string",
+            "enum": [
+              "CAMPO",
+              "SECUNDARIA"
+            ]
+          },
+          "detalleFuente": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "resultado",
+          "finEn",
+          "fuente",
+          "detalleFuente"
+        ],
+        "description": "Resultado, hora de fin (solo si fue real) y fuente. El detalle nunca describe a personas"
+      },
+      "VerificacionInput": {
+        "type": "object",
+        "properties": {
+          "resultado": {
+            "type": "string",
+            "enum": [
+              "REAL",
+              "FALSO",
+              "NO_VERIFICABLE"
+            ]
+          },
+          "finEn": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fuente": {
+            "type": "string",
+            "enum": [
+              "CAMPO",
+              "SECUNDARIA"
+            ]
+          },
+          "detalleFuente": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "idReporte": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "registradaEn": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "resultado",
+          "finEn",
+          "fuente",
+          "detalleFuente",
+          "idReporte",
+          "registradaEn"
+        ],
+        "description": "Referencia independiente de veracidad y hora de fin de un reporte"
+      },
+      "ListaDeVerificacionesInput": {
+        "type": "object",
+        "properties": {
+          "verificaciones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VerificacionInput"
+            }
+          }
+        },
+        "required": [
+          "verificaciones"
+        ],
+        "description": "Verificaciones registradas, de la más reciente a la más antigua"
+      },
       "Problema": {
         "type": "object",
         "properties": {
@@ -2587,6 +3366,811 @@
         ],
         "additionalProperties": false,
         "description": "Instantáneas congeladas, de la más reciente a la más antigua, sin sus puntos"
+      },
+      "NuevaSesion": {
+        "type": "object",
+        "properties": {
+          "codigoParticipante": {
+            "type": "string",
+            "example": "P07"
+          },
+          "secuencia": {
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 1
+              },
+              {
+                "type": "number",
+                "const": 2
+              },
+              {
+                "type": "number",
+                "const": 3
+              },
+              {
+                "type": "number",
+                "const": 4
+              }
+            ]
+          }
+        },
+        "required": [
+          "codigoParticipante",
+          "secuencia"
+        ],
+        "additionalProperties": false,
+        "description": "Código anónimo del participante (P y dos o tres dígitos) y su secuencia contrabalanceada"
+      },
+      "Tarea": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "orden": {
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 1
+              },
+              {
+                "type": "number",
+                "const": 2
+              }
+            ]
+          },
+          "vista": {
+            "type": "string",
+            "enum": [
+              "PROCESADA",
+              "BASE"
+            ]
+          },
+          "escenario": {
+            "type": "string",
+            "enum": [
+              "E1",
+              "E2"
+            ]
+          },
+          "idInstantanea": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "iniciadaEn": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "terminadaEn": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "duracionMs": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "agotada": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "marcas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idPunto": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "msDesdeInicio": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "idPunto",
+                "msDesdeInicio"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "orden",
+          "vista",
+          "escenario",
+          "idInstantanea",
+          "iniciadaEn",
+          "terminadaEn",
+          "duracionMs",
+          "agotada",
+          "marcas"
+        ],
+        "additionalProperties": false,
+        "description": "Una tarea cronometrada: vista, escenario, tiempo usado (máximo 180 s) y puntos marcados"
+      },
+      "Sesion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "codigoParticipante": {
+            "type": "string"
+          },
+          "secuencia": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "creadaEn": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "tareas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tarea"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "codigoParticipante",
+          "secuencia",
+          "creadaEn",
+          "tareas"
+        ],
+        "additionalProperties": false,
+        "description": "Sesión de un participante con sus dos tareas"
+      },
+      "ListaDeSesiones": {
+        "type": "object",
+        "properties": {
+          "sesiones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sesion"
+            }
+          }
+        },
+        "required": [
+          "sesiones"
+        ],
+        "additionalProperties": false,
+        "description": "Sesiones de la tarea cronometrada, de la más reciente a la más antigua"
+      },
+      "TareaEnCurso": {
+        "type": "object",
+        "properties": {
+          "idTarea": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "orden": {
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 1
+              },
+              {
+                "type": "number",
+                "const": 2
+              }
+            ]
+          },
+          "iniciadaEn": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "duracionMaximaMs": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "caja": {
+            "$ref": "#/components/schemas/Caja"
+          },
+          "puntos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idPunto": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "codigoCategoria": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "publicLocation": {
+                  "type": "object",
+                  "properties": {
+                    "latitud": {
+                      "type": "number"
+                    },
+                    "longitud": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "latitud",
+                    "longitud"
+                  ],
+                  "additionalProperties": false
+                },
+                "estado": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "ACTIVO",
+                        "CONFIRMADO"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "fuenteOficial": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "TRANSITO",
+                        "ABC",
+                        "MI_TELEFERICO",
+                        "OTRA"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "idPunto",
+                "codigoCategoria",
+                "publicLocation",
+                "estado",
+                "fuenteOficial"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "idTarea",
+          "orden",
+          "iniciadaEn",
+          "duracionMaximaMs",
+          "caja",
+          "puntos"
+        ],
+        "additionalProperties": false,
+        "description": "Lo que ve el participante: los puntos de la instantánea, sin decir qué vista es"
+      },
+      "FinDeTarea": {
+        "type": "object",
+        "properties": {
+          "marcas": {
+            "maxItems": 1000,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idPunto": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "msDesdeInicio": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "idPunto",
+                "msDesdeInicio"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "marcas"
+        ],
+        "additionalProperties": false,
+        "description": "Puntos marcados, con los milisegundos desde el inicio de la tarea"
+      },
+      "EnviosParaEtiquetar": {
+        "type": "object",
+        "properties": {
+          "envios": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idEnvio": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "codigoCategoria": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "publicLocation": {
+                  "type": "object",
+                  "properties": {
+                    "latitud": {
+                      "type": "number"
+                    },
+                    "longitud": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "latitud",
+                    "longitud"
+                  ],
+                  "additionalProperties": false
+                },
+                "recibidoEn": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                }
+              },
+              "required": [
+                "idEnvio",
+                "codigoCategoria",
+                "publicLocation",
+                "recibidoEn"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "etiquetas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "evaluador": {
+                  "type": "string",
+                  "enum": [
+                    "A",
+                    "B",
+                    "CONSENSO"
+                  ]
+                },
+                "idEnvio": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "grupo": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "evaluador",
+                "idEnvio",
+                "grupo"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "envios",
+          "etiquetas"
+        ],
+        "additionalProperties": false,
+        "description": "Envíos de la comunidad del periodo, sin el reporte al que los asignó la plataforma, y las etiquetas propias"
+      },
+      "Asignaciones": {
+        "type": "object",
+        "properties": {
+          "evaluador": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "CONSENSO"
+            ]
+          },
+          "asignaciones": {
+            "minItems": 1,
+            "maxItems": 2000,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idEnvio": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "grupo": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 40
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "idEnvio",
+                "grupo"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "evaluador",
+          "asignaciones"
+        ],
+        "additionalProperties": false,
+        "description": "Evaluador y grupo (incidente) de cada envío; un grupo nulo quita la etiqueta"
+      },
+      "Acuerdo": {
+        "type": "object",
+        "properties": {
+          "kappa": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "kappaMinimo": {
+            "type": "number"
+          },
+          "paresCandidatos": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "paresEvaluados": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "acuerdoObservado": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "desacuerdos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idEnvioA": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "idEnvioB": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "mismoSegunA": {
+                  "type": "boolean"
+                },
+                "mismoSegunB": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "idEnvioA",
+                "idEnvioB",
+                "mismoSegunA",
+                "mismoSegunB"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "kappa",
+          "kappaMinimo",
+          "paresCandidatos",
+          "paresEvaluados",
+          "acuerdoObservado",
+          "desacuerdos"
+        ],
+        "additionalProperties": false,
+        "description": "Kappa de Cohen entre los evaluadores A y B sobre los pares candidatos"
+      },
+      "Sorteo": {
+        "type": "object",
+        "properties": {
+          "confirmados": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idReporte": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "codigoCategoria": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "publicLocation": {
+                  "type": "object",
+                  "properties": {
+                    "latitud": {
+                      "type": "number"
+                    },
+                    "longitud": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "latitud",
+                    "longitud"
+                  ],
+                  "additionalProperties": false
+                },
+                "creadoEn": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                },
+                "confirmado": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "idReporte",
+                "codigoCategoria",
+                "publicLocation",
+                "creadoEn",
+                "confirmado"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "noConfirmados": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idReporte": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "codigoCategoria": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "publicLocation": {
+                  "type": "object",
+                  "properties": {
+                    "latitud": {
+                      "type": "number"
+                    },
+                    "longitud": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "latitud",
+                    "longitud"
+                  ],
+                  "additionalProperties": false
+                },
+                "creadoEn": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                },
+                "confirmado": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "idReporte",
+                "codigoCategoria",
+                "publicLocation",
+                "creadoEn",
+                "confirmado"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "confirmados",
+          "noConfirmados"
+        ],
+        "additionalProperties": false,
+        "description": "Hasta 5 alertas confirmadas y 5 reportes no confirmados por categoría, al azar"
+      },
+      "NuevaVerificacion": {
+        "type": "object",
+        "properties": {
+          "resultado": {
+            "type": "string",
+            "enum": [
+              "REAL",
+              "FALSO",
+              "NO_VERIFICABLE"
+            ]
+          },
+          "finEn": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fuente": {
+            "type": "string",
+            "enum": [
+              "CAMPO",
+              "SECUNDARIA"
+            ]
+          },
+          "detalleFuente": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "resultado",
+          "finEn",
+          "fuente",
+          "detalleFuente"
+        ],
+        "additionalProperties": false,
+        "description": "Resultado, hora de fin (solo si fue real) y fuente. El detalle nunca describe a personas"
+      },
+      "Verificacion": {
+        "type": "object",
+        "properties": {
+          "resultado": {
+            "type": "string",
+            "enum": [
+              "REAL",
+              "FALSO",
+              "NO_VERIFICABLE"
+            ]
+          },
+          "finEn": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fuente": {
+            "type": "string",
+            "enum": [
+              "CAMPO",
+              "SECUNDARIA"
+            ]
+          },
+          "detalleFuente": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "idReporte": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "registradaEn": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "resultado",
+          "finEn",
+          "fuente",
+          "detalleFuente",
+          "idReporte",
+          "registradaEn"
+        ],
+        "additionalProperties": false,
+        "description": "Referencia independiente de veracidad y hora de fin de un reporte"
+      },
+      "ListaDeVerificaciones": {
+        "type": "object",
+        "properties": {
+          "verificaciones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Verificacion"
+            }
+          }
+        },
+        "required": [
+          "verificaciones"
+        ],
+        "additionalProperties": false,
+        "description": "Verificaciones registradas, de la más reciente a la más antigua"
       }
     }
   },

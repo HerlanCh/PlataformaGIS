@@ -5,6 +5,11 @@ import type { TestDatabase } from '@gis/testing';
 import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { RepositorioEvaluacionPg } from '../adapters/repositorio-evaluacion-pg.js';
+import {
+  RepositorioEtiquetasPg,
+  RepositorioSesionesPg,
+  RepositorioVerificacionesPg,
+} from '../adapters/repositorio-herramientas-pg.js';
 import { RepositorioInstantaneasPg } from '../adapters/repositorio-instantaneas-pg.js';
 import { evaluationModulo } from '../index.js';
 
@@ -213,7 +218,152 @@ describeIntegration('registro de la evaluación en PostGIS', () => {
     expect((await instantaneas.buscarPorId(e1.id))?.base).toHaveLength(2);
   });
 
+  it('HU-14: sesiones y tareas: inicio y cierre solo una vez, marcas guardadas y código único', async () => {
+    const sesiones = new RepositorioSesionesPg(db);
+    const tarea = (n: number, orden: 1 | 2) => ({
+      id: id(n),
+      idSesion: id(600),
+      orden,
+      vista: orden === 1 ? ('BASE' as const) : ('PROCESADA' as const),
+      escenario: 'E1' as const,
+      idInstantanea: id(500),
+      iniciadaEn: null,
+      terminadaEn: null,
+      duracionMs: null,
+      agotada: null,
+      marcas: [],
+    });
+    const sesion = {
+      id: id(600),
+      codigoParticipante: 'P01',
+      secuencia: 1 as const,
+      creadaEn: minutos(0),
+      tareas: [tarea(601, 1), tarea(602, 2)] as const,
+    };
+    await sesiones.crear(sesion);
+    const cierre = {
+      terminadaEn: minutos(2),
+      duracionMs: 120_000,
+      agotada: false,
+      marcas: [{ idPunto: id(2), msDesdeInicio: 3_000 }],
+    };
+
+    expect(await sesiones.cerrar(id(601), cierre)).toBe(false);
+    expect([
+      await sesiones.iniciar(id(601), minutos(0)),
+      await sesiones.iniciar(id(601), minutos(1)),
+    ]).toEqual([true, false]);
+    expect([
+      await sesiones.cerrar(id(601), cierre),
+      await sesiones.cerrar(id(601), cierre),
+    ]).toEqual([true, false]);
+    const leida = await sesiones.buscarPorTarea(id(602));
+    expect(leida?.tareas[0]).toMatchObject({ iniciadaEn: minutos(0), ...cierre });
+    expect(leida?.tareas[1]).toMatchObject({ orden: 2, iniciadaEn: null, marcas: [] });
+    expect(await sesiones.listar()).toHaveLength(1);
+    expect(await sesiones.buscarPorTarea(id(699))).toBeNull();
+    await expect(
+      sesiones.crear({ ...sesion, id: id(610), tareas: [tarea(611, 1), tarea(612, 2)] }),
+    ).rejects.toMatchObject({
+      codigo: 'PARTICIPANTE_REPETIDO',
+    });
+    await expect(
+      db.execute(sql`insert into evaluacion_sesiones values (${id(620)}, 'Ana', 1, now())`),
+    ).rejects.toThrow();
+  });
+
+  it('HU-14: etiquetas por evaluador se corrigen o se quitan; verificaciones se corrigen', async () => {
+    const etiquetas = new RepositorioEtiquetasPg(db);
+    const verificaciones = new RepositorioVerificacionesPg(db);
+    await etiquetas.guardar('A', [
+      { idEnvio: id(1), grupo: 'x' },
+      { idEnvio: id(40), grupo: 'x' },
+    ]);
+    await etiquetas.guardar('B', [{ idEnvio: id(1), grupo: 'y' }]);
+    await etiquetas.guardar('A', [
+      { idEnvio: id(1), grupo: 'z' },
+      { idEnvio: id(40), grupo: null },
+    ]);
+    const verificacion = {
+      idReporte: id(1),
+      resultado: 'NO_VERIFICABLE' as const,
+      finEn: null,
+      fuente: 'SECUNDARIA' as const,
+      detalleFuente: null,
+      registradaEn: minutos(10),
+    };
+    await verificaciones.guardar(verificacion);
+    await verificaciones.guardar({
+      ...verificacion,
+      resultado: 'REAL',
+      finEn: minutos(5),
+      registradaEn: minutos(20),
+    });
+
+    expect(await etiquetas.buscar([id(1), id(40)])).toEqual([
+      { evaluador: 'A', idEnvio: id(1), grupo: 'z' },
+      { evaluador: 'B', idEnvio: id(1), grupo: 'y' },
+    ]);
+    expect(await etiquetas.buscar([])).toEqual([]);
+    expect(await verificaciones.listar()).toEqual([
+      { ...verificacion, resultado: 'REAL', finEn: minutos(5), registradaEn: minutos(20) },
+    ]);
+    await expect(
+      db.execute(
+        sql`insert into evaluacion_verificaciones values (${id(2)}, 'FALSO', now(), 'CAMPO', null, now())`,
+      ),
+    ).rejects.toThrow();
+  });
+
+  it('HU-14: los envíos para etiquetar y los reportes para verificar son de la comunidad, del periodo y no rechazados', async () => {
+    const envio = (n: number, cambios = {}) =>
+      registro.registrarEnvio({
+        idEnvio: id(n),
+        tipo: 'CREADO',
+        idReporte: id(n),
+        codigoCategoria: 'jauria',
+        publicLocation: { latitud: -16.45, longitud: -68.2 },
+        fuenteOficial: null,
+        recibidoEn: minutos(5000 + n),
+        ...cambios,
+      });
+    await envio(70);
+    await envio(71, { tipo: 'DUPLICADO', idReporte: id(70) });
+    await envio(72, { fuenteOficial: 'ABC' });
+    await envio(73);
+    await envio(74);
+    for (const [evento, n, estado] of [
+      [170, 70, 'CONFIRMADO'],
+      [173, 73, 'RECHAZADO'],
+    ] as const) {
+      await registro.registrarTransicion({
+        idEvento: id(evento),
+        idReporte: id(n),
+        estado,
+        caducaEn: estado === 'CONFIRMADO' ? minutos(6000) : null,
+        ocurridoEn: minutos(5100),
+      });
+    }
+    const [desde, hasta] = [minutos(5070), minutos(5080)];
+
+    const etiquetables = await registro.buscarEnviosEtiquetables(desde, hasta);
+    const verificables = await registro.buscarReportesVerificables(desde, hasta);
+
+    expect(etiquetables.map((e) => e.idEnvio)).toEqual([id(70), id(71), id(74)]);
+    expect(etiquetables[0]).toEqual({
+      idEnvio: id(70),
+      codigoCategoria: 'jauria',
+      publicLocation: { latitud: -16.45, longitud: -68.2 },
+      recibidoEn: minutos(5070),
+    });
+    expect(verificables.map((r) => [r.idReporte, r.confirmado])).toEqual([
+      [id(70), true],
+      [id(74), false],
+    ]);
+  });
+
   it('las migraciones se revierten sin dejar tablas ni la función del disparador', async () => {
+    expect(await revertirUltima(db, migraciones)).toBe('0002_herramientas');
     expect(await revertirUltima(db, migraciones)).toBe('0001_instantaneas');
     expect(await revertirUltima(db, migraciones)).toBe('0000_registro_evaluacion');
 
