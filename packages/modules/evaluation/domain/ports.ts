@@ -1,4 +1,5 @@
 import type { EnvioEtiquetable, Etiqueta, Evaluador } from './etiquetado.js';
+import type { Exportacion } from './exportacion.js';
 import type { Instantanea, ResumenDeInstantanea } from './instantanea.js';
 import type { EstadoDelRegistro, Envio, Transicion, VotoRegistrado } from './registro.js';
 import type { CierreDeTarea, Sesion } from './tarea.js';
@@ -63,6 +64,11 @@ export interface RepositorioDeVerificaciones {
   /** Alta o corrección: la última registrada reemplaza a la anterior. */
   guardar(verificacion: Verificacion): Promise<void>;
   listar(): Promise<readonly Verificacion[]>;
+}
+
+/** Lectura completa para la exportación: cada tabla con las columnas de `COLUMNAS_EXPORTADAS`. */
+export interface RepositorioDeExportacion {
+  exportar(): Promise<Exportacion>;
 }
 
 /** Fuente de azar del sorteo: un número en `[0, 1)`. */

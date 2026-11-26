@@ -812,3 +812,37 @@ reales durante semanas, y ninguno se registra antes de medirlo.
 ### Pendiente
 - Las APIs vuelven el 1 de diciembre. Desplegar esta corrección antes.
 - Pausar el monitor de UptimeRobot hasta una semana antes del ensayo general del piloto.
+
+## [2026-11-23] — Fase 13: instrumentos de evaluación (ADR-007)
+
+### Qué se hizo
+- **ADR-007 aprobado por el autor** (sin tutor asignado).
+- **PR #71, registro:** evento interno `EnvioDuplicadoRegistrado.v1` (sin autor, con `publicLocation`) en la misma
+  unidad de trabajo que `ReporteDuplicadoDetectado.v1`; módulo `evaluation` (`FEATURE_EVALUATION`) con envíos,
+  transiciones y votos sin datos personales; `GET /v1/evaluacion/estado` y paso «evaluación» en la prueba de humo.
+  HU-14 y RF-19 en el SRS.
+- **PR #73, vistas:** reconstrucción de la vista procesada y la base en un instante; instantáneas inmutables (un
+  disparador impide modificarlas). Una prueba con el flujo real de producción compara la reconstrucción con la consulta
+  del mapa en 8 instantes.
+- **PR #74, herramientas:** tarea cronometrada con secuencias contrabalanceadas, etiquetado ciego con kappa de Cohen y
+  verificación con sorteo semanal; pantalla `/evaluacion` bajo demanda (JS inicial 153,7 KB) con el mismo mapa en un
+  modo de evaluación.
+- **PR del análisis:** `pnpm piloto:exportar`, `pnpm piloto:analizar` (indicadores de beneficio y de costo de H1a a
+  H1d), `tools/piloto/contraste.R` y `pnpm piloto:sensibilidad` (27 combinaciones). Una prueba de equivalencia exige
+  que el simulador, con los parámetros del SRS, dé lo mismo que los casos de uso reales.
+
+### Decisiones
+- **Análisis en TypeScript** (`apps/api/src/evaluacion/`), no en `tools/piloto/analizar.mjs`: la sensibilidad
+  recalcula los mismos indicadores y la raíz de composición es la única que puede usar las reglas de `reports` y
+  `verification`.
+- **R por Docker** (`rocker/r-ver:4.4.2`): la versión queda fijada sin instalar R en la máquina del autor.
+- **Exportación con horas ISO:** `db.execute` entrega las horas como texto de PostgreSQL; la consulta las formatea.
+
+### Problemas encontrados
+1. Una subconsulta correlacionada del PR 2 podía quedar como `id_reporte = id_reporte` (Drizzle omite la tabla dentro
+   de un `select` de una sola tabla). Se corrigió en el PR 3, con la tabla escrita a mano.
+2. SonarCloud marcó un `toSorted()` sin comparador (S2871); se corrigió en el PR 3.
+
+### Pendiente
+- Preparación 4: actualizar el protocolo, la matriz de marco lógico (P-1 a P-3) y las planillas al perfil v5.
+- Activar `FEATURE_EVALUATION` en el ensayo general y probar ahí los instrumentos (criterio de salida).

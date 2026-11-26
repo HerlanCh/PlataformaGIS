@@ -74,8 +74,10 @@ Requiere Node 24 y pnpm 12. En bash de Windows, pnpm está en `%APPDATA%\npm`.
 - `pnpm datos-abiertos:cargar` carga en los datos abiertos los reportes ya terminados (idempotente).
 - `pnpm piloto:metricas <desde> <hasta> [salida.csv]` resume las métricas del piloto (días de Bolivia) contra `DATABASE_URL`
   y, con el tercer argumento, exporta sus reportes en CSV. Solo cuentan desde que se activa `FEATURE_METRICS`.
-- `pnpm piloto:analizar <metricas.csv> <whatsapp.csv> <verificacion.csv> <fin> [salida.md]` compara la plataforma con el
-  grupo de WhatsApp (indicadores del Propósito de `docs/marco-logico.md`). Formato de las planillas en `docs/piloto/`.
+- Evaluación del piloto (ADR-007; pasos y definiciones en `docs/piloto/README.md`): `pnpm piloto:exportar <carpeta>`
+  exporta el registro y las herramientas contra `DATABASE_URL`; `pnpm piloto:analizar <carpeta> <salida>` calcula los
+  indicadores de H1a a H1d y deja los CSV que lee `tools/piloto/contraste.R` (se ejecuta con Docker,
+  `rocker/r-ver:4.4.2`); `pnpm piloto:sensibilidad <carpeta> <salida.csv>` recorre la malla de 27 combinaciones.
 - `pnpm clasificador:evaluar [conjunto.jsonl]` regenera `docs/clasificador/evaluacion.md`; `pnpm clasificador:exportar <archivo>`
   exporta las descripciones moderadas como conjunto etiquetado.
 - `pnpm gen:module <nombre>` crea un módulo y lo registra. Para eliminar uno: borrar su carpeta y

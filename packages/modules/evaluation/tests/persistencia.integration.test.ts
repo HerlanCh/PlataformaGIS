@@ -10,7 +10,9 @@ import {
   RepositorioSesionesPg,
   RepositorioVerificacionesPg,
 } from '../adapters/repositorio-herramientas-pg.js';
+import { RepositorioExportacionPg } from '../adapters/repositorio-exportacion-pg.js';
 import { RepositorioInstantaneasPg } from '../adapters/repositorio-instantaneas-pg.js';
+import { COLUMNAS_EXPORTADAS } from '../domain/exportacion.js';
 import { evaluationModulo } from '../index.js';
 
 const migraciones = evaluationModulo.migraciones!;
@@ -360,6 +362,24 @@ describeIntegration('registro de la evaluación en PostGIS', () => {
       [id(70), true],
       [id(74), false],
     ]);
+  });
+
+  it('HU-14: la exportación trae cada tabla con las columnas del contrato y las horas en ISO 8601', async () => {
+    const exportacion = await new RepositorioExportacionPg(db).exportar();
+
+    for (const [tabla, columnas] of Object.entries(COLUMNAS_EXPORTADAS)) {
+      const filas = exportacion[tabla as keyof typeof COLUMNAS_EXPORTADAS];
+      expect(filas.length, tabla).toBeGreaterThan(0);
+      expect(Object.keys(filas[0]!).toSorted(), tabla).toEqual([...columnas].toSorted());
+    }
+    expect(exportacion.envios[0]!['recibido_en']).toMatch(
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+    );
+    expect(exportacion.tareas[0]).toMatchObject({
+      codigo_participante: 'P01',
+      iniciada_en: minutos(0).toISOString(),
+    });
+    expect(JSON.stringify(exportacion)).not.toMatch(/id_autor|id_votante|ubicacion"/);
   });
 
   it('las migraciones se revierten sin dejar tablas ni la función del disparador', async () => {

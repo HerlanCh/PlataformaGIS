@@ -26,3 +26,5 @@ export { UnidadDeTrabajoVotoPg } from './adapters/unidad-de-trabajo-voto.js';
 export { RepositorioVotosPg } from './adapters/vote-repository.js';
 export type { ConsultaDeReporte } from './domain/ports.js';
 export type { InstantaneaDeReporte } from './domain/report-snapshot.js';
+// Umbrales del SRS para el simulador de sensibilidad de la raíz de composición (ADR-007).
+export { VERIFICACION } from './domain/verification-policy.js';

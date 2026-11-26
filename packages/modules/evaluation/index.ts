@@ -49,7 +49,11 @@ export {
   SortearReportes,
 } from './application/verificacion.js';
 export type { EntradaRegistrarVerificacion } from './application/verificacion.js';
+export { ExportarEvaluacion } from './application/exportar-evaluacion.js';
 export { RepositorioEvaluacionPg } from './adapters/repositorio-evaluacion-pg.js';
+export { RepositorioExportacionPg } from './adapters/repositorio-exportacion-pg.js';
+export { aCsv as exportacionACsv, COLUMNAS_EXPORTADAS } from './domain/exportacion.js';
+export type { Exportacion, Fila, NombreDeTabla } from './domain/exportacion.js';
 export {
   RepositorioEtiquetasPg,
   RepositorioSesionesPg,

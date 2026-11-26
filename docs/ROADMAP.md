@@ -636,6 +636,20 @@ Resultado: evidencia de que la plataforma resuelve el problema planteado (valida
 
 **Instrumentos de evaluación (ADR-007)**
 
+> **Cambios al ejecutarlo (2026-11-23):** bloque construido en cuatro PR (#71, #73, #74 y el del análisis). Falta
+> probarlo en el ensayo general (criterio de salida).
+> - **Tarea cronometrada:** el participante toca cada incidente vigente distinto; los aciertos, omisiones y marcados
+>   de más se calculan en el análisis contra la clave (etiquetado y verificación).
+> - **Kappa:** sobre pares candidatos (misma categoría, ≤ 24 h, ≤ 3 radios de deduplicación del SRS).
+> - **Análisis en TypeScript:** `pnpm piloto:analizar` pasó a `apps/api/src/evaluacion/`, junto al simulador, para
+>   que la sensibilidad recalcule los mismos indicadores. `contraste.R` corre en `rocker/r-ver:4.4.2` (Docker): R
+>   queda fijado sin instalarlo; la CI lo ejecuta sobre datos ficticios.
+> - **Vigencia:** la vista procesada usa `caducaEn ≥ t`, como el mapa; el rechazo quita también los duplicados del
+>   reporte (aclaraciones en el ADR-007).
+> - **E2E:** la tarea se prueba en Playwright con la API simulada (en staging no hay moderadores ni módulo activo).
+> - **Pendiente de Preparación 4:** el protocolo y la matriz de marco lógico aún nombran los indicadores P-1 a P-3
+>   del grupo de WhatsApp; se actualizan con las definiciones de `docs/piloto/README.md`.
+
 1. Crear el módulo `evaluation` con `pnpm gen:module evaluation`. Se alimenta solo de eventos y guarda envíos,
    transiciones de estado y votos (peso y decisión), sin autor, votante ni ubicación real.
 2. Emitir desde `reports` el evento interno `EnvioDuplicadoRegistrado.v1` (con `publicLocation`) junto a

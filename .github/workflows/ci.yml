@@ -48,6 +48,11 @@ jobs:
       - name: Pruebas con cobertura (RNF-04)
         if: ${{ !cancelled() }}
         run: pnpm test
+      - name: Contraste del piloto en R (datos de ejemplo, ADR-007)
+        if: ${{ !cancelled() }}
+        run: >-
+          docker run --rm -v "$PWD:/w" -w /w rocker/r-ver:4.4.2
+          Rscript tools/piloto/contraste.R tools/piloto/ejemplo /tmp/contraste
       - name: Build
         if: ${{ !cancelled() }}
         run: pnpm build
