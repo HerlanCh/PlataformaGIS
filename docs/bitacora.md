@@ -846,3 +846,36 @@ reales durante semanas, y ninguno se registra antes de medirlo.
 ### Pendiente
 - Preparación 4: actualizar el protocolo, la matriz de marco lógico (P-1 a P-3) y las planillas al perfil v5.
 - Activar `FEATURE_EVALUATION` en el ensayo general y probar ahí los instrumentos (criterio de salida).
+
+## [2026-11-26] — Fase 13: Preparación 4, alineación al perfil de grado v5
+
+### Qué se hizo
+- **Perfil v5 versionado como extracto:** [perfil-v5.md](perfil-v5.md) recoge las secciones que usa la plataforma
+  (hipótesis, operacionalización, método, procedimiento, análisis, ética, límites y matriz de consistencia). El `.docx`
+  del autor no se sube (`Tesis_*.docx` en `.gitignore`).
+- **PR #76, instrumentos y análisis (v2.22.0):** clave de E1 y E2 fijada por los evaluadores antes de las sesiones
+  (`PUT /v1/evaluacion/instantaneas/:id/clave`, tabla `evaluacion_claves`); avisos si E1 y E2 no cumplen 3 a 6
+  incidentes y ≤ 20 % de diferencia de reportes; secuencia sorteada entre las que llevan menos sesiones. En el
+  análisis: H1a en tasas, H1b y H1d por incidente único con delta de Cliff, H1c con la base ponderada por estrato, la
+  diferencia de proporciones, la exhaustividad y el % no verificable, y minutos de anticipo.
+- **PR de documentos:** matriz de marco lógico con H1a a H1d como P-1 a P-4 y el componente C7 (instrumentos probados,
+  kappa ≥ 0,61); protocolo reescrito (una o dos zonas, segundo evaluador, calendario con ensayo general y extensión,
+  verificación con las fuentes y la regla de seguridad del perfil, consentimiento sin el grupo de WhatsApp);
+  aclaraciones del perfil en el ADR-007; nota en el ROADMAP; trazabilidad.
+
+### Decisiones
+- **La clave se fija antes y no se calcula después:** así lo pide el perfil (6.3) y evita que el resultado de la tarea
+  dependa de etiquetas hechas después de verla. Se bloquea en cuanto empieza la primera tarea de la instantánea.
+- **Los criterios de E1 y E2 avisan, no bloquean:** el investigador puede necesitar congelar otro instante; la regla
+  queda en el protocolo.
+- **Extracto en lugar del `.docx`:** el perfil tiene datos personales del autor y es un binario; el extracto basta para
+  citar las secciones desde los documentos del repositorio.
+- Aprobado por el autor: el proyecto no tiene tutor asignado.
+
+### Problemas encontrados
+1. Sin pandoc en la máquina: el texto del `.docx` se extrajo con un script de Python (zipfile + ElementTree).
+
+### Pendiente
+- Activar `FEATURE_EVALUATION` y `FEATURE_METRICS` en producción para el ensayo general (tras el regreso de Render el
+  1 de diciembre) y probar ahí los instrumentos (criterio de salida).
+- Elegir las zonas y al segundo evaluador antes del ensayo general.
