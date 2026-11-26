@@ -271,7 +271,7 @@ function fusionesErroneas(
   let total = 0;
   for (const envios of porReporte.values()) {
     const grupos = envios.map((e) => referencia.grupoDe(e.idEnvio));
-    if (envios.length < 2 || grupos.some((g) => g === undefined)) continue;
+    if (envios.length < 2 || grupos.includes(undefined)) continue;
     total += 1;
     if (new Set(grupos).size > 1) casos += 1;
   }
@@ -297,7 +297,7 @@ function reportesVerificados(
     const creado = envios.find((e) => e.tipo === 'CREADO');
     const verificacion = referencia.verificacion(id);
     const vida = vidaDelReporte(datos.transiciones.filter((t) => t.idReporte === id));
-    if (!creado || creado.fuenteOficial !== null || !vida || !verificacion) continue;
+    if (creado?.fuenteOficial !== null || !vida || !verificacion) continue;
     if (verificacion.resultado === 'NO_VERIFICABLE') continue;
     resultado.push({
       id,

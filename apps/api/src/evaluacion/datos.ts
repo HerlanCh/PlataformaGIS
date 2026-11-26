@@ -95,7 +95,9 @@ type Crudo = Record<string, string>;
 function hora(valor: string | undefined): number | null {
   if (!valor) return null;
   const ms = Date.parse(valor);
-  if (Number.isNaN(ms) || !/T.*(Z|[+-]\d{2}:?\d{2})$/.test(valor)) {
+  // Con zona: termina en Z o en un desfase como -04:00 (sin zona, Date.parse usaría la hora local).
+  const conZona = valor.includes('T') && /(?:Z|[+-]\d{2}:?\d{2})$/.test(valor);
+  if (Number.isNaN(ms) || !conZona) {
     throw new Error(`Hora inválida (se espera ISO 8601 con zona): ${valor}`);
   }
   return ms;
@@ -110,7 +112,7 @@ const exigirHora = (valor: string | undefined): number => {
 const numero = (valor: string | undefined): number | null =>
   valor === undefined || valor === '' ? null : Number(valor);
 
-const nulo = (valor: string | undefined): string | null => (valor ? valor : null);
+const nulo = (valor: string | undefined): string | null => valor || null;
 
 const booleano = (valor: string | undefined): boolean | null =>
   valor === '' || valor === undefined ? null : valor === 'true';
@@ -190,7 +192,8 @@ export function leerExportacion(
     const filas = leerCsv(textos[tabla]);
     const faltan = COLUMNAS_EXPORTADAS[tabla].filter((c) => filas.length > 0 && !(c in filas[0]!));
     if (faltan.length > 0) throw new Error(`${tabla}.csv: faltan columnas ${faltan.join(', ')}`);
-    datos[tabla] = filas.map(LECTORES[tabla] as (f: Crudo) => unknown);
+    const leer = LECTORES[tabla] as (f: Crudo) => unknown;
+    datos[tabla] = filas.map((fila) => leer(fila));
   }
   return datos as unknown as DatosDeEvaluacion;
 }

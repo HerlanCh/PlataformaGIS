@@ -96,15 +96,20 @@ export async function prepararCadena(prefijo: string): Promise<Cadena> {
     ids,
   });
   let clave = 0;
-  const nuevaClave = () => `${prefijo}-${String((clave += 1)).padStart(4, '0')}`;
+  const nuevaClave = () => {
+    clave += 1;
+    return `${prefijo}-${String(clave).padStart(4, '0')}`;
+  };
+  /** Una pasada tras otra: cada una puede dejar eventos nuevos en el outbox. */
+  const despachar = async (): Promise<void> => {
+    if ((await despachador.despacharPendientes()) > 0) await despachar();
+  };
   return {
     base,
     db,
     casos,
     reloj,
-    async despachar() {
-      while ((await despachador.despacharPendientes()) > 0);
-    },
+    despachar,
     async caducar() {
       await caducidad.ejecutar();
     },
