@@ -1,3 +1,10 @@
+# [2.22.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.21.0...v2.22.0) (2026-11-26)
+
+
+### Features
+
+* **evaluation:** instrumentos y análisis según el perfil de grado v5 ([d9a2083](https://github.com/HerlanCh/PlataformaGIS/commit/d9a20834c88fc6723a9596afdd48274732000448))
+
 # [2.21.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.20.0...v2.21.0) (2026-11-26)
 
 
