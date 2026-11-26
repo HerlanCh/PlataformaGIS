@@ -1,3 +1,15 @@
+# [2.21.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.20.0...v2.21.0) (2026-11-26)
+
+
+### Bug Fixes
+
+* **evaluation:** avisos de SonarCloud en el análisis del piloto ([609c8fd](https://github.com/HerlanCh/PlataformaGIS/commit/609c8fd2f7a483056b4cf733097a6df528dcb54c))
+
+
+### Features
+
+* **evaluation:** exportación, análisis, contraste en R y sensibilidad (ADR-007) ([2299adc](https://github.com/HerlanCh/PlataformaGIS/commit/2299adc703d56ede1937c891ba51a8618b02fec8))
+
 # [2.20.0](https://github.com/HerlanCh/PlataformaGIS/compare/v2.19.0...v2.20.0) (2026-11-23)
 
 
