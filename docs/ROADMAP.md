@@ -630,6 +630,18 @@ Resultado: evidencia de que la plataforma resuelve el problema planteado (valida
 4. Actualizar al diseño del perfil v5 la [matriz de marco lógico](marco-logico.md), el [protocolo](piloto/protocolo.md)
    y las planillas de `docs/piloto/`: vista base, secuencias contrabalanceadas, metas mínimas de datos y extensión de
    dos semanas. El tutor las aprueba antes del piloto.
+
+> **Cambios al ejecutar Preparación 4 (2026-11-26, aprobado por el autor; sin tutor asignado):** hecho en dos PR, el de
+> los instrumentos (#76) y el de los documentos. El perfil v5 queda versionado como extracto en
+> [perfil-v5.md](perfil-v5.md) (el `.docx` no se sube).
+> - **Instrumentos:** la clave de E1 y E2 la fijan los evaluadores antes de las sesiones; la pantalla avisa si E1 y E2
+>   no cumplen 3 a 6 incidentes y ≤ 20 % de diferencia; la secuencia se sortea (cinco por secuencia).
+> - **Análisis:** H1b y H1d por incidente único con delta de Cliff; H1a en tasas; H1c ponderada por estrato con la
+>   diferencia de proporciones, la exhaustividad y el porcentaje no verificable; minutos de anticipo en H1d.
+> - **Documentos:** la matriz de marco lógico toma H1a a H1d como indicadores del Propósito (P-1 a P-4) y suma el
+>   componente C7; el protocolo pasa a una o dos zonas, con segundo evaluador, calendario de 4 (o 6) semanas, fuentes de
+>   verificación y regla de seguridad del perfil. Las planillas de WhatsApp ya se habían retirado con el ADR-007.
+> - **Aclaraciones** en el ADR-007 (clave previa, secuencias al azar, unidad incidente).
 5. Agregar al SRS y a la [trazabilidad](trazabilidad.md) la historia del modo de evaluación (HU-14).
 6. Ensayo general de una semana en producción con 3 o 4 personas, incluido un iPhone con la PWA instalada, con
    `FEATURE_EVALUATION` activo desde el primer día.
@@ -647,8 +659,8 @@ Resultado: evidencia de que la plataforma resuelve el problema planteado (valida
 > - **Vigencia:** la vista procesada usa `caducaEn ≥ t`, como el mapa; el rechazo quita también los duplicados del
 >   reporte (aclaraciones en el ADR-007).
 > - **E2E:** la tarea se prueba en Playwright con la API simulada (en staging no hay moderadores ni módulo activo).
-> - **Pendiente de Preparación 4:** el protocolo y la matriz de marco lógico aún nombran los indicadores P-1 a P-3
->   del grupo de WhatsApp; se actualizan con las definiciones de `docs/piloto/README.md`.
+> - **Preparación 4 (2026-11-26):** la clave pasó a fijarse antes de las sesiones y la secuencia a sortearse; el
+>   protocolo y la matriz de marco lógico ya usan H1a a H1d.
 
 1. Crear el módulo `evaluation` con `pnpm gen:module evaluation`. Se alimenta solo de eventos y guarda envíos,
    transiciones de estado y votos (peso y decisión), sin autor, votante ni ubicación real.
@@ -691,8 +703,8 @@ Resultado: evidencia de que la plataforma resuelve el problema planteado (valida
    confirmadas y 5 reportes no confirmados, al azar y por tipo, y registrar las horas de fin.
 4. Al cierre de la semana 2, revisar las metas mínimas de datos (30 incidentes etiquetados, 40 reportes verificados,
    20 horas de fin). Si no se alcanza la mitad, extender el piloto dos semanas.
-5. Al cierre de la semana 2, congelar E1 y E2. En las semanas 3 y 4, aplicar la tarea cronometrada con las cuatro
-   secuencias contrabalanceadas, cinco participantes por secuencia.
+5. Al cierre de la semana 2, congelar E1 y E2 y fijar su clave. En las semanas 3 y 4, aplicar la tarea cronometrada
+   con las cuatro secuencias contrabalanceadas, asignadas al azar, cinco participantes por secuencia.
 6. Etiquetar los incidentes con dos evaluadores (kappa ≥ 0,61) y resolver los desacuerdos por consenso.
 7. Al cierre, aplicar la encuesta SUS y la encuesta de impacto (indicador del Fin de la matriz de marco lógico).
 8. Exportar el conjunto etiquetado de moderación y ejecutar el paso 3 del bloque de IA de la Fase 10; desplegar el modelo solo si supera al clasificador por reglas.
