@@ -110,6 +110,12 @@ export class InstantaneasEnMemoria implements RepositorioDeInstantaneas {
     return Promise.resolve();
   }
 
+  fijarClave(id: string, grupos: readonly string[]): Promise<void> {
+    const instantanea = this.guardadas.get(id);
+    if (instantanea) this.guardadas.set(id, { ...instantanea, clave: [...grupos] });
+    return Promise.resolve();
+  }
+
   listar(): Promise<readonly ResumenDeInstantanea[]> {
     return Promise.resolve(
       [...this.guardadas.values()].map(({ procesada, base, ...resto }) => ({
@@ -146,6 +152,14 @@ export class SesionesEnMemoria implements RepositorioDeSesiones {
 
   listar(): Promise<readonly Sesion[]> {
     return Promise.resolve([...this.sesiones.values()]);
+  }
+
+  hayTareasIniciadas(idInstantanea: string): Promise<boolean> {
+    return Promise.resolve(
+      [...this.sesiones.values()].some((s) =>
+        s.tareas.some((t) => t.idInstantanea === idInstantanea && t.iniciadaEn !== null),
+      ),
+    );
   }
 
   buscarPorTarea(idTarea: string): Promise<Sesion | null> {

@@ -80,7 +80,7 @@ async function apiDeModerador(pagina: Page): Promise<{ cierre: () => unknown }> 
       terminada = true;
       return json(route, { ...tarea(1, true), marcas: (cierre as { marcas: unknown[] }).marcas });
     }
-    return json(route, { instantaneas: [], sesiones: [], verificaciones: [] });
+    return json(route, { instantaneas: [], avisos: [], sesiones: [], verificaciones: [] });
   });
   return { cierre: () => cierre };
 }

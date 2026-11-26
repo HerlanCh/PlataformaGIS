@@ -71,6 +71,11 @@ export interface EtiquetaDato {
   readonly grupo: string;
 }
 
+export interface ClaveDato {
+  readonly idInstantanea: string;
+  readonly grupo: string;
+}
+
 export interface VerificacionDato {
   readonly idReporte: string;
   readonly resultado: 'REAL' | 'FALSO' | 'NO_VERIFICABLE';
@@ -86,6 +91,7 @@ export interface DatosDeEvaluacion {
   readonly tareas: readonly TareaDato[];
   readonly marcas: readonly MarcaDato[];
   readonly etiquetas: readonly EtiquetaDato[];
+  readonly claves: readonly ClaveDato[];
   readonly verificaciones: readonly VerificacionDato[];
 }
 
@@ -171,6 +177,10 @@ const LECTORES = {
   etiquetas: (f: Crudo): EtiquetaDato => ({
     evaluador: f['evaluador']!,
     idEnvio: f['id_envio']!,
+    grupo: f['grupo']!,
+  }),
+  claves: (f: Crudo): ClaveDato => ({
+    idInstantanea: f['id_instantanea']!,
     grupo: f['grupo']!,
   }),
   verificaciones: (f: Crudo): VerificacionDato => ({

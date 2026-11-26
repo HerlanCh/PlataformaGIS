@@ -37,6 +37,7 @@ const CONSULTAS: Readonly<Record<NombreDeTabla, SQL>> = {
     order by id_tarea, ms_desde_inicio, id_punto`,
   etiquetas: sql`select evaluador, id_envio, grupo from evaluacion_etiquetas
     order by evaluador, id_envio`,
+  claves: sql`select id_instantanea, grupo from evaluacion_claves order by id_instantanea, grupo`,
   verificaciones: sql`select id_reporte, resultado, ${iso('fin_en')}, fuente, detalle_fuente,
     ${iso('registrada_en')} from evaluacion_verificaciones order by id_reporte`,
 };

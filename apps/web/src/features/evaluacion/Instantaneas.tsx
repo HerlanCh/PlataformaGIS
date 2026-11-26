@@ -1,13 +1,17 @@
-import { Camera } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Camera, KeyRound } from 'lucide-react';
 import { useId, useState } from 'react';
 import type { FormEvent } from 'react';
+import { categoriaDe } from '../../domain/categorias.js';
 import { CENTRO_LA_PAZ, formatearCoordenadas, leerCoordenadas } from '../../domain/geo.js';
 import type { Caja, Punto } from '../../domain/geo.js';
 import { useEstado } from '../../estado.js';
+import type { ResumenDeInstantanea } from '../../services/evaluacion.js';
 import { TRAZO } from '../../ui/iconos.js';
 import { Segmentado } from '../../ui/Segmentado.js';
+import { gruposDeLaZona, HORAS_DE_BUSQUEDA } from './clave.js';
 import { aLocal, horaCorta } from './textos.js';
-import { CLAVES, useInstantaneas, useOperacion } from './usarEvaluacion.js';
+import { CLAVES, useInstantaneas, useOperacion, usarCliente } from './usarEvaluacion.js';
 
 const METROS_POR_GRADO = 111_320;
 
@@ -114,27 +118,129 @@ function FormularioDeInstantanea() {
   );
 }
 
-/** Las instantáneas congeladas, con cuántos puntos tiene cada vista. */
+interface PropsEditor {
+  readonly instantanea: ResumenDeInstantanea;
+  readonly alCerrar: () => void;
+}
+
+/**
+ * Los evaluadores eligen, entre los incidentes etiquetados en la zona, los que estaban activos en
+ * el instante: la respuesta correcta de la tarea (perfil v5, 6.3).
+ */
+function EditorDeClave({ instantanea, alCerrar }: PropsEditor) {
+  const api = usarCliente();
+  const hasta = new Date(Date.parse(instantanea.instante) + 1).toISOString();
+  const desde = new Date(
+    Date.parse(instantanea.instante) - HORAS_DE_BUSQUEDA * 3_600_000,
+  ).toISOString();
+  const consulta = useQuery({
+    queryKey: ['evaluacion', 'etiquetado', 'CONSENSO', { desde, hasta }],
+    queryFn: () => api.paraEtiquetar('CONSENSO', { desde, hasta }),
+  });
+  const [elegidos, setElegidos] = useState<ReadonlySet<string>>(new Set(instantanea.clave));
+  const fijar = useOperacion(
+    (cliente, grupos: string[]) => cliente.fijarClave(instantanea.id, grupos),
+    { exito: `Clave de ${instantanea.nombre} fijada.`, error: 'No pudimos fijar la clave.' },
+    [CLAVES.instantaneas],
+  );
+  const grupos = consulta.data ? gruposDeLaZona(consulta.data, instantanea.caja) : [];
+  const alternar = (grupo: string) => {
+    const nuevos = new Set(elegidos);
+    if (nuevos.has(grupo)) nuevos.delete(grupo);
+    else nuevos.add(grupo);
+    setElegidos(nuevos);
+  };
+  return (
+    <fieldset className="evaluacion__formulario">
+      <legend className="caso__etiqueta">Incidentes activos en {instantanea.nombre}</legend>
+      {consulta.isPending && <p className="pagina__ayuda">Cargando el etiquetado…</p>}
+      {consulta.data && grupos.length === 0 && (
+        <p className="pagina__ayuda">
+          No hay envíos etiquetados en esta zona: primero hay que etiquetar.
+        </p>
+      )}
+      {grupos.map((g) => (
+        <label key={g.grupo} className="evaluacion__opcion">
+          <input
+            type="checkbox"
+            checked={elegidos.has(g.grupo)}
+            onChange={() => alternar(g.grupo)}
+          />
+          Incidente {g.grupo} · {categoriaDe(g.categoria).corto} · {g.envios}{' '}
+          {g.envios === 1 ? 'envío' : 'envíos'}
+        </label>
+      ))}
+      <div className="caso__acciones">
+        <button type="button" className="boton-texto" onClick={alCerrar}>
+          Cancelar
+        </button>
+        <button
+          type="button"
+          className="boton-texto boton-texto--tinta"
+          disabled={fijar.isPending}
+          onClick={() => fijar.mutate([...elegidos], { onSuccess: alCerrar })}
+        >
+          Fijar clave ({elegidos.size})
+        </button>
+      </div>
+    </fieldset>
+  );
+}
+
+function FilaDeInstantanea({ instantanea }: { readonly instantanea: ResumenDeInstantanea }) {
+  const [editando, setEditando] = useState(false);
+  const { clave } = instantanea;
+  return (
+    <li className="evaluacion__fila">
+      <strong>{instantanea.nombre}</strong>
+      <span>{horaCorta(instantanea.instante)}</span>
+      <span>
+        {instantanea.puntosProcesada} en la vista procesada · {instantanea.puntosBase} en la base
+      </span>
+      <span>
+        {clave.length === 0
+          ? 'Sin clave todavía.'
+          : `Clave: ${clave.length} incidentes (${clave.join(', ')}).`}
+      </span>
+      {editando ? (
+        <EditorDeClave instantanea={instantanea} alCerrar={() => setEditando(false)} />
+      ) : (
+        <button
+          type="button"
+          className="boton-texto boton-texto--chico"
+          onClick={() => setEditando(true)}
+        >
+          <KeyRound aria-hidden="true" size={18} strokeWidth={TRAZO} />
+          {clave.length === 0 ? 'Fijar clave' : 'Cambiar clave'}
+        </button>
+      )}
+    </li>
+  );
+}
+
+/** Las instantáneas congeladas, con su clave y los avisos del perfil sobre E1 y E2. */
 export function Instantaneas() {
   const lista = useInstantaneas();
+  const instantaneas = lista.data?.instantaneas;
   return (
     <>
       <FormularioDeInstantanea />
       <h2 className="evaluacion__subtitulo">Congeladas</h2>
       {lista.isPending && <p className="pagina__ayuda">Cargando…</p>}
       {lista.isError && <p className="pagina__ayuda">No pudimos cargar las instantáneas.</p>}
-      {lista.data?.length === 0 && (
+      {instantaneas?.length === 0 && (
         <p className="pagina__ayuda">Aún no hay instantáneas. Las tareas necesitan E1 y E2.</p>
       )}
+      {lista.data && lista.data.avisos.length > 0 && (
+        <ul className="evaluacion__avisos" aria-label="Criterios del perfil para E1 y E2">
+          {lista.data.avisos.map((aviso) => (
+            <li key={aviso}>{aviso}</li>
+          ))}
+        </ul>
+      )}
       <ul className="evaluacion__lista">
-        {lista.data?.map((i) => (
-          <li key={i.id} className="evaluacion__fila">
-            <strong>{i.nombre}</strong>
-            <span>{horaCorta(i.instante)}</span>
-            <span>
-              {i.puntosProcesada} en la vista procesada · {i.puntosBase} en la base
-            </span>
-          </li>
+        {instantaneas?.map((i) => (
+          <FilaDeInstantanea key={i.id} instantanea={i} />
         ))}
       </ul>
     </>

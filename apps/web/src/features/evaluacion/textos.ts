@@ -11,6 +11,8 @@ const MENSAJES: Readonly<Record<string, string>> = {
   TAREA_YA_INICIADA: 'Esa tarea ya empezó: no se puede repetir.',
   TAREA_YA_TERMINADA: 'Esa tarea ya terminó.',
   TAREA_NO_INICIADA: 'Esa tarea aún no empezó.',
+  FALTA_CLAVE: 'Los evaluadores deben fijar la clave de E1 y E2 antes de las sesiones.',
+  CLAVE_EN_USO: 'Ya empezó una tarea sobre esa instantánea: su clave no cambia.',
   VALIDACION_FALLIDA: 'Revisa los datos: hay un campo inválido.',
 };
 
@@ -26,6 +28,7 @@ const HORA = new Intl.DateTimeFormat('es-BO', {
   month: '2-digit',
   hour: '2-digit',
   minute: '2-digit',
+  hourCycle: 'h23',
 });
 
 /** «22/11, 14:05», en la hora de Bolivia. */

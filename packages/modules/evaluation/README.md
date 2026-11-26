@@ -20,25 +20,26 @@ excepción del ADR-003. Solo registra lo que ocurre desde que se activa.
 
 ## Casos de uso
 
-| Clase                         | Qué hace                                                                                                  |
-| :---------------------------- | :-------------------------------------------------------------------------------------------------------- |
-| `RegistrarEventoDeEvaluacion` | Manejador de los eventos del reporte y de los votos: registra cada envío, transición y voto una sola vez  |
-| `ConsultarEstadoDelRegistro`  | Envíos registrados y hora del último (rol `MODERADOR`). La prueba de humo lo usa                          |
-| `ConsultarVistas`             | Reconstruye la vista procesada y la base de una zona en un instante no futuro (`reconstruirVistas`)       |
-| `CongelarInstantanea`         | Guarda ambas vistas de una zona en un instante como una instantánea inmutable, con nombre único           |
-| `ListarInstantaneas`          | Las instantáneas, con cuántos puntos tiene cada vista                                                     |
-| `ObtenerInstantanea`          | Una instantánea con sus puntos, tal como se congeló                                                       |
-| `CrearSesion`                 | Abre la sesión de un participante (código anónimo `P07`) con su secuencia, sobre E1 y E2                  |
-| `ListarSesiones`              | Sesiones con el avance y las marcas de cada tarea                                                         |
-| `IniciarTarea`                | Fija la hora de inicio y entrega los puntos de la vista, sin decir cuál es                                |
-| `TerminarTarea`               | Cierra la tarea con el tiempo del servidor (máximo 180 s) y una marca por punto de la vista               |
-| `ListarEnviosParaEtiquetar`   | Envíos de la comunidad del periodo, sin el reporte de la plataforma ni las etiquetas del otro evaluador   |
-| `GuardarEtiquetas`            | Guarda o corrige el grupo de cada envío de un evaluador (A, B o consenso)                                 |
-| `MedirAcuerdo`                | Kappa de Cohen entre A y B sobre los pares candidatos, con los desacuerdos para el consenso               |
-| `SortearReportes`             | Por categoría, 5 alertas confirmadas y 5 reportes no confirmados del periodo, al azar                     |
-| `RegistrarVerificacion`       | Resultado (real, falso, no verificable), hora de fin y fuente de un reporte                               |
-| `ListarVerificaciones`        | Verificaciones registradas                                                                                |
-| `ExportarEvaluacion`          | Un CSV por tabla con las columnas de `COLUMNAS_EXPORTADAS`, para `pnpm piloto:analizar` y la sensibilidad |
+| Clase                         | Qué hace                                                                                                     |
+| :---------------------------- | :----------------------------------------------------------------------------------------------------------- |
+| `RegistrarEventoDeEvaluacion` | Manejador de los eventos del reporte y de los votos: registra cada envío, transición y voto una sola vez     |
+| `ConsultarEstadoDelRegistro`  | Envíos registrados y hora del último (rol `MODERADOR`). La prueba de humo lo usa                             |
+| `ConsultarVistas`             | Reconstruye la vista procesada y la base de una zona en un instante no futuro (`reconstruirVistas`)          |
+| `CongelarInstantanea`         | Guarda ambas vistas de una zona en un instante como una instantánea inmutable, con nombre único              |
+| `ListarInstantaneas`          | Las instantáneas, con cuántos puntos tiene cada vista                                                        |
+| `ObtenerInstantanea`          | Una instantánea con sus puntos, tal como se congeló                                                          |
+| `FijarClave`                  | Fija la clave de una instantánea (incidentes activos) antes de las sesiones; no cambia tras la primera tarea |
+| `CrearSesion`                 | Abre la sesión de un participante (código anónimo `P07`) con su secuencia, sobre E1 y E2                     |
+| `ListarSesiones`              | Sesiones con el avance y las marcas de cada tarea                                                            |
+| `IniciarTarea`                | Fija la hora de inicio y entrega los puntos de la vista, sin decir cuál es                                   |
+| `TerminarTarea`               | Cierra la tarea con el tiempo del servidor (máximo 180 s) y una marca por punto de la vista                  |
+| `ListarEnviosParaEtiquetar`   | Envíos de la comunidad del periodo, sin el reporte de la plataforma ni las etiquetas del otro evaluador      |
+| `GuardarEtiquetas`            | Guarda o corrige el grupo de cada envío de un evaluador (A, B o consenso)                                    |
+| `MedirAcuerdo`                | Kappa de Cohen entre A y B sobre los pares candidatos, con los desacuerdos para el consenso                  |
+| `SortearReportes`             | Por categoría, 5 alertas confirmadas y 5 reportes no confirmados del periodo, al azar                        |
+| `RegistrarVerificacion`       | Resultado (real, falso, no verificable), hora de fin y fuente de un reporte                                  |
+| `ListarVerificaciones`        | Verificaciones registradas                                                                                   |
+| `ExportarEvaluacion`          | Un CSV por tabla con las columnas de `COLUMNAS_EXPORTADAS`, para `pnpm piloto:analizar` y la sensibilidad    |
 
 ## Eventos que emite
 
@@ -66,7 +67,7 @@ raíz de composición (`apps/*`), que expone `/v1/evaluacion/estado`, `/v1/evalu
 
 `evaluacion_envios`, `evaluacion_transiciones`, `evaluacion_votos`, `evaluacion_instantaneas` y
 `evaluacion_puntos_instantanea` (inmutables por un disparador), `evaluacion_sesiones`, `evaluacion_tareas`,
-`evaluacion_marcas`, `evaluacion_etiquetas` y `evaluacion_verificaciones`. Detalle en
+`evaluacion_marcas`, `evaluacion_etiquetas`, `evaluacion_verificaciones` y `evaluacion_claves`. Detalle en
 [`docs/diccionario-datos.md`](../../../docs/diccionario-datos.md).
 
 ## Las dos vistas
@@ -79,7 +80,8 @@ raíz de composición (`apps/*`), que expone `/v1/evaluacion/estado`, `/v1/evalu
 ## Herramientas
 
 - **Tarea cronometrada:** el participante toca cada incidente vigente distinto que ve; tocarlo otra vez lo
-  desmarca. Secuencias: 1 Base·E1 → Procesada·E2, 2 Procesada·E1 → Base·E2, 3 Base·E2 → Procesada·E1,
+  desmarca. La respuesta correcta es la clave que fijan los evaluadores (sin la clave de E1 y E2 no hay sesiones), y
+  la secuencia se sortea entre las que llevan menos sesiones (perfil v5, 6.3). Secuencias: 1 Base·E1 → Procesada·E2, 2 Procesada·E1 → Base·E2, 3 Base·E2 → Procesada·E1,
   4 Procesada·E2 → Base·E1. Aciertos, omisiones y marcados de más se calculan en el análisis.
 - **Etiquetado:** pares candidatos de la misma categoría, a ≤ 24 h y a ≤ 3 veces el radio de deduplicación del SRS
   (lo inyecta la raíz de composición desde `reports`). Kappa mínimo del protocolo: 0,61.

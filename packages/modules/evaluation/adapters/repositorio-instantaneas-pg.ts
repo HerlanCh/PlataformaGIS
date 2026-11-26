@@ -1,11 +1,12 @@
 import type { Db } from '@gis/platform';
 import { esClaveDuplicada } from '@gis/platform';
 import { ErrorConflicto } from '@gis/shared-kernel';
-import { asc, desc, eq, sql } from 'drizzle-orm';
+import { asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { Instantanea, ResumenDeInstantanea } from '../domain/instantanea.js';
 import type { RepositorioDeInstantaneas } from '../domain/ports.js';
 import type { PuntoBase, PuntoProcesado } from '../domain/vistas.js';
 import {
+  evaluacionClaves as claves,
   evaluacionInstantaneas as instantaneas,
   evaluacionPuntosInstantanea as puntos,
 } from './schema.js';
@@ -93,6 +94,7 @@ export class RepositorioInstantaneasPg implements RepositorioDeInstantaneas {
       })
       .from(instantaneas)
       .orderBy(desc(instantaneas.creadaEn), asc(instantaneas.nombre));
+    const clavesDe = await this.clavesDe(filas.map((f) => f.fila.id));
     return filas.map(({ fila, puntosProcesada, puntosBase }) => ({
       id: fila.id,
       nombre: fila.nombre,
@@ -101,6 +103,7 @@ export class RepositorioInstantaneasPg implements RepositorioDeInstantaneas {
       creadaEn: fila.creadaEn,
       puntosProcesada,
       puntosBase,
+      clave: clavesDe.get(fila.id) ?? [],
     }));
   }
 
@@ -150,6 +153,7 @@ export class RepositorioInstantaneasPg implements RepositorioDeInstantaneas {
       creadaEn: fila.creadaEn,
       procesada: procesada.toSorted((a, b) => a.idReporte.localeCompare(b.idReporte)),
       base,
+      clave: (await this.clavesDe([id])).get(id) ?? [],
     };
   }
 
@@ -159,5 +163,29 @@ export class RepositorioInstantaneasPg implements RepositorioDeInstantaneas {
       .from(instantaneas)
       .where(eq(instantaneas.nombre, nombre));
     return fila?.id ?? null;
+  }
+
+  async fijarClave(id: string, grupos: readonly string[]): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      await tx.delete(claves).where(eq(claves.idInstantanea, id));
+      if (grupos.length > 0) {
+        await tx.insert(claves).values(grupos.map((grupo) => ({ idInstantanea: id, grupo })));
+      }
+    });
+  }
+
+  /** Los grupos de la clave de cada instantánea, en orden alfabético. */
+  private async clavesDe(ids: readonly string[]): Promise<Map<string, string[]>> {
+    const resultado = new Map<string, string[]>();
+    if (ids.length === 0) return resultado;
+    const filas = await this.db
+      .select()
+      .from(claves)
+      .where(inArray(claves.idInstantanea, [...ids]))
+      .orderBy(asc(claves.grupo));
+    for (const { idInstantanea, grupo } of filas) {
+      resultado.set(idInstantanea, [...(resultado.get(idInstantanea) ?? []), grupo]);
+    }
+    return resultado;
   }
 }

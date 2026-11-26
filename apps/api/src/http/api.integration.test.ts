@@ -782,13 +782,33 @@ describeIntegration('API REST /v1', () => {
         });
       }
       const instante = new Date().toISOString();
+      const congeladas: string[] = [];
       for (const nombre of ['E1', 'E2']) {
-        await pedir({
+        const congelada = await pedir({
           method: 'POST',
           url: '/v1/evaluacion/instantaneas',
           token,
           payload: { nombre, instante, bbox: bbox(lugar, 0.003) },
         });
+        congeladas.push(congelada.json().id);
+      }
+      const sinClave = await pedir({
+        method: 'POST',
+        url: '/v1/evaluacion/sesiones',
+        token,
+        payload: { codigoParticipante: 'P09' },
+      });
+      // Perfil v5, 6.3: los evaluadores fijan la respuesta correcta antes de las sesiones.
+      const claves = [];
+      for (const idInstantanea of congeladas) {
+        claves.push(
+          await pedir({
+            method: 'PUT',
+            url: `/v1/evaluacion/instantaneas/${idInstantanea}/clave`,
+            token,
+            payload: { grupos: ['1'] },
+          }),
+        );
       }
       // Solo los envíos de esta prueba: otras dejan los suyos en la misma base.
       const periodo = `desde=${new Date(recibido.getTime() - 1000).toISOString()}&hasta=${instante}`;
@@ -800,6 +820,19 @@ describeIntegration('API REST /v1', () => {
         payload: { codigoParticipante: 'P01', secuencia: 1 },
       });
       const [primera, segunda] = sesion.json().tareas as { id: string }[];
+      const enUso = async () =>
+        pedir({
+          method: 'PUT',
+          url: `/v1/evaluacion/instantaneas/${congeladas[0]}/clave`,
+          token,
+          payload: { grupos: ['2'] },
+        });
+      const alAzar = await pedir({
+        method: 'POST',
+        url: '/v1/evaluacion/sesiones',
+        token,
+        payload: { codigoParticipante: 'P02' },
+      });
       const inicio = await pedir({
         method: 'POST',
         url: `/v1/evaluacion/tareas/${primera!.id}/inicio`,
@@ -853,6 +886,13 @@ describeIntegration('API REST /v1', () => {
         token,
       });
 
+      expect([sinClave.statusCode, sinClave.json().codigo]).toEqual([409, 'FALTA_CLAVE']);
+      expect(claves.map((r) => r.json().clave)).toEqual([['1'], ['1']]);
+      // Con P01 en la secuencia 1, la sorteada sale de las tres que no tienen sesión.
+      expect([2, 3, 4]).toContain(alAzar.json().secuencia);
+      // La tarea 1 (vista base de E1) ya empezó: la clave de E1 no cambia.
+      const claveEnUso = await enUso();
+      expect([claveEnUso.statusCode, claveEnUso.json().codigo]).toEqual([409, 'CLAVE_EN_USO']);
       expect(sesion.statusCode).toBe(201);
       // Secuencia 1: primero la vista base de E1, sin decir cuál es.
       expect(inicio.json()).not.toHaveProperty('vista');
@@ -871,7 +911,10 @@ describeIntegration('API REST /v1', () => {
         409,
         'TAREA_NO_INICIADA',
       ]);
-      expect(sesiones.json().sesiones[0].tareas[0].terminadaEn).not.toBeNull();
+      const deP01 = sesiones
+        .json()
+        .sesiones.find((x: { codigoParticipante: string }) => x.codigoParticipante === 'P01');
+      expect(deP01.tareas[0].terminadaEn).not.toBeNull();
       expect(paraA.json().envios.map((e: { idEnvio: string }) => e.idEnvio)).toEqual(ids);
       expect(paraA.json().etiquetas.every((e: { evaluador: string }) => e.evaluador === 'A')).toBe(
         true,
@@ -896,9 +939,15 @@ describeIntegration('API REST /v1', () => {
         pedir({ method: 'GET', url: `/v1/evaluacion/acuerdo?${periodo}`, token }),
         pedir({ method: 'GET', url: `/v1/evaluacion/verificacion/sorteo?${periodo}`, token }),
         pedir({ method: 'GET', url: '/v1/evaluacion/verificaciones', token }),
+        pedir({
+          method: 'PUT',
+          url: `/v1/evaluacion/instantaneas/${id}/clave`,
+          token,
+          payload: { grupos: ['1'] },
+        }),
       ]);
 
-      expect(respuestas.map((r) => r.statusCode)).toEqual([403, 403, 403, 403, 403, 403]);
+      expect(respuestas.map((r) => r.statusCode)).toEqual([403, 403, 403, 403, 403, 403, 403]);
     });
   });
 

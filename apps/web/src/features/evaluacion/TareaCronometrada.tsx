@@ -11,7 +11,13 @@ import { minutosYSegundos } from './textos.js';
 import { CLAVES, useOperacion, useSesiones } from './usarEvaluacion.js';
 
 const SIN_CALOR = { celdas: null, cargando: false, fallo: false } as const;
-const SECUENCIAS = [1, 2, 3, 4].map((n) => ({ valor: n as 1 | 2 | 3 | 4, nombre: String(n) }));
+type Eleccion = 'azar' | 1 | 2 | 3 | 4;
+
+/** Perfil v5, 6.3: las secuencias se asignan al azar; elegir una a mano queda para repetir un caso. */
+const SECUENCIAS: readonly { valor: Eleccion; nombre: string }[] = [
+  { valor: 'azar', nombre: 'Al azar' },
+  ...[1, 2, 3, 4].map((n) => ({ valor: n as Eleccion, nombre: String(n) })),
+];
 
 /** Los puntos de la instantánea como estaciones del mismo mapa, sin vigencia que mostrar. */
 const aReportes = (tarea: TareaEnCurso): ReportePublico[] =>
@@ -146,11 +152,11 @@ function FilaDeSesion({ sesion, alEmpezar, empezando }: PropsSesion) {
 
 function FormularioDeSesion() {
   const [codigo, setCodigo] = useState('');
-  const [secuencia, setSecuencia] = useState<1 | 2 | 3 | 4>(1);
+  const [secuencia, setSecuencia] = useState<Eleccion>('azar');
   const idCodigo = useId();
   const crear = useOperacion(
-    (api, e: { codigo: string; secuencia: 1 | 2 | 3 | 4 }) =>
-      api.crearSesion(e.codigo, e.secuencia),
+    (api, e: { codigo: string; secuencia: Eleccion }) =>
+      api.crearSesion(e.codigo, e.secuencia === 'azar' ? null : e.secuencia),
     { exito: 'Sesión abierta.', error: 'No pudimos abrir la sesión.' },
     [CLAVES.sesiones],
   );

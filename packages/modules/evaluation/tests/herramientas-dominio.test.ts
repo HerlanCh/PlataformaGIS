@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { kappaDeCohen, medirAcuerdo, paresCandidatos } from '../domain/etiquetado.js';
 import type { EnvioEtiquetable, Etiqueta } from '../domain/etiquetado.js';
+import { avisosDeEscenarios } from '../domain/instantanea.js';
 import {
   cerrarTarea,
   CODIGO_DE_PARTICIPANTE,
   DURACION_DE_TAREA_MS,
   SECUENCIAS,
+  secuenciaEquilibrada,
 } from '../domain/tarea.js';
 import { sortear } from '../domain/verificacion.js';
 import type { ReporteVerificable } from '../domain/verificacion.js';
@@ -189,5 +191,30 @@ describe('sorteo de la verificación', () => {
     expect(
       confirmados.every((r) => r.confirmado) && noConfirmados.every((r) => !r.confirmado),
     ).toBe(true);
+  });
+});
+
+describe('criterios del perfil v5 para E1 y E2 (6.3)', () => {
+  it('HU-14: la secuencia sorteada sale de las que llevan menos sesiones', () => {
+    expect(secuenciaEquilibrada([], () => 0.99)).toBe(4);
+    expect(secuenciaEquilibrada([1, 2, 3], () => 0)).toBe(4);
+    expect(secuenciaEquilibrada([1, 1, 2, 3, 4], () => 0.5)).toBe(3);
+  });
+
+  it('HU-14: avisa si falta un escenario, si la clave no tiene de 3 a 6 incidentes o si difieren más de 20 %', () => {
+    const escenario = (incidentes: number, puntosBase: number) => ({
+      clave: Array.from({ length: incidentes }, (_, i) => `g${i}`),
+      puntosBase,
+    });
+
+    expect(avisosDeEscenarios(escenario(4, 20), escenario(5, 18))).toEqual([]);
+    expect(avisosDeEscenarios(escenario(2, 20), undefined)).toEqual([
+      'La clave de E1 tiene 2 incidentes; el perfil pide de 3 a 6.',
+      'Falta congelar E2.',
+    ]);
+    expect(avisosDeEscenarios(escenario(3, 20), escenario(7, 10))).toEqual([
+      'La clave de E2 tiene 7 incidentes; el perfil pide de 3 a 6.',
+      'E1 y E2 difieren en un 50 % de reportes; el perfil pide 20 % o menos.',
+    ]);
   });
 });

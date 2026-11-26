@@ -1816,6 +1816,29 @@ a.boton-redondo {
   font-weight: 700;
 }
 
+/* Criterios del perfil que E1 y E2 no cumplen: avisan, no bloquean. */
+.evaluacion__avisos {
+  margin: var(--e-3) 0 0;
+  padding-left: var(--e-5);
+  color: var(--tinta-2);
+  font-size: var(--t-2);
+}
+
+/* El editor de la clave es un grupo de casillas: borde de panel, no el gris del navegador. */
+fieldset.evaluacion__formulario {
+  padding: var(--e-3) var(--e-4) var(--e-4);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+/* Una casilla por incidente en el editor de la clave. */
+.evaluacion__opcion {
+  display: flex;
+  gap: var(--e-2);
+  align-items: center;
+  min-height: var(--toque);
+}
+
 /* Lo que se le lee al participante, separado del riel de herramientas. */
 .evaluacion__indicacion {
   margin-top: var(--e-4);

@@ -52,22 +52,31 @@ pnpm piloto:sensibilidad docs/piloto/datos docs/piloto/analisis/sensibilidad.csv
 ```
 
 `contraste.R` deja `contraste.csv` (Wilcoxon y Fisher unilaterales, α = 0,05 con Holm, y tamaños de efecto),
-`costos_ic.csv` (intervalos de Wilson), `supervivencia.txt` (Kaplan-Meier por categoría) y `sesion.txt` (versión de R
-y de sus paquetes). Solo usa R base y `survival`.
+`veracidad_diferencia.csv` (diferencia de proporciones de H1c con IC), `costos_ic.csv` (intervalos de Wilson),
+`descriptivos.txt` (anticipo y tasas de la tarea), `supervivencia.txt` (Kaplan-Meier por categoría) y `sesion.txt`
+(versión de R y de sus paquetes). Solo usa R base y `survival`.
 
-### Definiciones operativas (provisionales hasta fijarlas en el protocolo con el perfil v5)
+### Definiciones operativas (perfil v5, Tablas 3 y 6)
 
-- **Incidente real:** el grupo del etiquetado (consenso; si no lo hay, el evaluador A) con al menos un reporte
-  verificado como real, o de fuente oficial. Su fin es la primera hora de fin verificada.
-- **Clave de una instantánea:** los incidentes reales y no terminados en su instante que aparecen en alguna de sus dos
-  vistas.
-- **H1a:** tiempo de la tarea y aciertos (incidentes de la clave marcados); costo, omisiones.
-- **H1b:** marcados de más y puntos por incidente real; costo, fusiones erróneas (reportes que juntaron envíos de
-  incidentes distintos).
-- **H1c:** reales entre lo confirmado frente a lo no confirmado; costos, reales sin confirmar y latencia de
-  confirmación.
-- **H1d:** minutos visibles después del fin (procesada: hasta cerrarse o vencer; base: 24 h después del último envío);
-  costo, caducidad prematura (salió del mapa antes de terminar).
-- **Sensibilidad:** el simulador deduplica con la ubicación pública (en robos, el centro de la celda de 200 m), y un
-  envío que solo en la simulación pasa a duplicado confirma con peso 1,0 (la reputación inicial). Con los parámetros
-  del SRS da lo mismo que los casos de uso reales (prueba de equivalencia).
+- **Incidente único:** un grupo del etiquetado (consenso; si no lo hay, el evaluador A; si no, el B), sin los envíos de
+  reportes rechazados por moderación. Es **real** si alguno de sus reportes se verificó real o es de fuente oficial; su
+  **hora de fin** es la primera verificada (6.3, nunca de los votos).
+- **Clave de una instantánea:** los incidentes activos que fijan los dos evaluadores en `/evaluacion` → Congelar **antes**
+  de las sesiones (6.3). No hay sesiones sin la clave de E1 y E2, y no cambia después de la primera tarea. La pantalla
+  avisa si E1 o E2 no tienen de 3 a 6 incidentes o si sus reportes difieren más de 20 %.
+- **H1a (participante, n ≥ 20):** segundos de la tarea; costo, tasa de acierto y de omisión sobre la clave. Wilcoxon de
+  rangos con signo, r = Z/√n.
+- **H1b (incidente único, n ≥ 30):** ítems por incidente: en la base, sus envíos; en la procesada, las alertas que los
+  contienen. Wilcoxon de rangos con signo y delta de Cliff; costo, fusiones erróneas (alertas que juntan envíos de
+  incidentes distintos) con IC de Wilson.
+- **H1c (reporte verificado, n ≥ 40):** reales entre las alertas confirmadas frente a la vista base, cuya veracidad se
+  pondera por estrato (categoría × confirmado) con su tamaño en el total de reportes (6.5). Exacta de Fisher, razón de
+  odds y diferencia de proporciones con IC; costos, exhaustividad (reales confirmados / reales), mediana de minutos
+  hasta la confirmación y porcentaje no verificable.
+- **H1d (incidente con hora de fin, n ≥ 20):** minutos visible tras el fin: en la base, el último envío del incidente
+  + 24 h; en la procesada, la caducidad o resolución de su última alerta. Wilcoxon de rangos con signo y delta de
+  Cliff; costo, caducidad prematura (%) y minutos de anticipo.
+- **Secuencias:** se sortean entre las que llevan menos sesiones (cinco participantes por secuencia, 6.3).
+- **Sensibilidad (exploratoria, 6.5):** el simulador deduplica con la ubicación pública (en robos, el centro de la celda
+  de 200 m), y un envío que solo en la simulación pasa a duplicado confirma con peso 1,0 (la reputación inicial). Con
+  los parámetros del SRS da lo mismo que los casos de uso reales (prueba de equivalencia).

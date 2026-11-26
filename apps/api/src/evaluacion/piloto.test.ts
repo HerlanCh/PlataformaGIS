@@ -102,6 +102,7 @@ const EXPORTACION: Exportacion = {
     { evaluador: 'A', id_envio: ID(1), grupo: '1' },
     { evaluador: 'A', id_envio: ID(2), grupo: '1' },
   ],
+  claves: [{ id_instantanea: ID(30), grupo: '1' }],
   verificaciones: [
     {
       id_reporte: ID(1),
@@ -142,16 +143,23 @@ describe('comandos del análisis del piloto (ADR-007)', () => {
 
     const resultado = await analizarCarpeta({ raiz, carpeta: 'exportacion', salida: 'analisis' });
 
-    expect(archivos).toHaveLength(9);
+    expect(archivos).toHaveLength(10);
     expect(resultado.tareas).toEqual([
       expect.objectContaining({ vista: 'PROCESADA', aciertos: 1, omisiones: 0 }),
     ]);
     const tareas = leerCsv(await readFile(join(raiz, 'analisis', 'tareas.csv'), 'utf8'));
     expect(tareas[0]).toMatchObject({ participante: 'P01', aciertos: '1', duracion_ms: '60000' });
     expect(await readFile(join(raiz, 'analisis', 'resumen.md'), 'utf8')).toContain(
-      '| H1a | aciertos |',
+      '| H1a | tasa de acierto |',
     );
-    for (const nombre of ['indicadores', 'veracidad', 'vigencia', 'supervivencia', 'costos']) {
+    for (const nombre of [
+      'indicadores',
+      'incidentes',
+      'veracidad',
+      'vigencia',
+      'supervivencia',
+      'costos',
+    ]) {
       expect(
         (await readFile(join(raiz, 'analisis', `${nombre}.csv`), 'utf8')).length,
       ).toBeGreaterThan(0);

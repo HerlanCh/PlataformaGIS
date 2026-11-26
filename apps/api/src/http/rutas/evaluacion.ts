@@ -1,4 +1,5 @@
 import { http } from '@gis/contracts';
+import { avisosDeEscenarios } from '@gis/module-evaluation';
 import type { Instantanea, PuntoBase, PuntoProcesado, Vistas } from '@gis/module-evaluation';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import type { z } from 'zod';
@@ -35,6 +36,7 @@ const aInstantaneaHttp = (i: Instantanea): z.output<typeof http.esquemaInstantan
   id: i.id,
   nombre: i.nombre,
   creadaEn: i.creadaEn.toISOString(),
+  clave: [...i.clave],
   ...aVistasHttp(i),
 });
 
@@ -119,13 +121,16 @@ export function registrarRutasDeEvaluacion(
       const lista = await evaluacion.listarInstantaneas.ejecutar({
         rolActor: identidadDe(request).rol,
       });
+      const porNombre = (nombre: string) => lista.find((r) => r.nombre === nombre);
       return {
         instantaneas: lista.map((r) => ({
           ...r,
           instante: r.instante.toISOString(),
           caja: { ...r.caja },
           creadaEn: r.creadaEn.toISOString(),
+          clave: [...r.clave],
         })),
+        avisos: avisosDeEscenarios(porNombre('E1'), porNombre('E2')),
       };
     },
   );
@@ -141,6 +146,28 @@ export function registrarRutasDeEvaluacion(
       const instantanea = await evaluacion.obtenerInstantanea.ejecutar({
         rolActor: identidadDe(request).rol,
         id,
+      });
+      return aInstantaneaHttp(instantanea);
+    },
+  );
+
+  app.put(
+    '/evaluacion/instantaneas/:id/clave',
+    esquema('Fija la clave de una instantánea (perfil v5, 6.3; rol MODERADOR)', {
+      description:
+        'Los incidentes activos (grupos del etiquetado) que son la respuesta correcta de la ' +
+        'tarea. Se puede corregir hasta que empieza la primera tarea sobre la instantánea.',
+      params: http.esquemaParametroId,
+      body: http.esquemaClave,
+      response: { 200: http.esquemaInstantanea, ...ERRORES },
+    }),
+    async (request) => {
+      const { id } = request.params as z.output<typeof http.esquemaParametroId>;
+      const { grupos } = request.body as z.output<typeof http.esquemaClave>;
+      const instantanea = await evaluacion.fijarClave.ejecutar({
+        rolActor: identidadDe(request).rol,
+        id,
+        grupos,
       });
       return aInstantaneaHttp(instantanea);
     },

@@ -2242,6 +2242,8 @@ export interface components {
       nombre: string;
       /** Format: date-time */
       creadaEn: string;
+      /** @description Incidentes activos que fijaron los evaluadores (perfil v5, 6.3) */
+      clave: string[];
       /** Format: date-time */
       instante: string;
       caja: components['schemas']['CajaInput'];
@@ -2261,13 +2263,16 @@ export interface components {
         creadaEn: string;
         puntosProcesada: number;
         puntosBase: number;
+        clave: string[];
       }[];
+      /** @description Criterios del perfil sobre E1 y E2 que no se cumplen */
+      avisos: string[];
     };
-    /** @description Código anónimo del participante (P y dos o tres dígitos) y su secuencia contrabalanceada */
+    /** @description Código anónimo del participante (P y dos o tres dígitos) y su secuencia; sin ella, se sortea entre las que llevan menos sesiones */
     NuevaSesionInput: {
       /** @example P07 */
       codigoParticipante: string;
-      secuencia: 1 | 2 | 3 | 4;
+      secuencia?: 1 | 2 | 3 | 4;
     };
     /** @description Una tarea cronometrada: vista, escenario, tiempo usado (máximo 180 s) y puntos marcados */
     TareaInput: {
@@ -2432,6 +2437,10 @@ export interface components {
     /** @description Verificaciones registradas, de la más reciente a la más antigua */
     ListaDeVerificacionesInput: {
       verificaciones: components['schemas']['VerificacionInput'][];
+    };
+    /** @description Grupos del etiquetado que son los incidentes activos de la instantánea */
+    ClaveInput: {
+      grupos: string[];
     };
     /** @description Error en formato RFC 7807 */
     Problema: {
@@ -2734,6 +2743,8 @@ export interface components {
       nombre: string;
       /** Format: date-time */
       creadaEn: string;
+      /** @description Incidentes activos que fijaron los evaluadores (perfil v5, 6.3) */
+      clave: string[];
       /** Format: date-time */
       instante: string;
       caja: components['schemas']['Caja'];
@@ -2753,13 +2764,16 @@ export interface components {
         creadaEn: string;
         puntosProcesada: number;
         puntosBase: number;
+        clave: string[];
       }[];
+      /** @description Criterios del perfil sobre E1 y E2 que no se cumplen */
+      avisos: string[];
     };
-    /** @description Código anónimo del participante (P y dos o tres dígitos) y su secuencia contrabalanceada */
+    /** @description Código anónimo del participante (P y dos o tres dígitos) y su secuencia; sin ella, se sortea entre las que llevan menos sesiones */
     NuevaSesion: {
       /** @example P07 */
       codigoParticipante: string;
-      secuencia: 1 | 2 | 3 | 4;
+      secuencia?: 1 | 2 | 3 | 4;
     };
     /** @description Una tarea cronometrada: vista, escenario, tiempo usado (máximo 180 s) y puntos marcados */
     Tarea: {
@@ -2924,6 +2938,10 @@ export interface components {
     /** @description Verificaciones registradas, de la más reciente a la más antigua */
     ListaDeVerificaciones: {
       verificaciones: components['schemas']['Verificacion'][];
+    };
+    /** @description Grupos del etiquetado que son los incidentes activos de la instantánea */
+    Clave: {
+      grupos: string[];
     };
   };
   responses: never;

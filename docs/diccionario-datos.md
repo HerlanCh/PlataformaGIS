@@ -388,6 +388,16 @@ Los puntos de ambas vistas de una instantánea. La clave foránea a `evaluacion_
 
 Un `CHECK` (`evaluacion_puntos_campos_check`) exige los campos de cada vista y prohíbe los de la otra.
 
+### `evaluacion_claves`
+
+La respuesta correcta de la tarea: los incidentes activos de cada instantánea, que fijan los evaluadores antes de las
+sesiones (perfil v5, 6.3). Se reemplaza entera hasta que empieza la primera tarea sobre la instantánea.
+
+| Columna | Tipo | Restricción | Descripción |
+| :--- | :--- | :--- | :--- |
+| `id_instantanea` | `uuid` | PK compuesta, FK a `evaluacion_instantaneas.id` | Instantánea |
+| `grupo` | `text` | PK compuesta, `CHECK` de 1 a 40 caracteres | Incidente (grupo del etiquetado) activo en el instante |
+
 ### `evaluacion_sesiones`
 
 Sesión de la tarea cronometrada de un participante. Sin nombre ni dato personal: solo un código anónimo.
@@ -860,6 +870,7 @@ Referencia independiente de veracidad y hora de fin, comprobada en campo o con f
 | `evaluation` | `0000_registro_evaluacion` | `evaluacion_envios`, `evaluacion_transiciones`, `evaluacion_votos` y sus índices (ADR-007) |
 | `evaluation` | `0001_instantaneas` | `evaluacion_instantaneas`, `evaluacion_puntos_instantanea` y el disparador que las hace inmutables |
 | `evaluation` | `0002_herramientas` | `evaluacion_sesiones`, `evaluacion_tareas`, `evaluacion_marcas`, `evaluacion_etiquetas` y `evaluacion_verificaciones` |
+| `evaluation` | `0003_claves` | `evaluacion_claves` (perfil v5, 6.3) |
 
 Cada migración tiene su reversa escrita a mano en `<nombre>.down.sql`, porque Drizzle Kit solo genera el avance. Las pruebas de integración aplican, revierten y vuelven a aplicar cada conjunto contra PostGIS real.
 
