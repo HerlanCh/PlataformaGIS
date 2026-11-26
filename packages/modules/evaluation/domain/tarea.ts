@@ -112,3 +112,19 @@ export function cerrarTarea(
     marcas: validas,
   };
 }
+
+/**
+ * Perfil v5, 6.3: las cuatro secuencias se asignan al azar, cinco participantes por secuencia. Se
+ * sortea entre las secuencias que llevan menos sesiones, así ninguna se adelanta a las demás.
+ * `azar` devuelve un número en `[0, 1)`.
+ */
+export function secuenciaEquilibrada(
+  asignadas: readonly NumeroDeSecuencia[],
+  azar: () => number,
+): NumeroDeSecuencia {
+  const todas: NumeroDeSecuencia[] = [1, 2, 3, 4];
+  const cuenta = (s: NumeroDeSecuencia) => asignadas.filter((a) => a === s).length;
+  const minimo = Math.min(...todas.map(cuenta));
+  const candidatas = todas.filter((s) => cuenta(s) === minimo);
+  return candidatas[Math.floor(azar() * candidatas.length)]!;
+}

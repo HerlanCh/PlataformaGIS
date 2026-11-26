@@ -5,6 +5,7 @@ import {
   ListarEnviosParaEtiquetar,
   MedirAcuerdo,
 } from '../application/etiquetado.js';
+import { FijarClave } from '../application/instantaneas.js';
 import { CrearSesion, IniciarTarea, ListarSesiones, TerminarTarea } from '../application/tareas.js';
 import {
   ListarVerificaciones,
@@ -26,7 +27,7 @@ const CIUDADANO = 'CIUDADANO' as const;
 const punto = { latitud: -16.5, longitud: -68.15 };
 const caja = { latitudMin: -16.51, latitudMax: -16.49, longitudMin: -68.16, longitudMax: -68.14 };
 
-function instantanea(n: number, nombre: string): Instantanea {
+function instantanea(n: number, nombre: string, clave: string[] = ['g1']): Instantanea {
   const base = { codigoCategoria: 'bloqueo', publicLocation: punto, fuenteOficial: null };
   return {
     id: id(n),
@@ -34,6 +35,7 @@ function instantanea(n: number, nombre: string): Instantanea {
     instante: new Date('2026-11-20T12:00:00.000Z'),
     caja,
     creadaEn: new Date('2026-11-21T12:00:00.000Z'),
+    clave,
     procesada: [
       {
         ...base,
@@ -59,23 +61,86 @@ function instantanea(n: number, nombre: string): Instantanea {
   };
 }
 
-async function tareas(conInstantaneas = true) {
+async function tareas(conInstantaneas = true, clave = ['g1']) {
   const reloj = new RelojFijo('2026-11-22T12:00:00.000Z');
   const instantaneas = new InstantaneasEnMemoria();
   if (conInstantaneas) {
-    await instantaneas.guardar(instantanea(1, 'E1'));
-    await instantaneas.guardar(instantanea(2, 'E2'));
+    await instantaneas.guardar(instantanea(1, 'E1', clave));
+    await instantaneas.guardar(instantanea(2, 'E2', clave));
   }
   const sesiones = new SesionesEnMemoria();
-  const deps = { sesiones, instantaneas, reloj, ids: new GeneradorDeIdSecuencial('bbbbbbbb') };
+  const ids = new GeneradorDeIdSecuencial('bbbbbbbb');
+  // Con azar 0 se elige siempre la primera de las secuencias empatadas.
+  const deps = { sesiones, instantaneas, reloj, ids, azar: () => 0 };
   return {
     reloj,
+    instantaneas,
+    fijar: new FijarClave({ instantaneas, sesiones }),
     crear: new CrearSesion(deps),
     listar: new ListarSesiones(sesiones),
     iniciar: new IniciarTarea(deps),
     terminar: new TerminarTarea(deps),
   };
 }
+
+describe('clave y secuencias (perfil v5, 6.3)', () => {
+  it('HU-14: sin secuencia se sortea entre las que llevan menos sesiones, y quedan equilibradas', async () => {
+    const { crear } = await tareas();
+    const secuencias: number[] = [];
+
+    for (let n = 1; n <= 8; n += 1) {
+      const codigoParticipante = `P${String(n).padStart(2, '0')}`;
+      secuencias.push(
+        (await crear.ejecutar({ rolActor: MODERADOR, codigoParticipante })).secuencia,
+      );
+    }
+
+    expect(secuencias).toEqual([1, 2, 3, 4, 1, 2, 3, 4]);
+  });
+
+  it('HU-14: no hay sesiones hasta que los evaluadores fijan la clave de E1 y E2', async () => {
+    const { crear } = await tareas(true, []);
+
+    await expect(
+      crear.ejecutar({ rolActor: MODERADOR, codigoParticipante: 'P01', secuencia: 1 }),
+    ).rejects.toMatchObject({ tipo: 'CONFLICTO', codigo: 'FALTA_CLAVE' });
+  });
+
+  it('HU-14: la clave se reemplaza sin repetir grupos y no cambia después de la primera tarea', async () => {
+    const { crear, fijar, iniciar, instantaneas } = await tareas(true, []);
+    await fijar.ejecutar({ rolActor: MODERADOR, id: id(2), grupos: ['g9'] });
+
+    const fijada = await fijar.ejecutar({
+      rolActor: MODERADOR,
+      id: id(1),
+      grupos: [' g1 ', 'g2', 'g1'],
+    });
+    const sesion = await crear.ejecutar({
+      rolActor: MODERADOR,
+      codigoParticipante: 'P01',
+      secuencia: 1,
+    });
+    await iniciar.ejecutar({ rolActor: MODERADOR, idTarea: sesion.tareas[0].id });
+
+    expect(fijada.clave).toEqual(['g1', 'g2']);
+    expect((await instantaneas.buscarPorId(id(1)))?.clave).toEqual(['g1', 'g2']);
+    await expect(
+      fijar.ejecutar({ rolActor: MODERADOR, id: id(1), grupos: ['g3'] }),
+    ).rejects.toMatchObject({
+      codigo: 'CLAVE_EN_USO',
+    });
+    await expect(
+      fijar.ejecutar({ rolActor: MODERADOR, id: id(99), grupos: [] }),
+    ).rejects.toMatchObject({
+      codigo: 'INSTANTANEA_NO_ENCONTRADA',
+    });
+    await expect(
+      fijar.ejecutar({ rolActor: CIUDADANO, id: id(2), grupos: [] }),
+    ).rejects.toMatchObject({
+      codigo: 'ROL_INSUFICIENTE',
+    });
+  });
+});
 
 describe('tarea cronometrada (ADR-007)', () => {
   it('HU-14: crea la sesión con la secuencia asignada sobre E1 y E2', async () => {

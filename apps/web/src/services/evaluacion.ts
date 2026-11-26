@@ -71,16 +71,26 @@ export function clienteDeEvaluacion(urlApi: string, pedir: typeof fetch = fetch)
   });
 
   return {
-    instantaneas: async () =>
-      (await llamar<{ instantaneas: ResumenDeInstantanea[] }>('/instantaneas')).instantaneas,
+    /** Las instantáneas y los avisos de los criterios del perfil sobre E1 y E2. */
+    instantaneas: () =>
+      llamar<{ instantaneas: ResumenDeInstantanea[]; avisos: string[] }>('/instantaneas'),
+    fijarClave: (idInstantanea: string, grupos: readonly string[]) =>
+      llamar<Instantanea>(`/instantaneas/${idInstantanea}/clave`, enviar('PUT', { grupos })),
     congelar: (nombre: string, instante: string, caja: Caja) =>
       llamar<Instantanea>(
         '/instantaneas',
         enviar('POST', { nombre, instante, bbox: bboxDe(caja) }),
       ),
     sesiones: async () => (await llamar<{ sesiones: Sesion[] }>('/sesiones')).sesiones,
-    crearSesion: (codigoParticipante: string, secuencia: 1 | 2 | 3 | 4) =>
-      llamar<Sesion>('/sesiones', enviar('POST', { codigoParticipante, secuencia })),
+    /** Sin secuencia, la API la sortea entre las que llevan menos sesiones. */
+    crearSesion: (codigoParticipante: string, secuencia: 1 | 2 | 3 | 4 | null) =>
+      llamar<Sesion>(
+        '/sesiones',
+        enviar(
+          'POST',
+          secuencia === null ? { codigoParticipante } : { codigoParticipante, secuencia },
+        ),
+      ),
     iniciarTarea: (idTarea: string) =>
       llamar<TareaEnCurso>(`/tareas/${idTarea}/inicio`, { method: 'POST' }),
     terminarTarea: (

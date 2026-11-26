@@ -170,6 +170,7 @@ describeIntegration('registro de la evaluación en PostGIS', () => {
       instante: minutos(60),
       caja,
       creadaEn: minutos(90),
+      clave: [] as string[],
       procesada: [
         {
           idReporte: id(1),
@@ -220,6 +221,19 @@ describeIntegration('registro de la evaluación en PostGIS', () => {
     expect((await instantaneas.buscarPorId(e1.id))?.base).toHaveLength(2);
   });
 
+  it('HU-14: la clave de una instantánea se reemplaza entera y se lee con ella y en la lista', async () => {
+    const instantaneas = new RepositorioInstantaneasPg(db);
+
+    await instantaneas.fijarClave(id(500), ['g2', 'g1']);
+    await instantaneas.fijarClave(id(500), ['g3', 'g1']);
+
+    expect((await instantaneas.buscarPorId(id(500)))?.clave).toEqual(['g1', 'g3']);
+    expect((await instantaneas.listar())[0]?.clave).toEqual(['g1', 'g3']);
+    await expect(
+      db.execute(sql`insert into evaluacion_claves values (${id(500)}, '')`),
+    ).rejects.toThrow();
+  });
+
   it('HU-14: sesiones y tareas: inicio y cierre solo una vez, marcas guardadas y código único', async () => {
     const sesiones = new RepositorioSesionesPg(db);
     const tarea = (n: number, orden: 1 | 2) => ({
@@ -251,6 +265,7 @@ describeIntegration('registro de la evaluación en PostGIS', () => {
     };
 
     expect(await sesiones.cerrar(id(601), cierre)).toBe(false);
+    expect(await sesiones.hayTareasIniciadas(id(500))).toBe(false);
     expect([
       await sesiones.iniciar(id(601), minutos(0)),
       await sesiones.iniciar(id(601), minutos(1)),
@@ -261,6 +276,7 @@ describeIntegration('registro de la evaluación en PostGIS', () => {
     ]).toEqual([true, false]);
     const leida = await sesiones.buscarPorTarea(id(602));
     expect(leida?.tareas[0]).toMatchObject({ iniciadaEn: minutos(0), ...cierre });
+    expect(await sesiones.hayTareasIniciadas(id(500))).toBe(true);
     expect(leida?.tareas[1]).toMatchObject({ orden: 2, iniciadaEn: null, marcas: [] });
     expect(await sesiones.listar()).toHaveLength(1);
     expect(await sesiones.buscarPorTarea(id(699))).toBeNull();
@@ -383,6 +399,7 @@ describeIntegration('registro de la evaluación en PostGIS', () => {
   });
 
   it('las migraciones se revierten sin dejar tablas ni la función del disparador', async () => {
+    expect(await revertirUltima(db, migraciones)).toBe('0003_claves');
     expect(await revertirUltima(db, migraciones)).toBe('0002_herramientas');
     expect(await revertirUltima(db, migraciones)).toBe('0001_instantaneas');
     expect(await revertirUltima(db, migraciones)).toBe('0000_registro_evaluacion');

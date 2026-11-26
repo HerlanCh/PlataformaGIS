@@ -2,8 +2,13 @@ import { validarEntrada } from '@gis/contracts';
 import { ErrorConflicto, ErrorNoEncontrado } from '@gis/shared-kernel';
 import type { GeneradorDeId, Reloj } from '@gis/shared-kernel';
 import { z } from 'zod';
-import type { RepositorioDeInstantaneas, RepositorioDeSesiones } from '../domain/ports.js';
-import { CODIGO_DE_PARTICIPANTE, cerrarTarea, SECUENCIAS } from '../domain/tarea.js';
+import type { Azar, RepositorioDeInstantaneas, RepositorioDeSesiones } from '../domain/ports.js';
+import {
+  CODIGO_DE_PARTICIPANTE,
+  cerrarTarea,
+  SECUENCIAS,
+  secuenciaEquilibrada,
+} from '../domain/tarea.js';
 import type { NumeroDeSecuencia, Sesion, Tarea } from '../domain/tarea.js';
 import type { PuntoBase, PuntoProcesado } from '../domain/vistas.js';
 import { esquemaRol, exigirModerador } from './entradas.js';
@@ -13,6 +18,8 @@ export interface DependenciasDeTareas {
   readonly instantaneas: RepositorioDeInstantaneas;
   readonly reloj: Reloj;
   readonly ids: GeneradorDeId;
+  /** Para sortear la secuencia cuando no se indica. */
+  readonly azar: Azar;
 }
 
 const esquemaCrear = z.object({
@@ -22,37 +29,61 @@ const esquemaCrear = z.object({
     .trim()
     .toUpperCase()
     .regex(CODIGO_DE_PARTICIPANTE, 'El código es P y dos o tres dígitos, nunca un nombre'),
-  secuencia: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+  /** Sin secuencia, se sortea entre las que llevan menos sesiones (perfil v5, 6.3). */
+  secuencia: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
 });
 
 export type EntradaCrearSesion = z.input<typeof esquemaCrear>;
 
 /**
+ * E1 y E2, que deben estar congeladas y con su clave fijada (perfil v5, 6.3: la respuesta correcta
+ * se fija antes de las sesiones).
+ * @throws {ErrorConflicto} `FALTAN_INSTANTANEAS` o `FALTA_CLAVE`.
+ */
+async function escenariosListos(
+  instantaneas: RepositorioDeInstantaneas,
+): Promise<Readonly<Record<'E1' | 'E2', string>>> {
+  const [e1, e2] = await Promise.all([
+    instantaneas.buscarIdPorNombre('E1'),
+    instantaneas.buscarIdPorNombre('E2'),
+  ]);
+  if (!e1 || !e2) {
+    throw new ErrorConflicto(
+      'FALTAN_INSTANTANEAS',
+      'Antes de las tareas hay que congelar las instantáneas E1 y E2',
+    );
+  }
+  const claves = await Promise.all([e1, e2].map((id) => instantaneas.buscarPorId(id)));
+  if (claves.some((i) => !i || i.clave.length === 0)) {
+    throw new ErrorConflicto(
+      'FALTA_CLAVE',
+      'Los evaluadores deben fijar la clave de E1 y E2 antes de las sesiones',
+    );
+  }
+  return { E1: e1, E2: e2 };
+}
+
+/**
  * ADR-007: abre la sesión de un participante con su secuencia contrabalanceada. Sus dos tareas
- * apuntan a las instantáneas `E1` y `E2`, que deben estar congeladas.
+ * apuntan a las instantáneas `E1` y `E2`.
  */
 export class CrearSesion {
   constructor(private readonly deps: DependenciasDeTareas) {}
 
   /**
-   * @throws {ErrorConflicto} con código `FALTAN_INSTANTANEAS` si E1 o E2 no existen, o
+   * @throws {ErrorConflicto} `FALTAN_INSTANTANEAS` o `FALTA_CLAVE` si E1 o E2 no están listas, o
    * `PARTICIPANTE_REPETIDO` si el código ya tiene sesión.
    */
   async ejecutar(entrada: EntradaCrearSesion): Promise<Sesion> {
     const datos = validarEntrada(esquemaCrear, entrada);
     exigirModerador(datos.rolActor);
-    const secuencia = datos.secuencia as NumeroDeSecuencia;
-    const [e1, e2] = await Promise.all([
-      this.deps.instantaneas.buscarIdPorNombre('E1'),
-      this.deps.instantaneas.buscarIdPorNombre('E2'),
-    ]);
-    if (!e1 || !e2) {
-      throw new ErrorConflicto(
-        'FALTAN_INSTANTANEAS',
-        'Antes de las tareas hay que congelar las instantáneas E1 y E2',
+    const instantaneaDe = await escenariosListos(this.deps.instantaneas);
+    const secuencia =
+      (datos.secuencia as NumeroDeSecuencia | undefined) ??
+      secuenciaEquilibrada(
+        (await this.deps.sesiones.listar()).map((s) => s.secuencia),
+        this.deps.azar,
       );
-    }
-    const instantaneaDe = { E1: e1, E2: e2 } as const;
     const id = this.deps.ids.siguiente();
     const tarea = (orden: 1 | 2): Tarea => {
       const { vista, escenario } = SECUENCIAS[secuencia][orden - 1]!;

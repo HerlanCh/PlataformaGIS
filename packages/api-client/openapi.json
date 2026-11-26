@@ -1188,6 +1188,13 @@
             "format": "date-time",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           },
+          "clave": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Incidentes activos que fijaron los evaluadores (perfil v5, 6.3)"
+          },
           "instante": {
             "type": "string",
             "format": "date-time",
@@ -1213,6 +1220,7 @@
           "id",
           "nombre",
           "creadaEn",
+          "clave",
           "instante",
           "caja",
           "procesada",
@@ -1258,6 +1266,12 @@
                   "type": "integer",
                   "minimum": -9007199254740991,
                   "maximum": 9007199254740991
+                },
+                "clave": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 }
               },
               "required": [
@@ -1267,13 +1281,22 @@
                 "caja",
                 "creadaEn",
                 "puntosProcesada",
-                "puntosBase"
+                "puntosBase",
+                "clave"
               ]
             }
+          },
+          "avisos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Criterios del perfil sobre E1 y E2 que no se cumplen"
           }
         },
         "required": [
-          "instantaneas"
+          "instantaneas",
+          "avisos"
         ],
         "description": "Instantáneas congeladas, de la más reciente a la más antigua, sin sus puntos"
       },
@@ -1306,10 +1329,9 @@
           }
         },
         "required": [
-          "codigoParticipante",
-          "secuencia"
+          "codigoParticipante"
         ],
-        "description": "Código anónimo del participante (P y dos o tres dígitos) y su secuencia contrabalanceada"
+        "description": "Código anónimo del participante (P y dos o tres dígitos) y su secuencia; sin ella, se sortea entre las que llevan menos sesiones"
       },
       "TareaInput": {
         "type": "object",
@@ -2055,6 +2077,24 @@
           "verificaciones"
         ],
         "description": "Verificaciones registradas, de la más reciente a la más antigua"
+      },
+      "ClaveInput": {
+        "type": "object",
+        "properties": {
+          "grupos": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            }
+          }
+        },
+        "required": [
+          "grupos"
+        ],
+        "description": "Grupos del etiquetado que son los incidentes activos de la instantánea"
       },
       "Problema": {
         "type": "object",
@@ -3275,6 +3315,13 @@
             "format": "date-time",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           },
+          "clave": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Incidentes activos que fijaron los evaluadores (perfil v5, 6.3)"
+          },
           "instante": {
             "type": "string",
             "format": "date-time",
@@ -3300,6 +3347,7 @@
           "id",
           "nombre",
           "creadaEn",
+          "clave",
           "instante",
           "caja",
           "procesada",
@@ -3346,6 +3394,12 @@
                   "type": "integer",
                   "minimum": -9007199254740991,
                   "maximum": 9007199254740991
+                },
+                "clave": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 }
               },
               "required": [
@@ -3355,14 +3409,23 @@
                 "caja",
                 "creadaEn",
                 "puntosProcesada",
-                "puntosBase"
+                "puntosBase",
+                "clave"
               ],
               "additionalProperties": false
             }
+          },
+          "avisos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Criterios del perfil sobre E1 y E2 que no se cumplen"
           }
         },
         "required": [
-          "instantaneas"
+          "instantaneas",
+          "avisos"
         ],
         "additionalProperties": false,
         "description": "Instantáneas congeladas, de la más reciente a la más antigua, sin sus puntos"
@@ -3396,11 +3459,10 @@
           }
         },
         "required": [
-          "codigoParticipante",
-          "secuencia"
+          "codigoParticipante"
         ],
         "additionalProperties": false,
-        "description": "Código anónimo del participante (P y dos o tres dígitos) y su secuencia contrabalanceada"
+        "description": "Código anónimo del participante (P y dos o tres dígitos) y su secuencia; sin ella, se sortea entre las que llevan menos sesiones"
       },
       "Tarea": {
         "type": "object",
@@ -4171,6 +4233,25 @@
         ],
         "additionalProperties": false,
         "description": "Verificaciones registradas, de la más reciente a la más antigua"
+      },
+      "Clave": {
+        "type": "object",
+        "properties": {
+          "grupos": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            }
+          }
+        },
+        "required": [
+          "grupos"
+        ],
+        "additionalProperties": false,
+        "description": "Grupos del etiquetado que son los incidentes activos de la instantánea"
       }
     }
   },

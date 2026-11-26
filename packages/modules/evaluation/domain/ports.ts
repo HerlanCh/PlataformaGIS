@@ -35,6 +35,8 @@ export interface RepositorioDeInstantaneas {
   listar(): Promise<readonly ResumenDeInstantanea[]>;
   buscarPorId(id: string): Promise<Instantanea | null>;
   buscarIdPorNombre(nombre: string): Promise<string | null>;
+  /** Reemplaza la clave de la instantánea. La instantánea en sí no cambia. */
+  fijarClave(id: string, grupos: readonly string[]): Promise<void>;
 }
 
 /** Sesiones de la tarea cronometrada. */
@@ -42,6 +44,8 @@ export interface RepositorioDeSesiones {
   /** @throws {ErrorConflicto} con código `PARTICIPANTE_REPETIDO` si el código ya tiene sesión. */
   crear(sesion: Sesion): Promise<void>;
   listar(): Promise<readonly Sesion[]>;
+  /** Si alguna tarea sobre la instantánea ya empezó: desde entonces su clave no cambia. */
+  hayTareasIniciadas(idInstantanea: string): Promise<boolean>;
   buscarPorTarea(idTarea: string): Promise<Sesion | null>;
   /** Marca el inicio si la tarea aún no empezó. Devuelve si la marcó. */
   iniciar(idTarea: string, en: Date): Promise<boolean>;

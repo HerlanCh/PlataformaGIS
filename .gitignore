@@ -19,3 +19,6 @@ apps/web/playwright-report/
 apps/web/test-results/
 .lighthouseci/
 tools/carga/resultado-completo.json
+
+# Perfil de grado (Word): su extracto versionado es docs/perfil-v5.md
+Tesis_*.docx

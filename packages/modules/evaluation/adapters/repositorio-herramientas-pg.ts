@@ -82,6 +82,15 @@ export class RepositorioSesionesPg implements RepositorioDeSesiones {
     return sesion ?? null;
   }
 
+  async hayTareasIniciadas(idInstantanea: string): Promise<boolean> {
+    const [fila] = await this.db
+      .select({ id: tareas.id })
+      .from(tareas)
+      .where(and(eq(tareas.idInstantanea, idInstantanea), isNotNull(tareas.iniciadaEn)))
+      .limit(1);
+    return fila !== undefined;
+  }
+
   async iniciar(idTarea: string, en: Date): Promise<boolean> {
     const filas = await this.db
       .update(tareas)

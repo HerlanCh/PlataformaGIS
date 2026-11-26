@@ -273,3 +273,22 @@ export const evaluacionVerificaciones = pgTable(
     ),
   ],
 );
+
+/**
+ * La clave de cada instantánea: los incidentes activos (grupos del etiquetado) que fijan los
+ * evaluadores antes de las sesiones (perfil v5, 6.3). Se reemplaza entera hasta que empieza la
+ * primera tarea sobre la instantánea.
+ */
+export const evaluacionClaves = pgTable(
+  'evaluacion_claves',
+  {
+    idInstantanea: uuid('id_instantanea')
+      .notNull()
+      .references(() => evaluacionInstantaneas.id),
+    grupo: text('grupo').notNull(),
+  },
+  (tabla) => [
+    primaryKey({ columns: [tabla.idInstantanea, tabla.grupo] }),
+    check('evaluacion_claves_grupo_check', sql`char_length(${tabla.grupo}) between 1 and 40`),
+  ],
+);

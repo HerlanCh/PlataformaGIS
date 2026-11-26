@@ -6,6 +6,7 @@ import {
   ConsultarEstadoDelRegistro,
   ConsultarVistas,
   CrearSesion,
+  FijarClave,
   GuardarEtiquetas,
   IniciarTarea,
   ListarEnviosParaEtiquetar,
@@ -35,6 +36,7 @@ export interface Evaluacion {
   readonly congelar: Caso<CongelarInstantanea>;
   readonly listarInstantaneas: Caso<ListarInstantaneas>;
   readonly obtenerInstantanea: Caso<ObtenerInstantanea>;
+  readonly fijarClave: Caso<FijarClave>;
   readonly crearSesion: Caso<CrearSesion>;
   readonly listarSesiones: Caso<ListarSesiones>;
   readonly iniciarTarea: Caso<IniciarTarea>;
@@ -51,7 +53,7 @@ export interface Evaluacion {
 export const radiosDeDeduplicacion = (): ReadonlyMap<string, number> =>
   new Map(CATEGORIAS_MVP.map((c) => [c.codigo, c.radioDuplicadoM]));
 
-/** Azar del sorteo: un entero criptográfico llevado a `[0, 1)`. */
+/** Azar del sorteo y de las secuencias: un entero criptográfico llevado a `[0, 1)`. */
 const azar = (): number => randomInt(0, 2 ** 47) / 2 ** 47;
 
 export function componerEvaluacion(db: Db, reloj: Reloj, ids: GeneradorDeId): Evaluacion {
@@ -60,13 +62,14 @@ export function componerEvaluacion(db: Db, reloj: Reloj, ids: GeneradorDeId): Ev
   const sesiones = new RepositorioSesionesPg(db);
   const etiquetas = new RepositorioEtiquetasPg(db);
   const verificaciones = new RepositorioVerificacionesPg(db);
-  const tareas = { sesiones, instantaneas, reloj, ids };
+  const tareas = { sesiones, instantaneas, reloj, ids, azar };
   return {
     estado: new ConsultarEstadoDelRegistro(registro),
     vistas: new ConsultarVistas(registro, reloj),
     congelar: new CongelarInstantanea({ registro, instantaneas, reloj, ids }),
     listarInstantaneas: new ListarInstantaneas(instantaneas),
     obtenerInstantanea: new ObtenerInstantanea(instantaneas),
+    fijarClave: new FijarClave({ instantaneas, sesiones }),
     crearSesion: new CrearSesion(tareas),
     listarSesiones: new ListarSesiones(sesiones),
     iniciarTarea: new IniciarTarea(tareas),

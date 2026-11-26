@@ -59,6 +59,7 @@ export const COLUMNAS_EXPORTADAS = {
   ],
   marcas: ['id_tarea', 'id_punto', 'ms_desde_inicio'],
   etiquetas: ['evaluador', 'id_envio', 'grupo'],
+  claves: ['id_instantanea', 'grupo'],
   verificaciones: [
     'id_reporte',
     'resultado',

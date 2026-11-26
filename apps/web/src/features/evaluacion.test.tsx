@@ -14,6 +14,7 @@ import { PantallaDeEvaluacion } from './evaluacion/PantallaDeEvaluacion.js';
 import { TareaEnPantalla } from './evaluacion/TareaCronometrada.js';
 import {
   aLocal,
+  horaCorta,
   hoyEnBolivia,
   mensajeDeError,
   minutosYSegundos,
@@ -98,13 +99,17 @@ describe('pantalla de evaluación (HU-14)', () => {
               creadaEn: '2026-11-21T12:00:00.000Z',
               puntosProcesada: 3,
               puntosBase: 7,
+              clave: [],
             },
           ],
+          avisos: ['Falta congelar E2.'],
         }),
     });
     const { container } = montar(<PantallaDeEvaluacion />);
 
     expect(await screen.findByText('3 en la vista procesada · 7 en la base')).toBeTruthy();
+    expect(screen.getByText('Falta congelar E2.')).toBeTruthy();
+    expect(screen.getByText('Sin clave todavía.')).toBeTruthy();
     fireEvent.change(screen.getByLabelText('Centro de la zona (latitud, longitud)'), {
       target: { value: '-16.5, -68.15' },
     });
@@ -133,14 +138,82 @@ describe('pantalla de evaluación (HU-14)', () => {
     fireEvent.change(screen.getByLabelText(/Código del participante/), {
       target: { value: 'p07' },
     });
-    fireEvent.click(screen.getByLabelText('3'));
     fireEvent.click(abrir);
 
+    // Por defecto la secuencia se sortea en la API (perfil v5, 6.3): no se envía.
     await waitFor(() => expect(pedidoDe('POST') !== undefined).toBe(true));
-    expect(await pedidoDe('POST')!.json()).toEqual({
-      codigoParticipante: 'P07',
-      secuencia: 3,
+    expect(await pedidoDe('POST')!.json()).toEqual({ codigoParticipante: 'P07' });
+    expect(await infracciones(container)).toEqual([]);
+  });
+
+  it('HU-14: una secuencia elegida a mano se envía tal cual', async () => {
+    api('MODERADOR', { '/v1/evaluacion/sesiones': () => json({ sesiones: [] }) });
+    montar(<PantallaDeEvaluacion />);
+    fireEvent.click(await screen.findByLabelText('Tarea'));
+
+    fireEvent.change(screen.getByLabelText(/Código del participante/), {
+      target: { value: 'P08' },
     });
+    fireEvent.click(screen.getByLabelText('3'));
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir sesión' }));
+
+    await waitFor(() => expect(pedidoDe('POST') !== undefined).toBe(true));
+    expect(await pedidoDe('POST')!.json()).toEqual({ codigoParticipante: 'P08', secuencia: 3 });
+  });
+
+  it('HU-14: los evaluadores fijan la clave eligiendo los incidentes etiquetados de la zona', async () => {
+    const enLaZona = { latitud: -16.5, longitud: -68.15 };
+    api('MODERADOR', {
+      '/v1/evaluacion/instantaneas': () =>
+        json({
+          instantaneas: [
+            {
+              id: ID,
+              nombre: 'E1',
+              instante: '2026-11-20T16:00:00.000Z',
+              caja: cajaAlrededor(enLaZona, 500),
+              creadaEn: '2026-11-21T12:00:00.000Z',
+              puntosProcesada: 1,
+              puntosBase: 2,
+              clave: [],
+            },
+          ],
+          avisos: [],
+        }),
+      '/v1/evaluacion/etiquetado': () =>
+        json({
+          envios: [
+            {
+              idEnvio: 'e1',
+              codigoCategoria: 'bloqueo',
+              publicLocation: enLaZona,
+              recibidoEn: '2026-11-20T15:00:00.000Z',
+            },
+            {
+              idEnvio: 'e2',
+              codigoCategoria: 'bloqueo',
+              publicLocation: { latitud: -16.6, longitud: -68.15 },
+              recibidoEn: '2026-11-20T15:00:00.000Z',
+            },
+          ],
+          etiquetas: [
+            { evaluador: 'A', idEnvio: 'e1', grupo: 'x' },
+            { evaluador: 'CONSENSO', idEnvio: 'e1', grupo: '7' },
+            { evaluador: 'A', idEnvio: 'e2', grupo: '8' },
+          ],
+        }),
+      [`/v1/evaluacion/instantaneas/${ID}/clave`]: () => json({}),
+    });
+    const { container } = montar(<PantallaDeEvaluacion />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Fijar clave' }));
+    // Solo el incidente del consenso dentro de la zona: el envío e2 está fuera.
+    fireEvent.click(await screen.findByLabelText(/Incidente 7/));
+    fireEvent.click(screen.getByRole('button', { name: 'Fijar clave (1)' }));
+
+    await waitFor(() => expect(pedidoDe('PUT') !== undefined).toBe(true));
+    expect(await pedidoDe('PUT')!.json()).toEqual({ grupos: ['7'] });
+    expect(screen.queryByLabelText(/Incidente 8/)).toBeNull();
     expect(await infracciones(container)).toEqual([]);
   });
 
@@ -333,6 +406,8 @@ describe('servicio y textos de la evaluación', () => {
       hasta: '2026-11-22T04:00:00.000Z',
     });
     expect(hoyEnBolivia(new Date('2026-11-22T02:00:00.000Z'))).toBe('2026-11-21');
+    // En 24 h, como el resto de la app: las 18:05 UTC son las 14:05 en Bolivia.
+    expect(horaCorta('2026-11-22T18:05:00.000Z')).toBe('22/11, 14:05');
     expect(minutosYSegundos(65_400)).toBe('1:06');
     expect(minutosYSegundos(-5)).toBe('0:00');
     expect(aLocal(new Date(2026, 10, 22, 9, 5))).toBe('2026-11-22T09:05');

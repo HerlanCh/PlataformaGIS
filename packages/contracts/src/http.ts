@@ -448,7 +448,15 @@ export const esquemaVistas = conId(
 );
 
 export const esquemaInstantanea = conId(
-  z.object({ id: esquemaUuid, nombre: z.string(), creadaEn: esquemaFecha, ...camposDeVistas }),
+  z.object({
+    id: esquemaUuid,
+    nombre: z.string(),
+    creadaEn: esquemaFecha,
+    clave: z
+      .array(z.string())
+      .meta({ description: 'Incidentes activos que fijaron los evaluadores (perfil v5, 6.3)' }),
+    ...camposDeVistas,
+  }),
   'Instantanea',
   'Instantánea congelada: el contenido de ambas vistas, inmutable',
 );
@@ -464,8 +472,12 @@ export const esquemaListaDeInstantaneas = conId(
         creadaEn: esquemaFecha,
         puntosProcesada: z.number().int(),
         puntosBase: z.number().int(),
+        clave: z.array(z.string()),
       }),
     ),
+    avisos: z
+      .array(z.string())
+      .meta({ description: 'Criterios del perfil sobre E1 y E2 que no se cumplen' }),
   }),
   'ListaDeInstantaneas',
   'Instantáneas congeladas, de la más reciente a la más antigua, sin sus puntos',
@@ -476,10 +488,10 @@ const esquemaVista = z.enum(['PROCESADA', 'BASE']);
 export const esquemaNuevaSesion = conId(
   z.object({
     codigoParticipante: z.string().meta({ example: 'P07' }),
-    secuencia: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+    secuencia: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
   }),
   'NuevaSesion',
-  'Código anónimo del participante (P y dos o tres dígitos) y su secuencia contrabalanceada',
+  'Código anónimo del participante (P y dos o tres dígitos) y su secuencia; sin ella, se sortea entre las que llevan menos sesiones',
 );
 
 const esquemaMarca = z.object({ idPunto: esquemaUuid, msDesdeInicio: z.number().int() });
@@ -643,4 +655,10 @@ export const esquemaListaDeVerificaciones = conId(
   z.object({ verificaciones: z.array(esquemaVerificacion) }),
   'ListaDeVerificaciones',
   'Verificaciones registradas, de la más reciente a la más antigua',
+);
+
+export const esquemaClave = conId(
+  z.object({ grupos: z.array(z.string().trim().min(1).max(40)).max(20) }),
+  'Clave',
+  'Grupos del etiquetado que son los incidentes activos de la instantánea',
 );
