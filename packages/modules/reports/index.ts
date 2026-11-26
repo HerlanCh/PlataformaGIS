@@ -17,6 +17,12 @@ export const reportsModulo: DefinicionDeModulo = {
 export { RepositorioCategoriasPg } from './adapters/category-repository.js';
 export { RepositorioReportesPostgis } from './adapters/report-repository.js';
 export { CATEGORIAS_MVP } from './domain/category.js';
+// Reglas de dominio para el simulador de sensibilidad de la raíz de composición (ADR-007).
+export {
+  FRACCION_DE_EXTENSION,
+  MAX_EXTENSIONES,
+  PoliticaDeCaducidad,
+} from './domain/expiration-policy.js';
 export type { Categoria } from './domain/category.js';
 export type { RepositorioDeCategorias, RepositorioDeReportes } from './domain/ports.js';
 export { FUENTES_OFICIALES } from './domain/report.js';
